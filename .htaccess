@@ -1,0 +1,49 @@
+RewriteEngine On
+RewriteBase /
+
+# ============================================================
+# SECURITY: Block direct access to sensitive files
+# ============================================================
+<FilesMatch "\.(sqlite|sqlite3|db|env|log|lock|bak|sql|sh)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "^(composer)\.(json|lock)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Block access to includes and languages directories directly
+<IfModule mod_rewrite.c>
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^languages/ - [F,L]
+</IfModule>
+
+# Ignore existing physical files and directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# API URL Rewriting
+RewriteRule ^api/v1/domain/([a-zA-Z0-9\.\-]+)/?$ api.php?domain=$1 [QSA,L]
+
+# Auth URL Rewriting
+RewriteRule ^login/?$ index.php?route=login [QSA,L]
+RewriteRule ^register/?$ index.php?route=register [QSA,L]
+RewriteRule ^logout/?$ index.php?route=logout [QSA,L]
+
+# User Panel URL Rewriting
+RewriteRule ^panel/?$ index.php?route=panel [QSA,L]
+RewriteRule ^panel/domains/?$ index.php?route=panel_domains [QSA,L]
+RewriteRule ^panel/domains/export/?$ index.php?route=panel_domains_export [QSA,L]
+RewriteRule ^panel/hosting/?$ index.php?route=panel_hosting [QSA,L]
+RewriteRule ^panel/integrations/?$ index.php?route=panel_integrations [QSA,L]
+RewriteRule ^panel/integrations/upgrade/?$ index.php?route=panel_integrations_upgrade [QSA,L]
+
+# Pages URL Rewriting
+RewriteRule ^domain/([a-zA-Z0-9\.\-]+)/?$ index.php?route=domain&name=$1 [QSA,L]
+RewriteRule ^trending/?$ index.php?route=trending [QSA,L]
+RewriteRule ^expiring/?$ index.php?route=expiring [QSA,L]
+RewriteRule ^docs/?$ index.php?route=docs [QSA,L]
+RewriteRule ^admin/?$ index.php?route=admin [QSA,L]
+RewriteRule ^cron/?$ index.php?route=cron [QSA,L]
