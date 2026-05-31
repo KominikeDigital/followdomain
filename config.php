@@ -17,8 +17,8 @@ $config = [
     'mysql_pass' => '',
     
     // Admin Credentials
-    'admin_email' => 'emre.ce@gmail.com',
-    'admin_password' => '16.12.24.Do.Ra.',
+    'admin_email' => 'emre@kominikee.com',
+    'admin_password' => '$2y$12$wqLYlpj00Gih/EqXiaTdMOfWRijqVTa4UnarbpOp31mJlUQxY46Va',
     
     // Default Ad & SEO Settings
     'ad_status' => 'off', // 'on' or 'off'

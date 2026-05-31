@@ -510,7 +510,15 @@ switch ($route) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
-            if ($email === $config['admin_email'] && $password === $config['admin_password']) {
+            
+            $isPasswordCorrect = false;
+            if (password_verify($password, $config['admin_password'])) {
+                $isPasswordCorrect = true;
+            } elseif ($password === $config['admin_password']) {
+                $isPasswordCorrect = true;
+            }
+
+            if ($email === $config['admin_email'] && $isPasswordCorrect) {
                 $_SESSION['admin_logged_in'] = true;
                 $isAdminLoggedIn = true;
             } else {
@@ -614,6 +622,7 @@ switch ($route) {
         break;
 
     case 'blog_category':
+        $categorySlug = $_GET['category'] ?? $categorySlug ?? '';
         $blogPosts = getBlogPostsByCategory($categorySlug, $lang);
         $displayCategory = str_replace('-', ' ', $categorySlug);
         if (!empty($blogPosts)) {

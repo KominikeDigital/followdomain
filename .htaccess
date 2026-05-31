@@ -31,6 +31,7 @@ RewriteRule ^api/v1/domain/([a-zA-Z0-9\.\-]+)/?$ api.php?domain=$1 [QSA,L]
 RewriteRule ^login/?$ index.php?route=login [QSA,L]
 RewriteRule ^register/?$ index.php?route=register [QSA,L]
 RewriteRule ^logout/?$ index.php?route=logout [QSA,L]
+RewriteRule ^forgot-password/?$ index.php?route=forgot_password [QSA,L]
 
 # User Panel URL Rewriting
 RewriteRule ^panel/?$ index.php?route=panel [QSA,L]
@@ -45,5 +46,31 @@ RewriteRule ^domain/([a-zA-Z0-9\.\-]+)/?$ index.php?route=domain&name=$1 [QSA,L]
 RewriteRule ^trending/?$ index.php?route=trending [QSA,L]
 RewriteRule ^expiring/?$ index.php?route=expiring [QSA,L]
 RewriteRule ^docs/?$ index.php?route=docs [QSA,L]
-RewriteRule ^admin/?$ index.php?route=admin [QSA,L]
 RewriteRule ^cron/?$ index.php?route=cron [QSA,L]
+
+# Checkout & Payment
+RewriteRule ^checkout/?$ index.php?route=checkout [QSA,L]
+
+# Domain Sale Page
+RewriteRule ^domains-for-sale/?$ index.php?route=domains_for_sale [QSA,L]
+
+# Affiliate redirect
+RewriteRule ^go/?$ index.php?route=go [QSA,L]
+
+# Legal Pages
+RewriteRule ^privacy-policy/?$ index.php?route=privacy [QSA,L]
+RewriteRule ^terms-of-service/?$ index.php?route=terms [QSA,L]
+
+# Blog
+RewriteRule ^blog/?$ index.php?route=blog_list [QSA,L]
+RewriteRule ^blog/category/([a-zA-Z0-9\-]+)/?$ index.php?route=blog_category&category=$1 [QSA,L]
+RewriteRule ^blog/([a-zA-Z0-9\-]+)/?$ index.php?route=blog_detail&slug=$1 [QSA,L]
+
+# Admin Panel — hidden URL
+RewriteRule ^manage-secure-panel/?$ index.php?route=admin [QSA,L]
+
+# Fallback: old /admin -> redirect to home (keep secure)
+RewriteRule ^admin/?$ index.php?route=home [QSA,L]
+
+# Default fallback — catch all remaining paths through index.php
+RewriteRule ^(.+)/?$ index.php [QSA,L]
