@@ -20,9 +20,10 @@ RewriteBase /
     RewriteRule ^languages/ - [F,L]
 </IfModule>
 
-# Ignore existing physical files and directories
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+# Ignore physical files and directories from rewriting
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
 # API URL Rewriting
 RewriteRule ^api/v1/domain/([a-zA-Z0-9\.\-]+)/?$ api.php?domain=$1 [QSA,L]
