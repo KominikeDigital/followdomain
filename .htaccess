@@ -33,6 +33,8 @@ RewriteRule ^login/?$ index.php?route=login [QSA,L]
 RewriteRule ^register/?$ index.php?route=register [QSA,L]
 RewriteRule ^logout/?$ index.php?route=logout [QSA,L]
 RewriteRule ^forgot-password/?$ index.php?route=forgot_password [QSA,L]
+RewriteRule ^verify-email/?$ index.php?route=verify_email [QSA,L]
+
 
 # User Panel URL Rewriting
 RewriteRule ^panel/?$ index.php?route=panel [QSA,L]

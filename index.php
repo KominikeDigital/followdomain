@@ -122,6 +122,8 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
             $route = 'admin';
         } elseif ($path === 'forgot-password') {
             $route = 'forgot_password';
+        } elseif ($path === 'verify-email') {
+            $route = 'verify_email';
         } elseif ($path === 'blog') {
             $route = 'blog_list';
         } elseif (preg_match('/^blog\/category\/([a-zA-Z0-9\-]+)$/', $path, $matches)) {
@@ -195,22 +197,30 @@ switch ($route) {
         
         // Handle Register Submission
         if (isset($_POST['submit_register'])) {
-            $res = registerUser($pdo, $_POST['username'], $_POST['email'], $_POST['password']);
+            $plan = trim($_POST['plan'] ?? 'free');
+            $res = registerUser($pdo, $_POST['username'], $_POST['email'], $_POST['password'], $plan);
             if ($res['success']) {
                 $userEmail = trim($_POST['email']);
                 $userName = trim($_POST['username']);
+                $token = $res['verification_token'];
                 
-                $subject = "Welcome to TLDix!";
-                $messageHtml = getFormattedEmail('mail_tpl_user_register', [
+                // Send verification email
+                $subject = "TLDix E-posta Doğrulama";
+                $verifyUrl = absolute_url('verify-email?token=' . $token);
+                $messageHtml = getFormattedEmail('mail_tpl_user_verify', [
                     'username' => esc($userName),
-                    'login_url' => absolute_url('login')
+                    'verify_url' => $verifyUrl
                 ]);
-                sendEmailNotification($userEmail, $subject, $messageHtml);
+                $mailSent = sendEmailNotification($userEmail, $subject, $messageHtml);
+                
+                if (!$mailSent) {
+                    error_log("Failed to send verification email to $userEmail");
+                }
                 
                 // Admin notification email
                 $adminEmail = $config['admin_notification_email'] ?? '';
                 if (!empty($adminEmail)) {
-                    $adminSubject = "Yeni Üye Kaydı: " . $userName;
+                    $adminSubject = "Yeni Üye Kaydı (Doğrulama Bekleniyor): " . $userName;
                     $adminMessage = getFormattedEmail('mail_tpl_admin_register', [
                         'username' => esc($userName),
                         'email' => esc($userEmail),
@@ -219,8 +229,7 @@ switch ($route) {
                     sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
                 }
                 
-                header("Location: " . url("panel"));
-                exit;
+                $authSuccess = "Kayıt başarılı! Lütfen hesabınızı doğrulamak için e-posta adresinize gönderdiğimiz bağlantıya tıklayın.";
             } else {
                 $authError = $res['message'];
             }
@@ -284,6 +293,65 @@ switch ($route) {
         
         $pageTitle = "Şifremi Unuttum | " . $config['site_title'];
         $pageDesc = "Şifrenizi sıfırlamak için e-posta adresinizi girin.";
+        break;
+        
+    case 'verify_email':
+        $token = trim($_GET['token'] ?? '');
+        $verificationError = null;
+        
+        if (empty($token)) {
+            $verificationError = "Geçersiz veya eksik doğrulama bağlantısı!";
+        } else {
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE verification_token = ?");
+            $stmt->execute([$token]);
+            $user = $stmt->fetch();
+            
+            if ($user) {
+                // Update user verification status
+                $stmtUpdate = $pdo->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?");
+                $stmtUpdate->execute([$user['id']]);
+                
+                // Automatically log the user in
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                
+                logActivity($pdo, $user['id'], "E-posta adresi doğrulandı ve giriş yapıldı.");
+                
+                // Send Welcome E-mail now
+                $subject = "Welcome to TLDix!";
+                $messageHtml = getFormattedEmail('mail_tpl_user_register', [
+                    'username' => esc($user['username']),
+                    'login_url' => absolute_url('login')
+                ]);
+                sendEmailNotification($user['email'], $subject, $messageHtml);
+                
+                // Notify admin that verification is complete and account is active
+                $adminEmail = $config['admin_notification_email'] ?? '';
+                if (!empty($adminEmail)) {
+                    $adminSubject = "Üyelik Doğrulandı: " . $user['username'];
+                    $adminMessage = "<h2>Üyelik Doğrulama Bildirimi</h2><p>Yeni kayıt olan kullanıcının e-posta adresi doğrulandı ve hesabı aktif hale getirildi:</p><ul><li><strong>Kullanıcı Adı:</strong> " . esc($user['username']) . "</li><li><strong>E-posta:</strong> " . esc($user['email']) . "</li><li><strong>Plan:</strong> " . esc(strtoupper($user['api_plan'])) . "</li></ul>";
+                    sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
+                }
+                
+                // Redirect logic: If paid plan, redirect to checkout, else redirect to panel
+                $plan = $user['api_plan'] ?? 'free';
+                if (in_array($plan, ['bronze', 'silver', 'gold'])) {
+                    header("Location: " . url("checkout?plan=" . urlencode($plan)));
+                } else {
+                    header("Location: " . url("panel"));
+                }
+                exit;
+            } else {
+                $verificationError = "Bu doğrulama bağlantısı geçersiz veya zaten kullanılmış.";
+            }
+        }
+        
+        if ($verificationError) {
+            $authError = $verificationError;
+        }
+        
+        $pageTitle = "E-posta Doğrulama | " . $config['site_title'];
+        $pageDesc = "E-posta adresinizi doğrulayın.";
         break;
         
     case 'logout':
@@ -1066,6 +1134,7 @@ switch ($route) {
     case 'login':
     case 'register':
     case 'forgot_password':
+    case 'verify_email':
         require_once __DIR__ . '/templates/login.php';
         break;
     case 'panel':

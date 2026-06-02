@@ -692,6 +692,7 @@ html[data-theme="light"] .admin-card textarea {
                         <label>Özelleştirilecek E-posta Şablonu</label>
                         <select id="tpl_selector" onchange="switchTemplate(this.value)">
                             <option value="mail_tpl_user_register">Hoş Geldiniz E-postası (Yeni Üye)</option>
+                            <option value="mail_tpl_user_verify">E-posta Doğrulama E-postası (Yeni Üye)</option>
                             <option value="mail_tpl_user_forgot">Şifre Sıfırlama E-postası (Kullanıcı)</option>
                             <option value="mail_tpl_admin_register">Yeni Üye Bildirimi (Yönetici)</option>
                             <option value="mail_tpl_admin_forgot">Şifre Sıfırlama Bildirimi (Yönetici)</option>
@@ -717,6 +718,25 @@ html[data-theme="light"] .admin-card textarea {
                                 <textarea name="settings[mail_tpl_user_register]" rows="15" class="code-editor"><?php 
                                     $default = '<h2>Hoş Geldiniz, {username}!</h2><p>TLDix platformuna başarıyla üye oldunuz. Artık alan adlarınızı ve barındırma (hosting) sürelerinizi tek bir noktadan güvenle takip edebilirsiniz.</p><p>Takip listenize yeni alan adları eklemek için hemen kullanıcı panelinize giriş yapabilirsiniz:</p><p><a href="{login_url}" class="btn">Panel Girişi Yap</a></p><p>Herhangi bir sorunuz olursa bizimle iletişime geçebilirsiniz.</p>';
                                     echo esc($config['mail_tpl_user_register'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- User Email Verification Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_user_verify" style="display:none;">
+                        <div class="admin-card">
+                            <h3>✉️ E-posta Doğrulama E-postası (Yeni Üye)</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Kullanıcı yeni kayıt oluşturduğunda doğrulaması için gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Kullanıcı Adı), <code>{verify_url}</code> (E-posta Doğrulama Bağlantısı)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_user_verify]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>E-posta Adresinizi Doğrulayın</h2><p>Merhaba {username},</p><p>TLDix platformuna başarıyla üye oldunuz. Hesabınızı aktifleştirmek ve hizmetleri kullanmaya başlamak için lütfen aşağıdaki bağlantıya tıklayarak e-posta adresinizi doğrulayın:</p><p><a href="{verify_url}" class="btn">E-postamı Doğrula</a></p><p>Bağlantı çalışmıyorsa aşağıdaki URL\'yi kopyalayıp tarayıcınıza yapıştırabilirsiniz:</p><p>{verify_url}</p>';
+                                    echo esc($config['mail_tpl_user_verify'] ?? $default); 
                                 ?></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>

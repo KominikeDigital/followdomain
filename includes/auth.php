@@ -8,9 +8,10 @@ if (count(get_included_files()) === 1) {
 /**
  * Register a new user
  */
-function registerUser($pdo, $username, $email, $password) {
+function registerUser($pdo, $username, $email, $password, $plan = 'free') {
     $username = trim($username);
     $email = trim(strtolower($email));
+    $plan = in_array($plan, ['free', 'bronze', 'silver', 'gold']) ? $plan : 'free';
     
     if (empty($username) || empty($email) || empty($password)) {
         return ['success' => false, 'message' => 'Lütfen tüm alanları doldurun.'];
@@ -41,20 +42,22 @@ function registerUser($pdo, $username, $email, $password) {
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
     $now = date('Y-m-d H:i:s');
     $apiKey = 'da_' . bin2hex(random_bytes(16));
+    $verificationToken = bin2hex(random_bytes(16));
     
     try {
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, created_at) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$username, $email, $passwordHash, $apiKey, $now]);
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, api_plan, created_at, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
+        $stmt->execute([$username, $email, $passwordHash, $apiKey, $plan, $now, $verificationToken]);
         $userId = $pdo->lastInsertId();
         
         // Log activity
-        logActivity($pdo, $userId, "Hesap oluşturuldu.");
+        logActivity($pdo, $userId, "Hesap oluşturuldu (Doğrulama bekleniyor).");
         
-        // Log in automatically
-        $_SESSION['user_id'] = $userId;
-        $_SESSION['username'] = $username;
-        
-        return ['success' => true, 'message' => 'Kayıt başarıyla oluşturuldu!'];
+        return [
+            'success' => true, 
+            'message' => 'Kayıt başarıyla oluşturuldu!',
+            'verification_token' => $verificationToken,
+            'user_id' => $userId
+        ];
     } catch (PDOException $e) {
         return ['success' => false, 'message' => 'Kayıt sırasında bir hata oluştu: ' . $e->getMessage()];
     }
@@ -76,6 +79,10 @@ function loginUser($pdo, $usernameOrEmail, $password) {
     $user = $stmt->fetch();
     
     if ($user && password_verify($password, $user['password_hash'])) {
+        if ((int)($user['is_verified'] ?? 0) === 0) {
+            return ['success' => false, 'message' => 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.'];
+        }
+        
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         
