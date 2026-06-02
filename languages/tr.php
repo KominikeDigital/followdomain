@@ -527,5 +527,17 @@ return [
     'provider_sedo_desc' => 'Lider küresel domain ticaret platformu. Profesyonel domain brokerlığı, arama motoru optimize edilmiş domain park sayfaları ve yüksek değerli açık artırmalar sunar.',
     'provider_dan_desc' => 'Modern kiralama (lease-to-own) modelleri ve ultra hızlı domain transfer otomasyonu ile tanınır. Dan, GoDaddy bünyesinde domain satın almayı birkaç tıklama kadar basit hale getirir.',
     'provider_atom_desc' => 'Eski adıyla Squadhelp, lider marka niteliğindeki alan adı pazarı. Şirket isimlendirme, logo tasarımları ve premium marka olabilecek alan adlarının aracılığında uzmanlaşmıştır.',
-    'provider_dynadot_mkt_desc' => 'Süresi dolan ve premium alan adlarını satın alın, satın, teklif verin veya ön sipariş verin. Dynadot açık artırma motoru, düşük komisyon oranları ve API entegrasyonu sunar.'
+    'provider_dynadot_mkt_desc' => 'Süresi dolan ve premium alan adlarını satın alın, satın, teklif verin veya ön sipariş verin. Dynadot açık artırma motoru, düşük komisyon oranları ve API entegrasyonu sunar.',
+    
+    // WHOIS labels
+    'registration_date_label' => 'Kayıt Tarihi',
+    'expiration_date_label' => 'Bitiş Tarihi',
+    'updated_on_label' => 'Güncellenme Tarihi',
+    'status_label' => 'Durum',
+    'nameservers_label' => 'Name Sunucuları',
+    'last_checked_label' => 'Son Kontrol',
+    
+    // New Services
+    'nav_social_search' => 'Sosyal Arama',
+    'nav_domain_search' => 'Alan Adı Arama'
 ];

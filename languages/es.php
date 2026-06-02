@@ -527,5 +527,17 @@ return [
     'provider_sedo_desc' => 'Una plataforma de comercio de dominios líder a nivel mundial. Cuenta con corretaje de dominios profesional, páginas de estacionamiento de dominios optimizadas para motores de búsqueda y subastas de alto valor.',
     'provider_dan_desc' => 'Conocida por sus modelos modernos de alquiler con opción a compra y automatización de transferencia de dominios ultrarrápida. Dan hace que comprar dominios sea tan simple como unos pocos clics bajo GoDaddy.',
     'provider_atom_desc' => 'Anteriormente Squadhelp, el mercado de dominios de marca de primer nivel. Se especializa en nombres comerciales personalizados de origen colectivo, diseños de logotipos y corretaje de dominios de marca premium.',
-    'provider_dynadot_mkt_desc' => 'Compre, venda, puje o reserve nombres de dominio vencidos y premium. El motor de subastas avanzado de Dynadot ofrece tarifas bajas y opciones de seguimiento directo por API.'
+    'provider_dynadot_mkt_desc' => 'Compre, venda, puje o reserve nombres de dominio vencidos y premium. El motor de subastas avanzado de Dynadot ofrece tarifas bajas y opciones de seguimiento directo por API.',
+    
+    // WHOIS labels
+    'registration_date_label' => 'Registrado el',
+    'expiration_date_label' => 'Expira el',
+    'updated_on_label' => 'Actualizado el',
+    'status_label' => 'Estado',
+    'nameservers_label' => 'Servidores de Nombres',
+    'last_checked_label' => 'Última comprobación',
+    
+    // New Services
+    'nav_social_search' => 'Búsqueda Social',
+    'nav_domain_search' => 'Búsqueda de Dominio'
 ];

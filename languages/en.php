@@ -527,5 +527,17 @@ return [
     'provider_sedo_desc' => 'A leading global domain trading platform. Features professional domain brokerages, search engine optimized domain parking pages, and high-stakes auctions.',
     'provider_dan_desc' => 'Known for its modern lease-to-own models and ultra-fast domain transfer automation. Dan makes purchasing domains as simple as a few clicks under GoDaddy.',
     'provider_atom_desc' => 'Formerly Squadhelp, the premier brandable domain marketplace. Specializes in custom crowdsourced business naming, logo designs, and premium brandable domain brokerage.',
-    'provider_dynadot_mkt_desc' => 'Buy, sell, bid, or backorder expired and premium domain names. Dynadot\'s advanced auction engine offers low fees and direct API tracking options.'
+    'provider_dynadot_mkt_desc' => 'Buy, sell, bid, or backorder expired and premium domain names. Dynadot\'s advanced auction engine offers low fees and direct API tracking options.',
+    
+    // WHOIS labels
+    'registration_date_label' => 'Registered On',
+    'expiration_date_label' => 'Expires On',
+    'updated_on_label' => 'Updated On',
+    'status_label' => 'Status',
+    'nameservers_label' => 'Name Servers',
+    'last_checked_label' => 'Last Checked',
+    
+    // New Services
+    'nav_social_search' => 'Social Search',
+    'nav_domain_search' => 'Domain Search'
 ];

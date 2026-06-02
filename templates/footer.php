@@ -15,7 +15,7 @@
             <!-- Brand Info Column -->
             <div class="footer-info">
                 <a href="<?php echo url(''); ?>" class="app-logo">
-                    <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 38px; width: auto; display: block;">
+                    <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 55px; width: auto; display: block;">
                 </a>
                 <p class="footer-desc"><?php echo __('footer_logo_sub'); ?></p>
                 
@@ -33,6 +33,7 @@
                     <ul>
                         <li><a href="<?php echo url(''); ?>"><?php echo __('nav_track'); ?></a></li>
                         <li><a href="<?php echo url('trending'); ?>"><?php echo __('nav_trending'); ?></a></li>
+                        <li><a href="<?php echo url('social-search'); ?>"><?php echo __('nav_social_search'); ?></a></li>
                         <?php if ($isUser): ?>
                             <li><a href="<?php echo url('expiring'); ?>"><?php echo __('nav_expiring'); ?></a></li>
                         <?php endif; ?>

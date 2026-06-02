@@ -148,8 +148,8 @@ $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['r
                                     <td><?php echo formatDate($domainData['expiration_date']); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><?php echo __('last_checked_label'); ?></td>
-                                    <td><?php echo formatDate($domainData['last_checked']); ?></td>
+                                    <td><?php echo __('updated_on_label'); ?></td>
+                                    <td><?php echo formatDate($domainData['last_changed_date'] ?? null); ?></td>
                                 </tr>
                                 <tr>
                                     <td><?php echo __('status_label'); ?></td>
@@ -184,6 +184,10 @@ $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['r
                                             ?>
                                         </div>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td><?php echo __('last_checked_label'); ?></td>
+                                    <td><?php echo formatDate($domainData['last_checked']); ?></td>
                                 </tr>
                             </tbody>
                         </table>

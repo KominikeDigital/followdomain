@@ -135,16 +135,34 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
         } elseif (preg_match('/^domain\/([a-zA-Z0-9\.\-]+)$/', $path, $matches)) {
             $route = 'domain';
             $_GET['name'] = $matches[1];
+        } elseif ($path === 'social-search') {
+            $route = 'social_search';
+        } elseif ($path === 'social-search/ajax') {
+            $route = 'social_search_ajax';
+        } elseif ($path === 'domain-search') {
+            $route = 'domain_search';
+        } elseif ($path === 'domain-search/ajax') {
+            $route = 'domain_search_ajax';
+        } elseif ($path === 'admin/test-smtp-live') {
+            $route = 'admin_test_smtp_live';
         }
     }
 }
 
 // Handle Home Page Search redirect
 if ($route === 'home' && isset($_GET['q'])) {
-    $searchDomain = cleanDomainName($_GET['q']);
-    if ($searchDomain) {
-        header("Location: " . url("domain/" . urlencode($searchDomain)));
-        exit;
+    $q = trim($_GET['q']);
+    if ($q !== '') {
+        if (strpos($q, '.') === false) {
+            header("Location: " . url("domain-search?q=" . urlencode($q)));
+            exit;
+        } else {
+            $searchDomain = cleanDomainName($q);
+            if ($searchDomain) {
+                header("Location: " . url("domain/" . urlencode($searchDomain)));
+                exit;
+            }
+        }
     }
 }
 
@@ -724,6 +742,298 @@ switch ($route) {
         require_once __DIR__ . '/includes/cron_handler.php';
         echo runCronJobs($pdo);
         exit;
+
+    case 'social_search':
+        $pageTitle = __('nav_social_search') . " | " . $config['site_title'];
+        $pageDesc = "Search usernames across multiple social networks in real-time.";
+        break;
+
+    case 'social_search_ajax':
+        // Social Platforms List
+        $social_sites = [
+            "Instagram" => ["url" => "https://www.instagram.com/%s/", "type" => "status_code"],
+            "Twitter" => ["url" => "https://www.twitter.com/%s", "type" => "status_code"],
+            "Facebook" => ["url" => "https://www.facebook.com/%s", "type" => "status_code"],
+            "GitHub" => ["url" => "https://www.github.com/%s", "type" => "status_code"],
+            "Reddit" => ["url" => "https://www.reddit.com/user/%s", "type" => "message", "error" => "user not found"],
+            "TikTok" => ["url" => "https://www.tiktok.com/@%s", "type" => "status_code"],
+            "YouTube" => ["url" => "https://www.youtube.com/@%s", "type" => "status_code"],
+            "Pinterest" => ["url" => "https://www.pinterest.com/%s/", "type" => "status_code"],
+            "Snapchat" => ["url" => "https://www.snapchat.com/add/%s", "type" => "status_code"],
+            "Telegram" => ["url" => "https://t.me/%s", "type" => "message", "error" => "If you have Telegram"],
+            "Twitch" => ["url" => "https://www.twitch.tv/%s", "type" => "status_code"],
+            "Spotify" => ["url" => "https://open.spotify.com/user/%s", "type" => "status_code"],
+            "Medium" => ["url" => "https://medium.com/@%s", "type" => "status_code"],
+            "Steam" => ["url" => "https://steamcommunity.com/id/%s", "type" => "message", "error" => "found"],
+            "SoundCloud" => ["url" => "https://soundcloud.com/%s", "type" => "status_code"],
+            "Vimeo" => ["url" => "https://vimeo.com/%s", "type" => "status_code"],
+            "Dribbble" => ["url" => "https://dribbble.com/%s", "type" => "status_code"],
+            "Behance" => ["url" => "https://www.behance.net/%s", "type" => "status_code"],
+            "Linktree" => ["url" => "https://linktr.ee/%s", "type" => "status_code"],
+            "Chess.com" => ["url" => "https://www.chess.com/member/%s", "type" => "status_code"],
+        ];
+        header('Content-Type: application/json');
+        $query = $_GET['query'] ?? '';
+        $batch = isset($_GET['batch']) ? (int)$_GET['batch'] : 0;
+        
+        if (empty($query)) {
+            echo json_encode(['results' => [], 'done' => true]);
+            exit;
+        }
+
+        $usernames = explode(',', $query);
+        $siteNames = array_keys($social_sites);
+        $chunkSize = 6;
+        $chunkedKeys = array_chunk($siteNames, $chunkSize);
+        if (!isset($chunkedKeys[$batch])) {
+            echo json_encode(['done' => true]);
+            exit;
+        }
+        
+        $results = [];
+        foreach ($usernames as $rawUser) {
+            $user = trim(preg_replace('/[^a-zA-Z0-9._-]/', '', $rawUser));
+            if (empty($user)) continue;
+            $mh = curl_multi_init();
+            $handles = [];
+
+            foreach ($chunkedKeys[$batch] as $name) {
+                $ch = curl_init(sprintf($social_sites[$name]['url'], $user));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+                curl_multi_add_handle($mh, $ch);
+                $handles[$name] = $ch;
+            }
+
+            $running = null;
+            do {
+                curl_multi_exec($mh, $running);
+                curl_multi_select($mh);
+            } while ($running > 0);
+
+            foreach ($handles as $name => $ch) {
+                $html = curl_multi_getcontent($ch);
+                $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $exists = ($social_sites[$name]['type'] == 'status_code')
+                    ? ($code >= 200 && $code < 300)
+                    : (strpos($html, $social_sites[$name]['error']) === false);
+
+                $results[] = [
+                    'label' => $user,
+                    'site' => $name,
+                    'url' => sprintf($social_sites[$name]['url'], $user),
+                    'status' => $exists ? 'found' : 'not_found'
+                ];
+
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+
+            curl_multi_close($mh);
+        }
+
+        echo json_encode([
+            'results' => $results,
+            'nextBatch' => ($batch + 1 < count($chunkedKeys)) ? ($batch + 1) : null,
+            'done' => ($batch + 1 >= count($chunkedKeys)),
+            'total' => count($social_sites)
+        ]);
+        exit;
+
+    case 'domain_search':
+        $pageTitle = __('nav_domain_search') . " | " . $config['site_title'];
+        $pageDesc = "Search domains across multiple TLDs in real-time.";
+        break;
+
+    case 'domain_search_ajax':
+        // Domain TLDs List
+        $tlds = [".com", ".net", ".org", ".info", ".me", ".biz", ".io", ".tech", ".co", ".online", ".space", ".pro", ".xyz"];
+        $rdap_base_urls = [
+            ".com"    => "https://rdap.verisign.com/com/v1/domain/",
+            ".net"    => "https://rdap.verisign.com/net/v1/domain/",
+            ".org"    => "https://rdap.publicinterestregistry.org/rdap/domain/",
+            ".info"   => "https://rdap.afilias.net/rdap/info/domain/",
+            ".me"     => "https://rdap.nic.me/rdap/domain/",
+            ".biz"    => "https://rdap.afilias.net/rdap/biz/domain/",
+            ".io"     => "https://rdap.nic.io/domain/",
+            ".tech"   => "https://rdap.nic.tech/domain/",
+            ".co"     => "https://rdap.nic.co/domain/",
+            ".online" => "https://rdap.nic.online/domain/",
+            ".space"  => "https://rdap.nic.space/domain/",
+            ".pro"    => "https://rdap.afilias.net/rdap/pro/domain/",
+            ".xyz"    => "https://rdap.nic.xyz/domain/",
+        ];
+
+        header('Content-Type: application/json');
+        $query = $_GET['query'] ?? '';
+        $batch = isset($_GET['batch']) ? (int)$_GET['batch'] : 0;
+        
+        if (empty($query)) {
+            echo json_encode(['results' => [], 'done' => true]);
+            exit;
+        }
+
+        $domain_base = trim(preg_replace('/[^a-zA-Z0-9-]/', '', $query));
+        $chunkedTlds = array_chunk($tlds, 4);
+        if (!isset($chunkedTlds[$batch])) {
+            echo json_encode(['done' => true]);
+            exit;
+        }
+
+        $results = [];
+        $mh = curl_multi_init();
+        $handles = [];
+
+        foreach ($chunkedTlds[$batch] as $tld) {
+            $full_domain = $domain_base . $tld;
+            $rdap_url = ($rdap_base_urls[$tld] ?? "https://rdap.org/domain/") . urlencode($full_domain);
+
+            $ch = curl_init($rdap_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+
+            curl_multi_add_handle($mh, $ch);
+            $handles[$tld] = ['ch' => $ch, 'domain' => $full_domain];
+        }
+
+        $running = null;
+        do {
+            curl_multi_exec($mh, $running);
+            curl_multi_select($mh);
+        } while ($running > 0);
+
+        foreach ($handles as $tld => $info) {
+            $code = curl_getinfo($info['ch'], CURLINFO_HTTP_CODE);
+            $is_taken = ($code === 200);
+
+            $results[] = [
+                'label' => $domain_base,
+                'site' => $tld,
+                'url' => 'https://www.whois.com/whois/' . $info['domain'],
+                'status' => $is_taken ? 'not_found' : 'found'
+            ];
+
+            curl_multi_remove_handle($mh, $info['ch']);
+            curl_close($info['ch']);
+        }
+
+        curl_multi_close($mh);
+
+        echo json_encode([
+            'results' => $results,
+            'nextBatch' => ($batch + 1 < count($chunkedTlds)) ? ($batch + 1) : null,
+            'done' => ($batch + 1 >= count($chunkedTlds)),
+            'total' => count($tlds)
+        ]);
+        exit;
+
+    case 'admin_test_smtp_live':
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('HTTP/1.1 403 Forbidden');
+            echo json_encode(['success' => false, 'log' => 'Forbidden']);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+        
+        $logs = [];
+        $log = function($msg) use (&$logs) {
+            $logs[] = $msg;
+        };
+
+        $host = trim($_POST['smtp_host'] ?? '');
+        $port = intval($_POST['smtp_port'] ?? 25);
+        $username = trim($_POST['smtp_user'] ?? '');
+        $password = $_POST['smtp_pass'] ?? '';
+        $fromEmail = trim($_POST['smtp_from_email'] ?? '');
+        $fromName = trim($_POST['smtp_from_name'] ?? 'TLDix Test');
+        $to = trim($_POST['test_target_email'] ?? '');
+
+        if (empty($host) || empty($port) || empty($to)) {
+            echo json_encode(['success' => false, 'log' => "Error: Host, Port, and Target Email are required."]);
+            exit;
+        }
+
+        $log("Connecting to $host:$port...");
+        $socket = @fsockopen($host, $port, $errno, $errstr, 15);
+        if (!$socket) {
+            $log("CONNECTION FAILED: $errstr ($errno)");
+            echo json_encode(['success' => false, 'log' => implode("\n", $logs)]);
+            exit;
+        }
+        $log("Connected successfully.");
+
+        $getResponse = function($socket) use (&$logs) {
+            $data = "";
+            while (strpos($data, "\r\n") === false || (isset($data[3]) && $data[3] === '-')) {
+                $line = fgets($socket, 512);
+                if ($line === false) break;
+                $data .= $line;
+            }
+            $logs[] = "S: " . trim($data);
+            return $data;
+        };
+
+        $writeCommand = function($socket, $cmd) use (&$logs) {
+            $logs[] = "C: " . trim($cmd);
+            fwrite($socket, $cmd . "\r\n");
+        };
+
+        $banner = $getResponse($socket);
+        
+        $writeCommand($socket, "EHLO " . ($_SERVER['SERVER_NAME'] ?? 'localhost'));
+        $ehloResponse = $getResponse($socket);
+
+        if (!empty($username) && !empty($password)) {
+            $writeCommand($socket, "AUTH LOGIN");
+            $getResponse($socket);
+
+            $writeCommand($socket, base64_encode($username));
+            $getResponse($socket);
+
+            $writeCommand($socket, base64_encode($password));
+            $authResponse = $getResponse($socket);
+            if (strpos($authResponse, '235') === false) {
+                $log("AUTHENTICATION FAILED");
+            }
+        }
+
+        $writeCommand($socket, "MAIL FROM: <$fromEmail>");
+        $getResponse($socket);
+
+        $writeCommand($socket, "RCPT TO: <$to>");
+        $rcptResponse = $getResponse($socket);
+
+        $writeCommand($socket, "DATA");
+        $getResponse($socket);
+
+        $subject = "TLDix SMTP Live Test";
+        $body = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+        $body .= "To: <$to>\r\n";
+        $body .= "From: $fromName <$fromEmail>\r\n";
+        $body .= "MIME-Version: 1.0\r\n";
+        $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+        $body .= "<h1>SMTP Live Test</h1><p>If you see this, your SMTP connection is fully operational!</p>\r\n.\r\n";
+
+        $logs[] = "C: [Sending Email Data...]";
+        fwrite($socket, $body);
+        $dataResponse = $getResponse($socket);
+
+        $writeCommand($socket, "QUIT");
+        $getResponse($socket);
+
+        fclose($socket);
+        
+        $success = (strpos($dataResponse, '250') !== false);
+        echo json_encode([
+            'success' => $success,
+            'log' => implode("\n", $logs)
+        ]);
+        exit;
 }
 
 // Assemble page components
@@ -781,6 +1091,12 @@ switch ($route) {
         break;
     case 'admin':
         require_once __DIR__ . '/templates/admin.php';
+        break;
+    case 'social_search':
+        require_once __DIR__ . '/templates/social_search.php';
+        break;
+    case 'domain_search':
+        require_once __DIR__ . '/templates/domain_search.php';
         break;
     default:
         require_once __DIR__ . '/templates/home.php';

@@ -527,5 +527,17 @@ return [
     'provider_sedo_desc' => 'Eine weltweit führende Handelsplattform für Domains. Bietet professionellen Domain-Handel, für Suchmaschinen optimierte Domain-Parking-Seiten und hochkarätige Auktionen.',
     'provider_dan_desc' => 'Bekannt für seine modernen Mietkauf-Modelle und ultraschnelle Domain-Transfer-Automatisierung. Dan macht den Kauf von Domains mit wenigen Klicks unter GoDaddy so einfach wie möglich.',
     'provider_atom_desc' => 'Ehemals Squadhelp, der führende Marktplatz für Brandable-Domains. Spezialisiert auf Crowdsourcing-Namensfindung für Unternehmen, Logodesign und Premium-Domain-Brokerage.',
-    'provider_dynadot_mkt_desc' => 'Kaufen, verkaufen, bieten oder bestellen Sie abgelaufene und Premium-Domainnamen vor. Die hochentwickelte Auktions-Engine von Dynadot bietet niedrige Gebühren und direkte API-Tracking-Optionen.'
+    'provider_dynadot_mkt_desc' => 'Kaufen, verkaufen, bieten oder bestellen Sie abgelaufene und Premium-Domainnamen vor. Die hochentwickelte Auktions-Engine von Dynadot bietet niedrige Gebühren und direkte API-Tracking-Optionen.',
+    
+    // WHOIS labels
+    'registration_date_label' => 'Registriert am',
+    'expiration_date_label' => 'Läuft ab am',
+    'updated_on_label' => 'Aktualisiert am',
+    'status_label' => 'Status',
+    'nameservers_label' => 'Nameserver',
+    'last_checked_label' => 'Zuletzt geprüft',
+    
+    // New Services
+    'nav_social_search' => 'Soziale Suche',
+    'nav_domain_search' => 'Domain-Suche'
 ];

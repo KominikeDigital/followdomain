@@ -584,22 +584,85 @@ html[data-theme="light"] .admin-card textarea {
 
                 <!-- Test Email -->
                 <div class="admin-card" style="margin-top: 1.5rem;">
-                    <h3>🧪 Test E-postası Gönder</h3>
-                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Mevcut SMTP ayarlarınızla test e-postası gönderin.</p>
-                    <?php if (isset($_SESSION['test_email_success'])): ?>
-                        <div class="alert alert-success"><?php echo esc($_SESSION['test_email_success']); unset($_SESSION['test_email_success']); ?></div>
-                    <?php endif; ?>
-                    <?php if (isset($_SESSION['test_email_error'])): ?>
-                        <div class="alert alert-error"><?php echo esc($_SESSION['test_email_error']); unset($_SESSION['test_email_error']); ?></div>
-                    <?php endif; ?>
-                    <form action="" method="POST">
-                        <input type="hidden" name="action" value="send_test_email">
-                        <div style="display: flex; gap: 0.75rem;">
-                            <input type="email" name="test_email" placeholder="test@example.com" required style="flex: 1;">
-                            <button type="submit" class="btn btn-primary btn-sm">📤 Gönder</button>
+                    <h3>🧪 SMTP Live Connection Tester</h3>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                        Test connection logs in real-time using the input values above (without needing to save first).
+                    </p>
+                    
+                    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
+                        <input type="email" id="test_smtp_target" placeholder="test@example.com" value="<?php echo esc($config['smtp_from_email'] ?? ''); ?>" style="flex: 1; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--color-border); background: rgba(255,255,255,0.03); color: var(--color-text-primary);">
+                        <button type="button" class="btn btn-primary btn-sm" id="btn_test_smtp" onclick="runLiveSmtpTest()">📤 Run Test</button>
+                    </div>
+
+                    <!-- Collapsible Terminal Output -->
+                    <div id="smtp_test_log_container" style="display: none; border-radius: 8px; overflow: hidden; border: 1px solid var(--color-border); margin-top: 1rem;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; font-size: 0.78rem; font-weight: 700; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                            <span>SMTP Socket Communication Logs</span>
+                            <button type="button" onclick="document.getElementById('smtp_test_log_body').style.display = document.getElementById('smtp_test_log_body').style.display === 'none' ? 'block' : 'none';" style="background:none; border:none; color:var(--color-primary); cursor:pointer; font-weight:700;">Toggle Logs</button>
                         </div>
-                    </form>
+                        <pre id="smtp_test_log_body" style="margin: 0; padding: 1rem; background: #000; color: #00ff00; font-family: monospace; font-size: 0.85rem; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; height: 250px; text-align: left;"></pre>
+                    </div>
                 </div>
+
+                <script>
+                function runLiveSmtpTest() {
+                    const targetEmail = document.getElementById('test_smtp_target').value.trim();
+                    if (!targetEmail) {
+                        alert('Please enter a target email address.');
+                        return;
+                    }
+
+                    const host = document.querySelector('input[name="settings[smtp_host]"]').value.trim();
+                    const port = document.querySelector('input[name="settings[smtp_port]"]').value.trim();
+                    const user = document.querySelector('input[name="settings[smtp_user]"]').value.trim();
+                    const pass = document.querySelector('input[name="settings[smtp_pass]"]').value.trim();
+                    const fromEmail = document.querySelector('input[name="settings[smtp_from_email]"]').value.trim();
+                    const fromName = document.querySelector('input[name="settings[smtp_from_name]"]').value.trim();
+
+                    const btn = document.getElementById('btn_test_smtp');
+                    const container = document.getElementById('smtp_test_log_container');
+                    const body = document.getElementById('smtp_test_log_body');
+
+                    btn.disabled = true;
+                    btn.innerText = 'Testing...';
+                    container.style.display = 'block';
+                    body.style.display = 'block';
+                    body.textContent = 'Initializing test socket...\n';
+
+                    const formData = new FormData();
+                    formData.append('smtp_host', host);
+                    formData.append('smtp_port', port);
+                    formData.append('smtp_user', user);
+                    formData.append('smtp_pass', pass);
+                    formData.append('smtp_from_email', fromEmail);
+                    formData.append('smtp_from_name', fromName);
+                    formData.append('test_target_email', targetEmail);
+
+                    fetch('<?php echo url("admin/test-smtp-live"); ?>', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        body.textContent = data.log;
+                        if (data.success) {
+                            body.textContent += '\n\n🎉 TEST SUCCESSFUL! SMTP settings are correctly verified.';
+                            body.style.color = '#00ff00';
+                        } else {
+                            body.textContent += '\n\n❌ TEST FAILED. Check port blocks or credentials.';
+                            body.style.color = '#ff3333';
+                        }
+                    })
+                    .catch(err => {
+                        body.textContent += '\n\n❌ Error communicating with the test endpoint: ' + err;
+                        body.style.color = '#ff3333';
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerText = '📤 Run Test';
+                    });
+                }
+                </script>
             </div>
 
             <!-- ════════════════════════════════════════════════════

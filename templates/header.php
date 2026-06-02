@@ -115,7 +115,7 @@ if ($isUser) {
     <header class="app-header">
         <div class="container header-container">
             <a href="<?php echo url(''); ?>" class="app-logo">
-                <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 38px; width: auto; display: block;">
+                <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 50px; width: auto; display: block;">
             </a>
             
             <nav class="app-nav">
@@ -124,6 +124,7 @@ if ($isUser) {
                         <li><a href="<?php echo url(''); ?>" class="<?php echo ($route === 'home') ? 'active' : ''; ?>"><?php echo __('nav_track'); ?></a></li>
                         <li><a href="<?php echo url('trending'); ?>" class="<?php echo ($route === 'trending') ? 'active' : ''; ?>"><?php echo __('nav_trending'); ?></a></li>
                         <li><a href="<?php echo url('domains-for-sale'); ?>" class="<?php echo ($route === 'domains_for_sale') ? 'active' : ''; ?>"><?php echo __('nav_domains_for_sale'); ?></a></li>
+                        <li><a href="<?php echo url('social-search'); ?>" class="<?php echo ($route === 'social_search') ? 'active' : ''; ?>"><?php echo __('nav_social_search'); ?></a></li>
                         <li><a href="<?php echo url('docs'); ?>" class="<?php echo ($route === 'docs') ? 'active' : ''; ?>"><?php echo __('nav_api'); ?></a></li>
                     <?php endif; ?>
                 </ul>
@@ -233,7 +234,7 @@ if ($isUser) {
     <!-- Mobile Nav Popover (Modern Web Popover API) -->
     <div id="mobile-nav" popover="auto" class="mobile-nav-panel">
         <div class="mobile-nav-header">
-            <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 32px; width: auto; display: block;">
+            <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 40px; width: auto; display: block;">
             <button class="menu-close" popovertargetaction="hide" popovertarget="mobile-nav" aria-label="Kapat">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>

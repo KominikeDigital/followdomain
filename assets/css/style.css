@@ -123,7 +123,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 64px;
+        height: 80px;
         gap: 0.5rem;
     }
 
@@ -3998,4 +3998,339 @@ html[data-theme="light"] .mkt-badge-tag {
 html[data-theme="light"] .mkt-icon-badge {
     background: rgba(0, 0, 0, 0.04) !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* --------------------------------------------------
+   Detective (Social Search & Domain Search) Styles
+   -------------------------------------------------- */
+.det-page-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.det-title-section {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.det-title-section h1 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    background: var(--color-primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.det-title-section p {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.det-search-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    margin-bottom: 2.5rem;
+    transition: var(--transition-normal);
+}
+
+.det-input-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.det-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    padding: 1rem 1.25rem;
+    color: var(--color-text-primary);
+    border-radius: 12px;
+    font-size: 1.05rem;
+    outline: none;
+    font-family: var(--font-sans);
+    transition: var(--transition-fast);
+}
+
+.det-input:focus {
+    border-color: var(--color-border-focus);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.det-action-btns {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.det-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    transition: opacity 0.4s ease, height 0.3s ease;
+}
+
+.det-stats.active {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    margin-top: 1.5rem;
+}
+
+.det-stat {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.det-progress {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-top: 1.5rem;
+    overflow: hidden;
+    display: none;
+}
+
+.det-progress-fill {
+    height: 100%;
+    background: var(--color-primary-gradient);
+    width: 0%;
+    transition: width 0.4s ease;
+}
+
+.det-share-row {
+    display: none;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.det-share-btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-fast);
+    color: #fff;
+}
+
+.det-share-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.det-share-wa { background: #25D366; }
+.det-share-tw { background: #1DA1F2; }
+.det-share-li { background: #0077b5; }
+
+.det-cta-banner {
+    display: none;
+    margin-top: 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.det-cta-banner p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.det-cta-banner a {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.det-cta-banner a:hover {
+    text-decoration: underline;
+}
+
+.det-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.det-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 1.25rem;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition-normal);
+    text-align: left;
+}
+
+.det-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.det-card.found {
+    border-left: 4px solid var(--color-success);
+}
+
+.det-card.not-found {
+    opacity: 0.6;
+    border-left: 4px solid var(--color-error);
+}
+
+.det-card .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.det-card.found .dot {
+    background: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success);
+}
+
+.det-card.not-found .dot {
+    background: var(--color-error);
+}
+
+.det-card-label {
+    font-size: 0.7rem;
+    color: var(--color-text-secondary);
+}
+
+.det-card-title {
+    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--color-text-primary);
+}
+
+.det-card-status {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Scan Overlay / Lottie Scan styling */
+.det-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(9, 13, 22, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+.det-overlay.active {
+    display: flex;
+}
+
+.det-overlay #scanCanvas {
+    width: 200px;
+    height: 200px;
+}
+
+.det-overlay p {
+    color: #fff;
+    font-size: 1.1rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 1.5rem;
+    text-transform: uppercase;
+    animation: det-blink 1.4s infinite;
+}
+
+@keyframes det-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Light Theme overrides for Detective */
+html[data-theme="light"] .det-input {
+    background: rgba(0, 0, 0, 0.02);
+    color: #0f172a;
+}
+html[data-theme="light"] .det-input:focus {
+    background: rgba(0, 0, 0, 0.04);
+}
+html[data-theme="light"] .det-title-section p {
+    color: #475569;
+}
+html[data-theme="light"] .det-stat {
+    background: rgba(0, 0, 0, 0.02);
+    color: #334155;
+}
+html[data-theme="light"] .det-cta-banner {
+    background: rgba(0, 0, 0, 0.01);
+}
+html[data-theme="light"] .det-cta-banner p {
+    color: #475569;
+}
+html[data-theme="light"] .det-card-label {
+    color: #475569;
+}
+html[data-theme="light"] .det-card-title {
+    color: #0f172a;
+}
+html[data-theme="light"] .det-card-status {
+    color: #64748b;
+}
+html[data-theme="light"] .det-card:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+html[data-theme="light"] .det-overlay {
+    background: rgba(255, 255, 255, 0.85);
+}
+html[data-theme="light"] .det-overlay p {
+    color: #0f172a;
+}
+
+@media (max-width: 640px) {
+    .det-title-section h1 { font-size: 2rem; }
+    .det-input-group { flex-direction: column; }
+    .det-action-btns { flex-direction: column; align-items: stretch; }
+    .det-action-btns .btn { width: 100%; }
+    .det-stats { flex-wrap: wrap; }
+    .det-results { grid-template-columns: 1fr; }
 }
