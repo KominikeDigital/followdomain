@@ -409,6 +409,17 @@ function sendEmailNotification($to, $subject, $messageHtml) {
                 return false;
             }
 
+            $dnsHost = preg_replace('/^[a-z][a-z0-9+.-]*:\/\//i', '', $host);
+            $dnsHost = preg_replace('/\/.*$/', '', $dnsHost);
+            $dnsHost = preg_replace('/:\d+$/', '', $dnsHost);
+            if (filter_var($dnsHost, FILTER_VALIDATE_IP) === false) {
+                $resolvedIps = @gethostbynamel($dnsHost);
+                if (empty($resolvedIps)) {
+                    error_log("SMTP DNS lookup failed for host: $dnsHost");
+                    return false;
+                }
+            }
+
             if ($port === 465 && strpos($host, 'ssl://') !== 0) {
                 $host = 'ssl://' . $host;
             }

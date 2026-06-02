@@ -1050,6 +1050,19 @@ switch ($route) {
             exit;
         }
 
+        $dnsHost = preg_replace('/^[a-z][a-z0-9+.-]*:\/\//i', '', $host);
+        $dnsHost = preg_replace('/\/.*$/', '', $dnsHost);
+        $dnsHost = preg_replace('/:\d+$/', '', $dnsHost);
+        if (filter_var($dnsHost, FILTER_VALIDATE_IP) === false) {
+            $resolvedIps = @gethostbynamel($dnsHost);
+            if (empty($resolvedIps)) {
+                $log("DNS FAILED: '$dnsHost' could not be resolved.");
+                $log("Check the SMTP Host value. Do not prefix a subdomain with 'mail.' unless that exact hostname exists in DNS.");
+                echo json_encode(['success' => false, 'log' => implode("\n", $logs)]);
+                exit;
+            }
+        }
+
         if ($port === 465 && strpos($host, 'ssl://') !== 0) {
             $host = 'ssl://' . $host;
         }
@@ -1102,6 +1115,11 @@ switch ($route) {
             $authResponse = $getResponse($socket);
             if (strpos($authResponse, '235') === false) {
                 $log("AUTHENTICATION FAILED");
+                $writeCommand($socket, "QUIT");
+                $getResponse($socket);
+                fclose($socket);
+                echo json_encode(['success' => false, 'log' => implode("\n", $logs)]);
+                exit;
             }
         }
 

@@ -657,7 +657,7 @@ html[data-theme="light"] .admin-card textarea {
                             body.textContent += '\n\n🎉 TEST SUCCESSFUL! SMTP settings are correctly verified.';
                             body.style.color = '#00ff00';
                         } else {
-                            body.textContent += '\n\n❌ TEST FAILED. Check port blocks or credentials.';
+                            body.textContent += '\n\n❌ TEST FAILED. Check DNS/host, SSL port, port blocks, or credentials.';
                             body.style.color = '#ff3333';
                         }
                     })
