@@ -381,8 +381,8 @@ function getOrUpdateDomain($pdo, $domainName, $forceRefresh = false) {
 function sendEmailNotification($to, $subject, $messageHtml) {
     global $config;
     
-    $fromEmail = $config['smtp_from_email'];
-    $fromName = $config['smtp_from_name'];
+    $fromEmail = $config['smtp_from_email'] ?? 'alerts@tldix.local';
+    $fromName = $config['smtp_from_name'] ?? 'TLDix Alerts';
     
     // Headers for HTML mail
     $headers = "MIME-Version: 1.0\r\n";
@@ -391,76 +391,109 @@ function sendEmailNotification($to, $subject, $messageHtml) {
     $headers .= "Reply-To: " . $fromEmail . "\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion();
     
-    // Check if SMTP is enabled
-    if ((int)($config['email_use_smtp'] ?? 0) === 1) {
-        $host = $config['smtp_host'];
-        $port = $config['smtp_port'];
-        $username = $config['smtp_user'];
-        $password = $config['smtp_pass'];
-        
-        $socket = @fsockopen($host, $port, $errno, $errstr, 15);
-        if (!$socket) {
-            error_log("SMTP connection failed: $errstr ($errno)");
+    try {
+        // Check if SMTP is enabled
+        if ((int)($config['email_use_smtp'] ?? 0) === 1) {
+            if (!function_exists('fsockopen')) {
+                error_log("SMTP email skipped: fsockopen() is not available on this server.");
+                return false;
+            }
+
+            $host = trim($config['smtp_host'] ?? '');
+            $port = (int)($config['smtp_port'] ?? 0);
+            $username = $config['smtp_user'] ?? '';
+            $password = $config['smtp_pass'] ?? '';
+
+            if ($host === '' || $port <= 0) {
+                error_log("SMTP email skipped: smtp_host or smtp_port is not configured.");
+                return false;
+            }
+
+            if ($port === 465 && strpos($host, 'ssl://') !== 0) {
+                $host = 'ssl://' . $host;
+            }
+
+            $socket = @fsockopen($host, $port, $errno, $errstr, 15);
+            if (!$socket) {
+                error_log("SMTP connection failed: $errstr ($errno)");
+                return false;
+            }
+
+            $getResponse = function($socket) {
+                $data = "";
+                while (true) {
+                    $line = fgets($socket, 512);
+                    if ($line === false) {
+                        break;
+                    }
+                    $data .= $line;
+                    if (strpos($line, "\r\n") !== false) {
+                        if (strlen($line) >= 4 && $line[3] !== '-') {
+                            break;
+                        }
+                    }
+                }
+                return $data;
+            };
+
+            $getResponse($socket); // Read banner
+
+            // HELO
+            $serverName = $_SERVER['SERVER_NAME'] ?? ($_SERVER['HTTP_HOST'] ?? 'localhost');
+            fwrite($socket, "EHLO " . $serverName . "\r\n");
+            $getResponse($socket);
+
+            // AUTH LOGIN if credentials are provided
+            if (!empty($username) && !empty($password)) {
+                fwrite($socket, "AUTH LOGIN\r\n");
+                $getResponse($socket);
+
+                fwrite($socket, base64_encode($username) . "\r\n");
+                $getResponse($socket);
+
+                fwrite($socket, base64_encode($password) . "\r\n");
+                $getResponse($socket);
+            }
+
+            // MAIL FROM
+            fwrite($socket, "MAIL FROM: <$fromEmail>\r\n");
+            $getResponse($socket);
+
+            // RCPT TO
+            fwrite($socket, "RCPT TO: <$to>\r\n");
+            $getResponse($socket);
+
+            // DATA
+            fwrite($socket, "DATA\r\n");
+            $getResponse($socket);
+
+            // Email Body
+            $body = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+            $body .= "To: <$to>\r\n";
+            $body .= "From: $fromName <$fromEmail>\r\n";
+            $body .= "MIME-Version: 1.0\r\n";
+            $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+            $body .= $messageHtml . "\r\n.\r\n";
+
+            fwrite($socket, $body);
+            $getResponse($socket);
+
+            // QUIT
+            fwrite($socket, "QUIT\r\n");
+            fclose($socket);
+            return true;
+        }
+
+        if (!function_exists('mail')) {
+            error_log("Email skipped: PHP mail() is not available on this server.");
             return false;
         }
-        
-        $getResponse = function($socket) {
-            $data = "";
-            while (strpos($data, "\r\n") === false || $data[3] === '-') {
-                $line = fgets($socket, 512);
-                $data .= $line;
-            }
-            return $data;
-        };
-        
-        $getResponse($socket); // Read banner
-        
-        // HELO
-        fwrite($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
-        $getResponse($socket);
-        
-        // AUTH LOGIN if credentials are provided
-        if (!empty($username) && !empty($password)) {
-            fwrite($socket, "AUTH LOGIN\r\n");
-            $getResponse($socket);
-            
-            fwrite($socket, base64_encode($username) . "\r\n");
-            $getResponse($socket);
-            
-            fwrite($socket, base64_encode($password) . "\r\n");
-            $getResponse($socket);
-        }
-        
-        // MAIL FROM
-        fwrite($socket, "MAIL FROM: <$fromEmail>\r\n");
-        $getResponse($socket);
-        
-        // RCPT TO
-        fwrite($socket, "RCPT TO: <$to>\r\n");
-        $getResponse($socket);
-        
-        // DATA
-        fwrite($socket, "DATA\r\n");
-        $getResponse($socket);
-        
-        // Email Body
-        $body = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
-        $body .= "To: <$to>\r\n";
-        $body .= "From: $fromName <$fromEmail>\r\n";
-        $body .= "MIME-Version: 1.0\r\n";
-        $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-        $body .= $messageHtml . "\r\n.\r\n";
-        
-        fwrite($socket, $body);
-        $getResponse($socket);
-        
-        // QUIT
-        fwrite($socket, "QUIT\r\n");
-        fclose($socket);
-        return true;
-    } else {
+
         // Fallback to PHP's built-in mail() function
         return mail($to, $subject, $messageHtml, $headers);
+    } catch (Throwable $e) {
+        error_log("Email sending failed: " . $e->getMessage());
+        return false;
     }
 }
 

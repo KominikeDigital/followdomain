@@ -204,29 +204,33 @@ switch ($route) {
                 $userName = trim($_POST['username']);
                 $token = $res['verification_token'];
                 
-                // Send verification email
-                $subject = "TLDix E-posta Doğrulama";
-                $verifyUrl = absolute_url('verify-email?token=' . $token);
-                $messageHtml = getFormattedEmail('mail_tpl_user_verify', [
-                    'username' => esc($userName),
-                    'verify_url' => $verifyUrl
-                ]);
-                $mailSent = sendEmailNotification($userEmail, $subject, $messageHtml);
-                
-                if (!$mailSent) {
-                    error_log("Failed to send verification email to $userEmail");
-                }
-                
-                // Admin notification email
-                $adminEmail = $config['admin_notification_email'] ?? '';
-                if (!empty($adminEmail)) {
-                    $adminSubject = "Yeni Üye Kaydı (Doğrulama Bekleniyor): " . $userName;
-                    $adminMessage = getFormattedEmail('mail_tpl_admin_register', [
+                try {
+                    // Send verification email
+                    $subject = "TLDix E-posta Doğrulama";
+                    $verifyUrl = absolute_url('verify-email?token=' . $token);
+                    $messageHtml = getFormattedEmail('mail_tpl_user_verify', [
                         'username' => esc($userName),
-                        'email' => esc($userEmail),
-                        'date' => date('Y-m-d H:i:s')
+                        'verify_url' => $verifyUrl
                     ]);
-                    sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
+                    $mailSent = sendEmailNotification($userEmail, $subject, $messageHtml);
+
+                    if (!$mailSent) {
+                        error_log("Failed to send verification email to $userEmail");
+                    }
+
+                    // Admin notification email
+                    $adminEmail = $config['admin_notification_email'] ?? '';
+                    if (!empty($adminEmail)) {
+                        $adminSubject = "Yeni Üye Kaydı (Doğrulama Bekleniyor): " . $userName;
+                        $adminMessage = getFormattedEmail('mail_tpl_admin_register', [
+                            'username' => esc($userName),
+                            'email' => esc($userEmail),
+                            'date' => date('Y-m-d H:i:s')
+                        ]);
+                        sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
+                    }
+                } catch (Throwable $e) {
+                    error_log("Registration notification failed for $userEmail: " . $e->getMessage());
                 }
                 
                 $authSuccess = "Kayıt başarılı! Lütfen hesabınızı doğrulamak için e-posta adresinize gönderdiğimiz bağlantıya tıklayın.";
@@ -1046,6 +1050,10 @@ switch ($route) {
             exit;
         }
 
+        if ($port === 465 && strpos($host, 'ssl://') !== 0) {
+            $host = 'ssl://' . $host;
+        }
+
         $log("Connecting to $host:$port...");
         $socket = @fsockopen($host, $port, $errno, $errstr, 15);
         if (!$socket) {
@@ -1057,10 +1065,17 @@ switch ($route) {
 
         $getResponse = function($socket) use (&$logs) {
             $data = "";
-            while (strpos($data, "\r\n") === false || (isset($data[3]) && $data[3] === '-')) {
+            while (true) {
                 $line = fgets($socket, 512);
-                if ($line === false) break;
+                if ($line === false) {
+                    break;
+                }
                 $data .= $line;
+                if (strpos($line, "\r\n") !== false) {
+                    if (strlen($line) >= 4 && $line[3] !== '-') {
+                        break;
+                    }
+                }
             }
             $logs[] = "S: " . trim($data);
             return $data;
