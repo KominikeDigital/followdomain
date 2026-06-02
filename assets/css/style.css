@@ -247,12 +247,19 @@
         padding: 0.5rem;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1040px) {
         .app-nav {
             display: none;
         }
         .menu-toggle {
             display: block;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .header-actions .btn-nav,
+        .header-actions .btn-nav-accent {
+            display: none;
         }
     }
 }
@@ -1072,6 +1079,82 @@
 /* --------------------------------------------------
    API Docs Layout
    -------------------------------------------------- */
+.docs-grid-flex {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.95fr);
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 2rem;
+}
+
+.docs-content,
+.docs-sidebar-plans,
+.pricing-plans-card,
+.api-plans-vertical > div {
+    min-width: 0;
+}
+
+.pricing-plans-card {
+    overflow: hidden;
+}
+
+.api-plan-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    min-width: 0;
+}
+
+.api-plan-card-head strong {
+    color: #ffffff;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.api-plan-card-head span {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.api-plan-card-head .success-price {
+    color: var(--color-success);
+}
+
+@media (max-width: 1100px) {
+    .docs-grid-flex {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .api-method-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .endpoint-url,
+    .docs-content pre {
+        font-size: 0.82rem;
+    }
+
+    .api-plan-card-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .api-plan-card-head span {
+        text-align: left;
+    }
+}
+
 .api-method-card {
     display: flex;
     align-items: center;
@@ -4464,5 +4547,3 @@ html[data-theme="light"] .code-editor {
     background: #f8fafc !important;
     color: #0f172a !important;
 }
-
-

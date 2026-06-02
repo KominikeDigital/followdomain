@@ -15,7 +15,7 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
     </div>
 
     <!-- Responsive Grid Layout -->
-    <div class="docs-grid-flex" style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 2rem; align-items: start; margin-top: 2rem;">
+    <div class="docs-grid-flex">
         
         <!-- API Specs (Left Column) -->
         <div class="docs-content glass-panel">
@@ -92,9 +92,9 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
                     
                     <!-- Free Plan -->
                     <div style="border: 1px solid var(--color-border); border-radius: 8px; padding: 1.25rem; background: rgba(255,255,255,0.01);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <strong style="color: #ffffff; font-size: 1.05rem;"><?php echo __('plan_free_name'); ?></strong>
-                            <span style="color: var(--color-text-secondary); font-size: 0.85rem; font-weight: bold;"><?php echo __('plan_free_price'); ?> <?php echo __('plan_free_period'); ?></span>
+                        <div class="api-plan-card-head">
+                            <strong><?php echo __('plan_free_name'); ?></strong>
+                            <span><?php echo __('plan_free_price'); ?> <?php echo __('plan_free_period'); ?></span>
                         </div>
                         <ul style="list-style: none; font-size: 0.85rem; color: var(--color-text-secondary); padding: 0; display: flex; flex-direction: column; gap: 0.4rem;">
                             <li>✓ <?php echo __('plan_free_feature_1'); ?></li>
@@ -106,9 +106,9 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
                     <!-- Bronze Plan -->
                     <div style="border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 8px; padding: 1.25rem; background: rgba(99, 102, 241, 0.03); position: relative;">
                         <span class="status-tag" style="position: absolute; top: -10px; right: 10px; font-size: 0.65rem; background: var(--color-primary); color: #ffffff; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 600;"><?php echo __('plan_popular'); ?></span>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <strong style="color: #ffffff; font-size: 1.05rem;"><?php echo __('plan_bronze_name'); ?></strong>
-                            <span style="color: var(--color-success); font-size: 0.85rem; font-weight: bold;"><?php echo __('plan_bronze_price'); ?> <?php echo __('plan_bronze_period'); ?></span>
+                        <div class="api-plan-card-head">
+                            <strong><?php echo __('plan_bronze_name'); ?></strong>
+                            <span class="success-price"><?php echo __('plan_bronze_price'); ?> <?php echo __('plan_bronze_period'); ?></span>
                         </div>
                         <ul style="list-style: none; font-size: 0.85rem; color: var(--color-text-secondary); padding: 0; display: flex; flex-direction: column; gap: 0.4rem;">
                             <li>✓ <?php echo __('plan_bronze_feature_1'); ?></li>
@@ -119,9 +119,9 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
 
                     <!-- Silver Plan -->
                     <div style="border: 1px solid var(--color-border); border-radius: 8px; padding: 1.25rem; background: rgba(255,255,255,0.01);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <strong style="color: #ffffff; font-size: 1.05rem;"><?php echo __('plan_silver_name'); ?></strong>
-                            <span style="color: var(--color-success); font-size: 0.85rem; font-weight: bold;"><?php echo __('plan_silver_price'); ?> <?php echo __('plan_silver_period'); ?></span>
+                        <div class="api-plan-card-head">
+                            <strong><?php echo __('plan_silver_name'); ?></strong>
+                            <span class="success-price"><?php echo __('plan_silver_price'); ?> <?php echo __('plan_silver_period'); ?></span>
                         </div>
                         <ul style="list-style: none; font-size: 0.85rem; color: var(--color-text-secondary); padding: 0; display: flex; flex-direction: column; gap: 0.4rem;">
                             <li>✓ <?php echo __('plan_silver_feature_1'); ?></li>
@@ -132,9 +132,9 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
 
                     <!-- Gold Plan -->
                     <div style="border: 1px solid var(--color-border); border-radius: 8px; padding: 1.25rem; background: rgba(255,255,255,0.01);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <strong style="color: #ffffff; font-size: 1.05rem;"><?php echo __('plan_gold_name'); ?></strong>
-                            <span style="color: var(--color-success); font-size: 0.85rem; font-weight: bold;"><?php echo __('plan_gold_price'); ?> <?php echo __('plan_gold_period'); ?></span>
+                        <div class="api-plan-card-head">
+                            <strong><?php echo __('plan_gold_name'); ?></strong>
+                            <span class="success-price"><?php echo __('plan_gold_price'); ?> <?php echo __('plan_gold_period'); ?></span>
                         </div>
                         <ul style="list-style: none; font-size: 0.85rem; color: var(--color-text-secondary); padding: 0; display: flex; flex-direction: column; gap: 0.4rem;">
                             <li>✓ <?php echo __('plan_gold_feature_1'); ?></li>
