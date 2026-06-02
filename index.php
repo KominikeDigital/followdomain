@@ -208,6 +208,22 @@ switch ($route) {
                 ";
                 sendEmailNotification($userEmail, $subject, $messageHtml);
                 
+                // Admin notification email
+                $adminEmail = $config['admin_notification_email'] ?? '';
+                if (!empty($adminEmail)) {
+                    $adminSubject = "Yeni Üye Kaydı: " . $userName;
+                    $adminMessage = "
+                    <h2>Yeni Üye Kaydı Bildirimi</h2>
+                    <p>TLDix sisteminde yeni bir kullanıcı kaydoldu:</p>
+                    <ul>
+                        <li><strong>Kullanıcı Adı:</strong> " . esc($userName) . "</li>
+                        <li><strong>E-posta:</strong> " . esc($userEmail) . "</li>
+                        <li><strong>Kayıt Tarihi:</strong> " . date('Y-m-d H:i:s') . "</li>
+                    </ul>
+                    ";
+                    sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
+                }
+                
                 header("Location: " . url("panel"));
                 exit;
             } else {
@@ -250,6 +266,21 @@ switch ($route) {
                     
                     $sent = sendEmailNotification($email, $subject, $messageHtml);
                     if ($sent) {
+                        // Admin notification email
+                        $adminEmail = $config['admin_notification_email'] ?? '';
+                        if (!empty($adminEmail)) {
+                            $adminSubject = "Şifre Sıfırlama Talebi: " . $user['username'];
+                            $adminMessage = "
+                            <h2>Şifre Sıfırlama Bildirimi</h2>
+                            <p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu ve kendisine geçici şifre gönderildi:</p>
+                            <ul>
+                                <li><strong>Kullanıcı Adı:</strong> " . esc($user['username']) . "</li>
+                                <li><strong>E-posta:</strong> " . esc($email) . "</li>
+                                <li><strong>Tarih:</strong> " . date('Y-m-d H:i:s') . "</li>
+                            </ul>
+                            ";
+                            sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
+                        }
                         $authSuccess = "Geçici şifreniz e-posta adresinize gönderildi.";
                     } else {
                         $authError = "E-posta gönderimi sırasında bir sorun oluştu.";

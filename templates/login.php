@@ -68,7 +68,7 @@ $action = isset($_GET['action']) ? $_GET['action'] : (isset($route) ? ($route ==
                 
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label for="regPlan"><?php echo __('signup_select_plan_label'); ?></label>
-                    <select id="regPlan" name="plan" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--color-border); color: #fff;">
+                    <select id="regPlan" name="plan">
                         <option value="free"><?php echo __('signup_free_plan'); ?></option>
                         <option value="bronze"><?php echo __('signup_bronze_plan'); ?></option>
                         <option value="silver"><?php echo __('signup_silver_plan'); ?></option>

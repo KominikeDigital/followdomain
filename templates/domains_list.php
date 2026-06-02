@@ -45,7 +45,10 @@ $myDomains = $stmt->fetchAll();
 $domainCount = count($myDomains);
 ?>
 
-<div class="domains-list-page">
+<div class="user-shell">
+    <?php require_once __DIR__ . '/user_sidebar.php'; ?>
+    <main class="user-main">
+        <div class="domains-list-page">
     
     <?php if (isset($_SESSION['export_error'])): ?>
         <div class="alert alert-error" style="margin-top: 1rem; margin-bottom: 1.5rem;">
@@ -237,6 +240,10 @@ $domainCount = count($myDomains);
                 <button type="submit" class="btn btn-primary"><?php echo __('btn_save'); ?></button>
             </div>
         </form>
+        </div>
+    </main>
+</div>
+
 </dialog>
 
 <!-- Common Add Domain Modal -->

@@ -578,6 +578,11 @@ html[data-theme="light"] .admin-card textarea {
                                 <input type="text" name="settings[smtp_from_name]" value="<?php echo esc($config['smtp_from_name'] ?? 'TLDix'); ?>">
                             </div>
                         </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Admin Bildirim E-posta Adresi</label>
+                            <input type="email" name="settings[admin_notification_email]" value="<?php echo esc($config['admin_notification_email'] ?? ''); ?>" placeholder="admin@tldix.com">
+                            <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block; margin-top: 0.25rem;">Yeni üye kayıtları ve şifre sıfırlama taleplerinde bu adrese bildirim gönderilir.</span>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">💾 Kaydet</button>
                 </form>

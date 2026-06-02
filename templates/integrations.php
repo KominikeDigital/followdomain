@@ -93,7 +93,10 @@ $stmt->execute([$userId]);
 $cfIntegration = $stmt->fetch();
 ?>
 
-<div class="integrations-page">
+<div class="user-shell">
+    <?php require_once __DIR__ . '/user_sidebar.php'; ?>
+    <main class="user-main">
+        <div class="integrations-page">
     <div class="page-header">
         <h1 class="page-title"><?php echo __('integrations_title'); ?></h1>
         <p class="page-subtitle"><?php echo __('integrations_subtitle'); ?></p>
@@ -333,11 +336,11 @@ $cfIntegration = $stmt->fetch();
                             </a>
                         <?php endif; ?>
                     </div>
-                </div>
             </div>
         </div>
 
-    </div>
+        </div>
+    </main>
 </div>
 
 <script>

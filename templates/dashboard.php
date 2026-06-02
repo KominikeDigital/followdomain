@@ -120,7 +120,10 @@ $recentActivities = $stmtAct->fetchAll();
 
 ?>
 
-<div class="user-dashboard">
+<div class="user-shell">
+    <?php require_once __DIR__ . '/user_sidebar.php'; ?>
+    <main class="user-main">
+        <div class="user-dashboard">
     
     <!-- Greeting & Action Header -->
     <div class="dashboard-greet-header">
@@ -373,6 +376,8 @@ $recentActivities = $stmtAct->fetchAll();
         </div>
     </div>
 
+        </div>
+    </main>
 </div>
 
 <!-- Include Common Add Domain Modal -->

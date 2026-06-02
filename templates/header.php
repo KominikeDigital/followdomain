@@ -120,13 +120,11 @@ if ($isUser) {
             
             <nav class="app-nav">
                 <ul>
-                    <?php if (!$isUser): ?>
-                        <li><a href="<?php echo url(''); ?>" class="<?php echo ($route === 'home') ? 'active' : ''; ?>"><?php echo __('nav_track'); ?></a></li>
-                        <li><a href="<?php echo url('trending'); ?>" class="<?php echo ($route === 'trending') ? 'active' : ''; ?>"><?php echo __('nav_trending'); ?></a></li>
-                        <li><a href="<?php echo url('domains-for-sale'); ?>" class="<?php echo ($route === 'domains_for_sale') ? 'active' : ''; ?>"><?php echo __('nav_domains_for_sale'); ?></a></li>
-                        <li><a href="<?php echo url('social-search'); ?>" class="<?php echo ($route === 'social_search') ? 'active' : ''; ?>"><?php echo __('nav_social_search'); ?></a></li>
-                        <li><a href="<?php echo url('docs'); ?>" class="<?php echo ($route === 'docs') ? 'active' : ''; ?>"><?php echo __('nav_api'); ?></a></li>
-                    <?php endif; ?>
+                    <li><a href="<?php echo url(''); ?>" class="<?php echo ($route === 'home') ? 'active' : ''; ?>"><?php echo __('nav_track'); ?></a></li>
+                    <li><a href="<?php echo url('trending'); ?>" class="<?php echo ($route === 'trending') ? 'active' : ''; ?>"><?php echo __('nav_trending'); ?></a></li>
+                    <li><a href="<?php echo url('domains-for-sale'); ?>" class="<?php echo ($route === 'domains_for_sale') ? 'active' : ''; ?>"><?php echo __('nav_domains_for_sale'); ?></a></li>
+                    <li><a href="<?php echo url('social-search'); ?>" class="<?php echo ($route === 'social_search') ? 'active' : ''; ?>"><?php echo __('nav_social_search'); ?></a></li>
+                    <li><a href="<?php echo url('docs'); ?>" class="<?php echo ($route === 'docs') ? 'active' : ''; ?>"><?php echo __('nav_api'); ?></a></li>
                 </ul>
             </nav>
             
@@ -210,25 +208,6 @@ if ($isUser) {
                 </button>
             </div>
         </div>
-        
-        <?php if ($isUser): ?>
-            <!-- SECOND ROW NAVBAR FOR LOGGED IN USERS -->
-            <div class="header-subheader">
-                <div class="container subheader-container">
-                    <nav class="subheader-nav">
-                        <ul>
-                            <li><a href="<?php echo url('panel'); ?>" class="<?php echo ($route === 'panel') ? 'active' : ''; ?>"><?php echo __('nav_dashboard'); ?></a></li>
-                            <li><a href="<?php echo url('panel/domains'); ?>" class="<?php echo ($route === 'panel_domains') ? 'active' : ''; ?>"><?php echo __('nav_domains'); ?></a></li>
-                            <li><a href="<?php echo url('panel/hosting'); ?>" class="<?php echo ($route === 'panel_hosting') ? 'active' : ''; ?>"><?php echo __('nav_hosting'); ?></a></li>
-                            <li><a href="<?php echo url('expiring'); ?>" class="<?php echo ($route === 'expiring') ? 'active' : ''; ?>"><?php echo __('nav_expiring'); ?></a></li>
-                            <li><a href="<?php echo url('domains-for-sale'); ?>" class="<?php echo ($route === 'domains_for_sale') ? 'active' : ''; ?>"><?php echo __('nav_domains_for_sale'); ?></a></li>
-                            <li><a href="<?php echo url('panel/integrations'); ?>" class="<?php echo ($route === 'panel_integrations') ? 'active' : ''; ?>"><?php echo __('nav_integrations'); ?></a></li>
-                            <li><a href="<?php echo url('panel/integrations#pricing'); ?>" style="color: var(--color-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">👑 Premium</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-        <?php endif; ?>
     </header>
 
     <!-- Mobile Nav Popover (Modern Web Popover API) -->

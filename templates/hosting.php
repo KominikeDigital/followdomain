@@ -53,7 +53,10 @@ $stmtH->execute([$userId]);
 $myHostings = $stmtH->fetchAll();
 ?>
 
-<div class="hosting-page">
+<div class="user-shell">
+    <?php require_once __DIR__ . '/user_sidebar.php'; ?>
+    <main class="user-main">
+        <div class="hosting-page">
     <div class="dashboard-greet-header">
         <div>
             <h1 class="greet-title"><?php echo __('hosting_title'); ?></h1>
@@ -122,6 +125,8 @@ $myHostings = $stmtH->fetchAll();
             </table>
         </div>
     <?php endif; ?>
+        </div>
+    </main>
 </div>
 
 <!-- Add Hosting Dialog Modal -->

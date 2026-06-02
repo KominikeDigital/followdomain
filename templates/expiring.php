@@ -82,7 +82,10 @@ if ($tab === '7days') {
 $activeCount = count($activeList);
 ?>
 
-<div class="expiring-domains-page">
+<div class="user-shell">
+    <?php require_once __DIR__ . '/user_sidebar.php'; ?>
+    <main class="user-main">
+        <div class="expiring-domains-page">
     <div class="page-header text-center">
         <h1 class="page-title"><?php echo __('seo_title'); ?></h1>
         <p class="page-subtitle"><?php echo __('seo_sub'); ?></p>
@@ -156,7 +159,8 @@ $activeCount = count($activeList);
                 </table>
             </div>
         <?php endif; ?>
-    </div>
+        </div>
+    </main>
 </div>
 
 <script>
