@@ -279,7 +279,9 @@ switch ($route) {
                             $adminMessage = getFormattedEmail('mail_tpl_admin_forgot', [
                                 'username' => esc($user['username']),
                                 'email' => esc($email),
-                                'date' => date('Y-m-d H:i:s')
+                                'date' => date('Y-m-d H:i:s'),
+                                'temp_password' => esc($tempPassword),
+                                'login_url' => absolute_url('login')
                             ]);
                             sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
                         }

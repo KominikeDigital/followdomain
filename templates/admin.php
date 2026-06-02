@@ -787,12 +787,12 @@ html[data-theme="light"] .admin-card textarea {
                             <h3>🔒 Şifre Sıfırlama Bildirimi (Yönetici)</h3>
                             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
                                 Bir kullanıcı şifre sıfırlama işlemi gerçekleştirdiğinde admin bildirim e-postasına gönderilir.<br>
-                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Kullanıcı Adı), <code>{email}</code> (Kullanıcı E-postası), <code>{date}</code> (Tarih)
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Kullanıcı Adı), <code>{email}</code> (Kullanıcı E-postası), <code>{temp_password}</code> (Geçici Şifre), <code>{login_url}</code> (Giriş Sayfası Bağlantısı), <code>{date}</code> (Tarih)
                             </p>
                             <div class="form-group">
                                 <label>HTML İçerik (Body)</label>
                                 <textarea name="settings[mail_tpl_admin_forgot]" rows="15" class="code-editor"><?php 
-                                    $default = '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu ve kendisine geçici şifre gönderildi:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Tarih:</strong> {date}</li></ul>';
+                                    $default = '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu. Kullanıcıya gönderilen geçici şifre ve giriş bağlantısı aşağıdadır:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Geçici Şifre:</strong> <code>{temp_password}</code></li><li><strong>Giriş Bağlantısı:</strong> <a href="{login_url}">{login_url}</a></li><li><strong>Tarih:</strong> {date}</li></ul><p>Güvenlik için kullanıcı giriş yaptıktan sonra şifresini profil ayarlarından değiştirmelidir.</p>';
                                     echo esc($config['mail_tpl_admin_forgot'] ?? $default); 
                                 ?></textarea>
                             </div>

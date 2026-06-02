@@ -164,7 +164,7 @@ function getFormattedEmail($templateKey, $replacements = []) {
         
         'mail_tpl_admin_register' => '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li></ul><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>',
         
-        'mail_tpl_admin_forgot' => '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu ve kendisine geçici şifre gönderildi:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Tarih:</strong> {date}</li></ul>',
+        'mail_tpl_admin_forgot' => '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu. Kullanıcıya gönderilen geçici şifre ve giriş bağlantısı aşağıdadır:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Geçici Şifre:</strong> <code>{temp_password}</code></li><li><strong>Giriş Bağlantısı:</strong> <a href="{login_url}">{login_url}</a></li><li><strong>Tarih:</strong> {date}</li></ul><p>Güvenlik için kullanıcı giriş yaptıktan sonra şifresini profil ayarlarından değiştirmelidir.</p>',
         
         'mail_tpl_domain_expiry' => '<h2>Domain Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adınızın süresi yakında doluyor.</p><ul><li><strong>Alan Adı:</strong> {domain_name}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Alan adınızı kaybetmemek ve kesintisiz hizmet almaya devam etmek için hemen yenileme işlemlerini yapmanızı öneririz.</p><p><a href="{panel_url}" class="btn">Domain Listeme Git</a></p>',
         
@@ -172,6 +172,15 @@ function getFormattedEmail($templateKey, $replacements = []) {
     ];
     
     $templateContent = $config[$templateKey] ?? ($defaults[$templateKey] ?? '');
+
+    if (in_array($templateKey, ['mail_tpl_user_forgot', 'mail_tpl_admin_forgot'], true)) {
+        if (array_key_exists('temp_password', $replacements) && strpos($templateContent, '{temp_password}') === false) {
+            $templateContent .= '<p><strong>Geçici Şifre:</strong> <code>{temp_password}</code></p>';
+        }
+        if (array_key_exists('login_url', $replacements) && strpos($templateContent, '{login_url}') === false) {
+            $templateContent .= '<p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Giriş bağlantısı: <a href="{login_url}">{login_url}</a></p>';
+        }
+    }
     
     // Auto replace placeholders
     foreach ($replacements as $placeholder => $val) {
