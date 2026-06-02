@@ -34,9 +34,9 @@ $overLimit = ($totalTracked >= $currentLimit);
 $stmtAllDomains = $pdo->prepare("
     SELECT ud.*, d.expiration_date, d.registrar, d.last_checked
     FROM user_domains ud
-    JOIN domains d ON ud.domain_name = d.domain_name
+    LEFT JOIN domains d ON ud.domain_name = d.domain_name
     WHERE ud.user_id = ?
-    ORDER BY d.expiration_date ASC
+    ORDER BY (d.expiration_date IS NULL) ASC, d.expiration_date ASC
 ");
 $stmtAllDomains->execute([$userId]);
 $allDomainsList = $stmtAllDomains->fetchAll();
@@ -100,9 +100,9 @@ $expiringSoon = $stmtExp->fetchAll();
 $stmtFavs = $pdo->prepare("
     SELECT ud.*, d.expiration_date 
     FROM user_domains ud
-    JOIN domains d ON ud.domain_name = d.domain_name
+    LEFT JOIN domains d ON ud.domain_name = d.domain_name
     WHERE ud.user_id = ? AND ud.is_favorite = 1
-    ORDER BY d.expiration_date ASC
+    ORDER BY (d.expiration_date IS NULL) ASC, d.expiration_date ASC
     LIMIT 5
 ");
 $stmtFavs->execute([$userId]);

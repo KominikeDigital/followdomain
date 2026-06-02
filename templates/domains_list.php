@@ -18,7 +18,7 @@ $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'expiry'; // 'expiry' or 'name'
 $sql = "
     SELECT ud.*, d.expiration_date, d.registration_date, d.registrar, d.status, d.nameservers, d.last_checked
     FROM user_domains ud
-    JOIN domains d ON ud.domain_name = d.domain_name
+    LEFT JOIN domains d ON ud.domain_name = d.domain_name
     WHERE ud.user_id = ?
 ";
 $params = [$userId];
@@ -35,7 +35,7 @@ if (!empty($searchQuery)) {
 if ($sortBy === 'name') {
     $sql .= " ORDER BY ud.domain_name ASC";
 } else {
-    $sql .= " ORDER BY d.expiration_date ASC";
+    $sql .= " ORDER BY (d.expiration_date IS NULL) ASC, d.expiration_date ASC";
 }
 
 $stmt = $pdo->prepare($sql);

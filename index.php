@@ -260,7 +260,7 @@ switch ($route) {
                     $tempPassword = bin2hex(random_bytes(4)); // 8 characters
                     $passwordHash = password_hash($tempPassword, PASSWORD_DEFAULT);
                     
-                    $stmtUpdate = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+                    $stmtUpdate = $pdo->prepare("UPDATE users SET password_hash = ?, is_verified = 1, verification_token = NULL WHERE id = ?");
                     $stmtUpdate->execute([$passwordHash, $user['id']]);
                     
                     $subject = "TLDix Şifre Sıfırlama";
@@ -503,7 +503,7 @@ switch ($route) {
         $stmt = $pdo->prepare("
             SELECT ud.*, d.expiration_date, d.registration_date, d.registrar 
             FROM user_domains ud
-            JOIN domains d ON ud.domain_name = d.domain_name
+            LEFT JOIN domains d ON ud.domain_name = d.domain_name
             WHERE ud.user_id = ?
         ");
         $stmt->execute([$userId]);
