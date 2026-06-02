@@ -19,6 +19,168 @@ function url($path = '') {
 }
 
 /**
+ * Helper to generate absolute URLs (required for email clients)
+ */
+function absolute_url($path = '') {
+    $path = ltrim($path, '/');
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    
+    $base = '';
+    if (defined('BASE_PATH')) {
+        $base = BASE_PATH;
+    } else {
+        $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+        $base = rtrim(dirname($script_name), '/\\');
+    }
+    $base = trim($base, '/\\');
+    
+    return $protocol . $host . ($base !== '' ? '/' . $base : '') . '/' . $path;
+}
+
+/**
+ * Wraps dynamic email content in a premium HTML frame with site logo and footer
+ */
+function getEmailTemplateWrapper($contentHtml) {
+    global $config;
+    
+    $logoUrl = absolute_url('assets/images/logo.png');
+    $siteUrl = absolute_url('');
+    $siteTitle = $config['site_title'] ?? 'TLDix';
+    
+    return '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . esc($siteTitle) . '</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0b0f19;
+            font-family: "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #cbd5e1;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            background-color: #0b0f19;
+            padding: 40px 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+        .header {
+            background: linear-gradient(135deg, #0b0f19 0%, #1e1b4b 100%);
+            padding: 30px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: left;
+        }
+        .header img {
+            height: 50px;
+            width: auto;
+            display: block;
+            border: 0;
+        }
+        .content {
+            padding: 40px;
+            line-height: 1.6;
+            font-size: 15px;
+            color: #cbd5e1;
+        }
+        .content h1, .content h2, .content h3 {
+            color: #ffffff;
+            margin-top: 0;
+            font-family: "Outfit", sans-serif;
+            font-weight: 600;
+        }
+        .footer {
+            background-color: #090d16;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            color: #64748b;
+        }
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <a href="' . $siteUrl . '" target="_blank">
+                    <img src="' . $logoUrl . '" alt="' . esc($siteTitle) . ' Logo">
+                </a>
+            </div>
+            <div class="content">
+                ' . $contentHtml . '
+            </div>
+            <div class="footer">
+                <p>&copy; ' . date('Y') . ' <a href="' . $siteUrl . '" target="_blank">' . esc($siteTitle) . '</a>. Tüm Hakları Saklıdır.</p>
+                <p>Long-term and reliable tracking infrastructure.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>';
+}
+
+/**
+ * Hydrates, overrides, and completes customizable email templates
+ */
+function getFormattedEmail($templateKey, $replacements = []) {
+    global $config;
+    
+    $defaults = [
+        'mail_tpl_user_register' => '<h2>Hoş Geldiniz, {username}!</h2><p>TLDix platformuna başarıyla üye oldunuz. Artık alan adlarınızı ve barındırma (hosting) sürelerinizi tek bir noktadan güvenle takip edebilirsiniz.</p><p>Takip listenize yeni alan adları eklemek için hemen kullanıcı panelinize giriş yapabilirsiniz:</p><p><a href="{login_url}" class="btn">Panel Girişi Yap</a></p><p>Herhangi bir sorunuz olursa bizimle iletişime geçebilirsiniz.</p>',
+        
+        'mail_tpl_user_forgot' => '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #6366f1; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>',
+        
+        'mail_tpl_admin_register' => '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li></ul><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>',
+        
+        'mail_tpl_admin_forgot' => '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu ve kendisine geçici şifre gönderildi:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Tarih:</strong> {date}</li></ul>',
+        
+        'mail_tpl_domain_expiry' => '<h2>Domain Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adınızın süresi yakında doluyor.</p><ul><li><strong>Alan Adı:</strong> {domain_name}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Alan adınızı kaybetmemek ve kesintisiz hizmet almaya devam etmek için hemen yenileme işlemlerini yapmanızı öneririz.</p><p><a href="{panel_url}" class="btn">Domain Listeme Git</a></p>',
+        
+        'mail_tpl_hosting_expiry' => '<h2>Hosting Hizmet Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adına ait hosting (barındırma) paketinizin süresi yakında doluyor.</p><ul><li><strong>Hizmet Sunucusu:</strong> {hosting_provider}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Web sitenizin yayınının kesilmesini önlemek için hosting paketinizi yenilemeyi unutmayın.</p><p><a href="{panel_url}" class="btn">Hosting Listeme Git</a></p>'
+    ];
+    
+    $templateContent = $config[$templateKey] ?? ($defaults[$templateKey] ?? '');
+    
+    // Auto replace placeholders
+    foreach ($replacements as $placeholder => $val) {
+        $templateContent = str_replace('{' . $placeholder . '}', $val, $templateContent);
+    }
+    
+    return getEmailTemplateWrapper($templateContent);
+}
+
+
+/**
  * Localization helper to retrieve translated strings
  */
 function __($key, $default = '') {

@@ -199,28 +199,23 @@ switch ($route) {
             if ($res['success']) {
                 $userEmail = trim($_POST['email']);
                 $userName = trim($_POST['username']);
+                
                 $subject = "Welcome to TLDix!";
-                $messageHtml = "
-                <h2>Welcome to TLDix!</h2>
-                <p>Hello <strong>" . esc($userName) . "</strong>,</p>
-                <p>Your account has been successfully created. You can now start tracking your domain names and hosting servers, configure custom alert intervals, and use our Developer API.</p>
-                <p>Best regards,<br>TLDix Team</p>
-                ";
+                $messageHtml = getFormattedEmail('mail_tpl_user_register', [
+                    'username' => esc($userName),
+                    'login_url' => absolute_url('login')
+                ]);
                 sendEmailNotification($userEmail, $subject, $messageHtml);
                 
                 // Admin notification email
                 $adminEmail = $config['admin_notification_email'] ?? '';
                 if (!empty($adminEmail)) {
                     $adminSubject = "Yeni Üye Kaydı: " . $userName;
-                    $adminMessage = "
-                    <h2>Yeni Üye Kaydı Bildirimi</h2>
-                    <p>TLDix sisteminde yeni bir kullanıcı kaydoldu:</p>
-                    <ul>
-                        <li><strong>Kullanıcı Adı:</strong> " . esc($userName) . "</li>
-                        <li><strong>E-posta:</strong> " . esc($userEmail) . "</li>
-                        <li><strong>Kayıt Tarihi:</strong> " . date('Y-m-d H:i:s') . "</li>
-                    </ul>
-                    ";
+                    $adminMessage = getFormattedEmail('mail_tpl_admin_register', [
+                        'username' => esc($userName),
+                        'email' => esc($userEmail),
+                        'date' => date('Y-m-d H:i:s')
+                    ]);
                     sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
                 }
                 
@@ -256,13 +251,11 @@ switch ($route) {
                     $stmtUpdate->execute([$passwordHash, $user['id']]);
                     
                     $subject = "TLDix Şifre Sıfırlama";
-                    $messageHtml = "
-                    <h2>Şifre Sıfırlama Talebi</h2>
-                    <p>Merhaba <strong>" . esc($user['username']) . "</strong>,</p>
-                    <p>TLDix hesabınız için şifre sıfırlama talebinde bulundunuz.</p>
-                    <p>Geçici şifreniz: <strong style='font-size: 1.2rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #000;'>" . esc($tempPassword) . "</strong></p>
-                    <p>Lütfen bu şifreyi kullanarak giriş yapın ve ardından hesap panelinizden şifrenizi değiştirin.</p>
-                    ";
+                    $messageHtml = getFormattedEmail('mail_tpl_user_forgot', [
+                        'username' => esc($user['username']),
+                        'temp_password' => esc($tempPassword),
+                        'login_url' => absolute_url('login')
+                    ]);
                     
                     $sent = sendEmailNotification($email, $subject, $messageHtml);
                     if ($sent) {
@@ -270,15 +263,11 @@ switch ($route) {
                         $adminEmail = $config['admin_notification_email'] ?? '';
                         if (!empty($adminEmail)) {
                             $adminSubject = "Şifre Sıfırlama Talebi: " . $user['username'];
-                            $adminMessage = "
-                            <h2>Şifre Sıfırlama Bildirimi</h2>
-                            <p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu ve kendisine geçici şifre gönderildi:</p>
-                            <ul>
-                                <li><strong>Kullanıcı Adı:</strong> " . esc($user['username']) . "</li>
-                                <li><strong>E-posta:</strong> " . esc($email) . "</li>
-                                <li><strong>Tarih:</strong> " . date('Y-m-d H:i:s') . "</li>
-                            </ul>
-                            ";
+                            $adminMessage = getFormattedEmail('mail_tpl_admin_forgot', [
+                                'username' => esc($user['username']),
+                                'email' => esc($email),
+                                'date' => date('Y-m-d H:i:s')
+                            ]);
                             sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
                         }
                         $authSuccess = "Geçici şifreniz e-posta adresinize gönderildi.";

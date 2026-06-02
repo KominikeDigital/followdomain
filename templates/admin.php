@@ -102,7 +102,7 @@ if ($isAdmin) {
 
 // Active tab
 $activeTab = $_GET['tab'] ?? 'dashboard';
-$validTabs = ['dashboard','general','affiliate','ads','email','domains','members','payments','affiliate-stats','integrations'];
+$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','domains','members','payments','affiliate-stats','integrations'];
 if (!in_array($activeTab, $validTabs)) $activeTab = 'dashboard';
 ?>
 
@@ -393,6 +393,9 @@ html[data-theme="light"] .admin-card textarea {
                 <a href="?tab=email" class="<?php echo $activeTab==='email'?'active':''; ?>">
                     📧 E-posta & SMTP
                 </a>
+                <a href="?tab=email-templates" class="<?php echo $activeTab==='email-templates'?'active':''; ?>">
+                    📝 E-posta Şablonları
+                </a>
                 <a href="?tab=ads" class="<?php echo $activeTab==='ads'?'active':''; ?>">
                     📢 Reklam & Entegrasyon
                 </a>
@@ -667,6 +670,180 @@ html[data-theme="light"] .admin-card textarea {
                         btn.innerText = '📤 Run Test';
                     });
                 }
+                </script>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════
+                 TAB: EMAIL TEMPLATES
+            ════════════════════════════════════════════════════ -->
+            <div class="admin-tab-pane <?php echo $activeTab==='email-templates'?'active':''; ?>">
+                <div class="admin-page-header">
+                    <h2>📝 E-posta Şablonları Yönetimi</h2>
+                    <p>Sistem genelinde gönderilen tüm otomatik e-postaların içeriklerini HTML formatında özelleştirin.</p>
+                </div>
+                
+                <?php if ($settingsSaved && $activeTab === 'email-templates'): ?>
+                    <div class="admin-alert success" style="margin-bottom:1.5rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#10b981; padding:0.75rem 1rem; border-radius:8px;">💾 Şablon başarıyla güncellendi!</div>
+                <?php endif; ?>
+                
+                <div class="admin-card" style="margin-bottom: 2rem;">
+                    <h3>Şablon Seçimi</h3>
+                    <div class="form-group">
+                        <label>Özelleştirilecek E-posta Şablonu</label>
+                        <select id="tpl_selector" onchange="switchTemplate(this.value)">
+                            <option value="mail_tpl_user_register">Hoş Geldiniz E-postası (Yeni Üye)</option>
+                            <option value="mail_tpl_user_forgot">Şifre Sıfırlama E-postası (Kullanıcı)</option>
+                            <option value="mail_tpl_admin_register">Yeni Üye Bildirimi (Yönetici)</option>
+                            <option value="mail_tpl_admin_forgot">Şifre Sıfırlama Bildirimi (Yönetici)</option>
+                            <option value="mail_tpl_domain_expiry">Domain Süresi Sona Eriyor Hatırlatması</option>
+                            <option value="mail_tpl_hosting_expiry">Hosting Süresi Sona Eriyor Hatırlatması</option>
+                        </select>
+                    </div>
+                </div>
+
+                <form action="?tab=email-templates" method="POST" id="template_form">
+                    <input type="hidden" name="action" value="save_settings">
+                    
+                    <!-- User Welcome Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_user_register">
+                        <div class="admin-card">
+                            <h3>👋 Hoş Geldiniz E-postası (Yeni Üye)</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Kullanıcı kayıt işlemini tamamladığında gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Kullanıcı Adı), <code>{login_url}</code> (Giriş Sayfası Bağlantısı)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_user_register]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>Hoş Geldiniz, {username}!</h2><p>TLDix platformuna başarıyla üye oldunuz. Artık alan adlarınızı ve barındırma (hosting) sürelerinizi tek bir noktadan güvenle takip edebilirsiniz.</p><p>Takip listenize yeni alan adları eklemek için hemen kullanıcı panelinize giriş yapabilirsiniz:</p><p><a href="{login_url}" class="btn">Panel Girişi Yap</a></p><p>Herhangi bir sorunuz olursa bizimle iletişime geçebilirsiniz.</p>';
+                                    echo esc($config['mail_tpl_user_register'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- User Password Reset Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_user_forgot" style="display:none;">
+                        <div class="admin-card">
+                            <h3>🔑 Şifre Sıfırlama E-postası (Kullanıcı)</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Şifresini unutan kullanıcılara geçici şifre iletilirken gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Kullanıcı Adı), <code>{temp_password}</code> (Geçici Şifre), <code>{login_url}</code> (Giriş Sayfası Bağlantısı)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_user_forgot]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #6366f1; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>';
+                                    echo esc($config['mail_tpl_user_forgot'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- Admin New User Alert Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_admin_register" style="display:none;">
+                        <div class="admin-card">
+                            <h3>👥 Yeni Üye Bildirimi (Yönetici)</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Yeni bir üye kaydolduğunda belirlenen admin bildirim e-postasına gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Yeni Üyenin Adı), <code>{email}</code> (Yeni Üyenin E-postası), <code>{date}</code> (Kayıt Tarihi)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_admin_register]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li></ul><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>';
+                                    echo esc($config['mail_tpl_admin_register'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- Admin Forgot Password Alert Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_admin_forgot" style="display:none;">
+                        <div class="admin-card">
+                            <h3>🔒 Şifre Sıfırlama Bildirimi (Yönetici)</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Bir kullanıcı şifre sıfırlama işlemi gerçekleştirdiğinde admin bildirim e-postasına gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Kullanıcı Adı), <code>{email}</code> (Kullanıcı E-postası), <code>{date}</code> (Tarih)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_admin_forgot]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu ve kendisine geçici şifre gönderildi:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Tarih:</strong> {date}</li></ul>';
+                                    echo esc($config['mail_tpl_admin_forgot'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- Domain Expiry Alert Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_domain_expiry" style="display:none;">
+                        <div class="admin-card">
+                            <h3>⏰ Domain Süresi Sona Eriyor Hatırlatması</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Takip edilen bir alan adının süresi sona yaklaştığında kullanıcıya gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{domain_name}</code> (Alan Adı), <code>{expiry_date}</code> (Son Geçerlilik Tarihi), <code>{days_left}</code> (Kalan Gün Sayısı), <code>{panel_url}</code> (Panel Domain Detay Bağlantısı)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_domain_expiry]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>Domain Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adınızın süresi yakında doluyor.</p><ul><li><strong>Alan Adı:</strong> {domain_name}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Alan adınızı kaybetmemek ve kesintisiz hizmet almaya devam etmek için hemen yenileme işlemlerini yapmanızı öneririz.</p><p><a href="{panel_url}" class="btn">Domain Listeme Git</a></p>';
+                                    echo esc($config['mail_tpl_domain_expiry'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- Hosting Expiry Alert Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_hosting_expiry" style="display:none;">
+                        <div class="admin-card">
+                            <h3>🖥️ Hosting Süresi Sona Eriyor Hatırlatması</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Takip edilen bir hosting hizmetinin süresi sona yaklaştığında kullanıcıya gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{domain_name}</code> (Alan Adı), <code>{hosting_provider}</code> (Hosting Sağlayıcı Adı), <code>{expiry_date}</code> (Bitiş Tarihi), <code>{days_left}</code> (Kalan Gün), <code>{panel_url}</code> (Panel Hosting Sayfası Bağlantısı)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_hosting_expiry]" rows="15" class="code-editor"><?php 
+                                    $default = '<h2>Hosting Hizmet Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adına ait hosting (barındırma) paketinizin süresi yakında doluyor.</p><ul><li><strong>Hizmet Sunucusu:</strong> {hosting_provider}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Web sitenizin yayınının kesilmesini önlemek için hosting paketinizi yenilemeyi unutmayın.</p><p><a href="{panel_url}" class="btn">Hosting Listeme Git</a></p>';
+                                    echo esc($config['mail_tpl_hosting_expiry'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+                </form>
+
+                <script>
+                function switchTemplate(val) {
+                    document.querySelectorAll('.tpl-editor-pane').forEach(el => el.style.display = 'none');
+                    const targetPane = document.getElementById('pane_' + val);
+                    if (targetPane) targetPane.style.display = 'block';
+                    
+                    // Auto update action tab parameter on selector change
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('tab', 'email-templates');
+                    urlParams.set('sub', val);
+                    window.history.replaceState({}, '', '?' + urlParams.toString());
+                }
+                
+                // On load, activate selected template if any
+                window.addEventListener('DOMContentLoaded', () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const sub = urlParams.get('sub');
+                    if (sub) {
+                        const sel = document.getElementById('tpl_selector');
+                        if (sel) {
+                            sel.value = sub;
+                            switchTemplate(sub);
+                        }
+                    }
+                });
                 </script>
             </div>
 

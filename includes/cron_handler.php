@@ -96,51 +96,15 @@ function runCronJobs($pdo) {
         }
         
         if ($sendAlert) {
-            $domainUrl = "http://" . $_SERVER['HTTP_HOST'] . "/domain/" . urlencode($domainName);
+            $domainUrl = absolute_url("domain/" . urlencode($domainName));
             $namecheapAff = $config['affiliate_namecheap'] . "&query=" . urlencode($domainName);
             
-            $emailBody = "
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset='utf-8'>
-                <style>
-                    body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f3f4f6; margin: 0; padding: 0; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-                    .card { background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 32px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
-                    .logo { font-size: 24px; font-weight: bold; color: #6366f1; text-decoration: none; margin-bottom: 24px; display: inline-block; }
-                    h1 { font-size: 20px; margin-top: 0; color: #ffffff; }
-                    p { font-size: 16px; line-height: 1.6; color: #9ca3af; }
-                    .highlight { color: #f43f5e; font-weight: bold; }
-                    .btn-group { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
-                    .btn { display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; text-align: center; }
-                    .btn-secondary { background: rgba(255,255,255,0.05); color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1); }
-                    .footer { margin-top: 32px; font-size: 12px; color: #4b5563; text-align: center; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='card'>
-                        <a href='http://{$_SERVER['HTTP_HOST']}' class='logo'>TLDix</a>
-                        <h1>Alan Adı Yenileme Bildirimi</h1>
-                        <p>Merhaba <strong>{$username}</strong>,</p>
-                        <p>Takip listenizdeki <span style='color:#ffffff; font-weight:bold;'>{$domainName}</span> alan adının <span class='highlight'>{$timeLabel}!</span></p>
-                        <p><strong>Son Geçerlilik Tarihi:</strong> " . formatDate($ud['expiration_date'], 'd M Y') . "</p>
-                        <p><strong>Kayıt Kuruluşu:</strong> {$ud['registrar']}</p>
-                        
-                        <div class='btn-group'>
-                            <a href='{$domainUrl}' class='btn'>Panelde İncele</a>
-                            <a href='{$namecheapAff}' target='_blank' class='btn btn-secondary'>Namecheap ile Yenile / Kaydet</a>
-                        </div>
-                    </div>
-                    <div class='footer'>
-                        Bu e-posta, {$domainName} alan adını TLDix üzerinde takibe aldığınız için gönderilmiştir.<br>
-                        &copy; " . date('Y') . " TLDix. Tüm hakları saklıdır.
-                    </div>
-                </div>
-            </body>
-            </html>
-            ";
+            $emailBody = getFormattedEmail('mail_tpl_domain_expiry', [
+                'domain_name' => esc($domainName),
+                'expiry_date' => formatDate($ud['expiration_date'], 'd M Y'),
+                'days_left' => max(0, round($daysToExpiry)),
+                'panel_url' => $domainUrl
+            ]);
             
             $sent = sendEmailNotification($email, $subject, $emailBody);
             if ($sent) {
@@ -212,49 +176,16 @@ function runCronJobs($pdo) {
         }
         
         if ($sendAlert) {
+            $hostingUrl = absolute_url("panel/hosting");
             $hostingerAff = $config['affiliate_hostinger'];
             
-            $emailBody = "
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset='utf-8'>
-                <style>
-                    body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f3f4f6; margin: 0; padding: 0; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-                    .card { background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 32px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
-                    .logo { font-size: 24px; font-weight: bold; color: #6366f1; text-decoration: none; margin-bottom: 24px; display: inline-block; }
-                    h1 { font-size: 20px; margin-top: 0; color: #ffffff; }
-                    p { font-size: 16px; line-height: 1.6; color: #9ca3af; }
-                    .highlight { color: #f43f5e; font-weight: bold; }
-                    .btn-group { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
-                    .btn { display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; text-align: center; }
-                    .btn-secondary { background: rgba(255,255,255,0.05); color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1); }
-                    .footer { margin-top: 32px; font-size: 12px; color: #4b5563; text-align: center; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='card'>
-                        <a href='http://{$_SERVER['HTTP_HOST']}' class='logo'>TLDix</a>
-                        <h1>Hosting Yenileme Bildirimi</h1>
-                        <p>Merhaba <strong>{$username}</strong>,</p>
-                        <p>Takip listenizdeki <span style='color:#ffffff; font-weight:bold;'>{$domainName}</span> alan adına bağlı <strong>{$provider}</strong> hosting paketinizin <span class='highlight'>{$timeLabel}!</span></p>
-                        <p><strong>Hosting Bitiş Tarihi:</strong> " . formatDate($uh['expiration_date'], 'd M Y') . "</p>
-                        
-                        <div class='btn-group'>
-                            <a href='http://{$_SERVER['HTTP_HOST']}/panel/hosting' class='btn'>Hosting Panelini Aç</a>
-                            <a href='{$hostingerAff}' target='_blank' class='btn btn-secondary'>%70 İndirimli Yeni Hosting Satın Al</a>
-                        </div>
-                    </div>
-                    <div class='footer'>
-                        Bu e-posta, {$domainName} alan adının bağlı olduğu hosting paketini TLDix üzerinde takibe aldığınız için gönderilmiştir.<br>
-                        &copy; " . date('Y') . " TLDix. Tüm hakları saklıdır.
-                    </div>
-                </div>
-            </body>
-            </html>
-            ";
+            $emailBody = getFormattedEmail('mail_tpl_hosting_expiry', [
+                'domain_name' => esc($domainName),
+                'hosting_provider' => esc($provider),
+                'expiry_date' => formatDate($uh['expiration_date'], 'd M Y'),
+                'days_left' => max(0, round($daysToExpiry)),
+                'panel_url' => $hostingUrl
+            ]);
             
             $sent = sendEmailNotification($email, $subject, $emailBody);
             if ($sent) {
