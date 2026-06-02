@@ -9,7 +9,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>Los Conceptos Básicos de los Nombres de Dominio</h2>
-<p>Si planea crear un sitio web, lanzar una tienda en línea o comenzar un blog, el primer término que encontrará es "nombre de dominio". Pero, ¿qué es exactamente? En términos simples, un nombre de dominio es la dirección que la gente escribe en la barra de direcciones del navegador para visitar su sitio web. Por ejemplo, <code>domainawait.com</code> es un nombre de dominio.</p>
+<p>Si planea crear un sitio web, lanzar una tienda en línea o comenzar un blog, el primer término que encontrará es "nombre de dominio". Pero, ¿qué es exactamente? En términos simples, un nombre de dominio es la dirección que la gente escribe en la barra de direcciones del navegador para visitar su sitio web. Por ejemplo, <code>TLDix.com</code> es un nombre de dominio.</p>
 
 <h3>Dominios frente a alojamiento web: La analogía de la casa</h3>
 <p>Una de las confusiones más comunes para los principiantes es la diferencia entre un nombre de dominio y un alojamiento web. Para entenderlo, piense en su sitio web como una casa física:</p>
@@ -66,7 +66,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>¿Qué es un TLD?</h2>
-<p>Un Dominio de Nivel Superior (TLD) es el sufijo que aparece al final de un nombre de dominio, después del punto final. En <code>domainawait.com</code>, el TLD es <code>.com</code>. Internet ahora admite miles de extensiones diferentes, que se clasifican según su propósito y región.</p>
+<p>Un Dominio de Nivel Superior (TLD) es el sufijo que aparece al final de un nombre de dominio, después del punto final. En <code>TLDix.com</code>, el TLD es <code>.com</code>. Internet ahora admite miles de extensiones diferentes, que se clasifican según su propósito y región.</p>
 
 <h3>Las Principales Categorías de Extensiones</h3>
 <ol>

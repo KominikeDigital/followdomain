@@ -1,7 +1,7 @@
 <?php
 // Turkish Translations
 return [
-    'site_title' => 'domainawait',
+    'site_title' => 'TLDix',
     'logo_domain' => 'domain',
     'logo_await' => 'await',
     
@@ -73,8 +73,8 @@ return [
     'feature_3_title' => 'Premium Entegrasyonlar',
     'feature_3_desc' => 'Cloudflare bağlayın, webhook entegrasyonu yapın ve CSV olarak indirin.',
     'faq_title' => 'Sıkça Sorulan Sorular',
-    'faq_1_q' => 'domainawait nasıl çalışır?',
-    'faq_1_a' => 'domainawait, girdiğiniz alan adlarının WHOIS/RDAP bilgilerini sorgulayarak veritabanına kaydeder ve periyodik arka plan görevleriyle günceller.',
+    'faq_1_q' => 'TLDix nasıl çalışır?',
+    'faq_1_a' => 'TLDix, girdiğiniz alan adlarının WHOIS/RDAP bilgilerini sorgulayarak veritabanına kaydeder ve periyodik arka plan görevleriyle günceller.',
     'faq_2_q' => 'Hatırlatmalar ne zaman gönderilir?',
     'faq_2_a' => 'Kullanıcı panelinizden seçtiğiniz hatırlatıcı günlerine göre sistem size otomatik e-posta gönderir.',
     'faq_3_q' => 'cPanel altyapısı ile nasıl entegre olur?',
@@ -368,7 +368,7 @@ return [
     
     // API Docs Page
     'api_docs_title' => 'REST API Dokümantasyonu',
-    'api_docs_sub' => 'domainawait sorgu beslemelerini kendi kontrol paneli uygulamalarınıza entegre edin.',
+    'api_docs_sub' => 'TLDix sorgu beslemelerini kendi kontrol paneli uygulamalarınıza entegre edin.',
     
     // Trending Page
     'trending_page_title' => 'Trend Alan Adları',

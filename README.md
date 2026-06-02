@@ -1,6 +1,6 @@
-# 🌐 domainawait — Domain & Hosting Takip Platformu — v2.2
+# 🌐 TLDix — Domain & Hosting Takip Platformu — v2.2
 
-**domainawait**, alan adı (domain) ve web hosting takibi, WHOIS sorgulama, SSL kontrolü, affiliate yönlendirme ve ödeme sistemi içeren kapsamlı bir web platformudur. PHP + SQLite/MySQL ile çalışır; cPanel ortamına kolayca deploy edilebilir.
+**TLDix**, alan adı (domain) ve web hosting takibi, WHOIS sorgulama, SSL kontrolü, affiliate yönlendirme ve ödeme sistemi içeren kapsamlı bir web platformudur. PHP + SQLite/MySQL ile çalışır; cPanel ortamına kolayca deploy edilebilir.
 
 ---
 
@@ -44,7 +44,7 @@
 ## 📁 Klasör Yapısı
 
 ```
-raceplast/
+TLDix/
 ├── index.php                   # Ana router (tüm URL'ler buradan yönetilir)
 ├── config.php                  # Uygulama yapılandırması (DB, SMTP, affiliate vb.)
 ├── api.php                     # Public JSON API endpoint
@@ -99,7 +99,7 @@ raceplast/
 ## 🚀 Kurulum — Yerel Geliştirme
 
 ```bash
-cd raceplast
+cd TLDix
 php -S 127.0.0.1:8000
 ```
 
@@ -164,7 +164,7 @@ CREATE TABLE payments (
 ```php
 return [
     // Site
-    'site_title'       => 'domainawait',
+    'site_title'       => 'TLDix',
     'site_description' => 'Alan adı & hosting takip platformu',
     
     // Veritabanı

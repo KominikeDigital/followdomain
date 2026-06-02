@@ -444,7 +444,7 @@ function triggerWebhookNotification($webhookUrl, $payload) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
-        'X-DomainAwait-Event: domain_alert'
+        'X-TLDix-Event: domain_alert'
     ]);
     curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     
@@ -462,7 +462,7 @@ function exportDomainsToCSV($myDomains) {
     if (ob_get_level()) ob_end_clean();
     
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=domainawait_export_' . date('Y-m-d') . '.csv');
+    header('Content-Disposition: attachment; filename=tldix_export_' . date('Y-m-d') . '.csv');
     header('Pragma: no-cache');
     header('Expires: 0');
     

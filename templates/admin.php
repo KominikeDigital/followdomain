@@ -575,7 +575,7 @@ html[data-theme="light"] .admin-card textarea {
                             </div>
                             <div class="form-group">
                                 <label>Gönderici Adı</label>
-                                <input type="text" name="settings[smtp_from_name]" value="<?php echo esc($config['smtp_from_name'] ?? 'domainawait'); ?>">
+                                <input type="text" name="settings[smtp_from_name]" value="<?php echo esc($config['smtp_from_name'] ?? 'TLDix'); ?>">
                             </div>
                         </div>
                     </div>

@@ -348,7 +348,7 @@ function initializeDatabase($pdo, $dbType) {
         $count = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
         if ($count == 0) {
             $username = 'admin';
-            $email = 'admin@domainawait.com';
+            $email = 'admin@tldix.com';
             $passwordHash = password_hash('admin', PASSWORD_BCRYPT);
             $apiKey = 'da_default_admin_api_key_test_123';
             $now = date('Y-m-d H:i:s');

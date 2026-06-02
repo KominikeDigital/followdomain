@@ -50,7 +50,7 @@ if ($isUser) {
     </script>
     
     <!-- Open Graph Tags -->
-    <meta property="og:title" content="<?php echo isset($pageTitle) ? esc($pageTitle) : 'domainawait'; ?>">
+    <meta property="og:title" content="<?php echo isset($pageTitle) ? esc($pageTitle) : 'TLDix'; ?>">
     <meta property="og:description" content="<?php echo isset($pageDesc) ? esc($pageDesc) : 'Alan adlarının süresini takip edin.'; ?>">
     <meta property="og:type" content="website">
     
@@ -115,12 +115,7 @@ if ($isUser) {
     <header class="app-header">
         <div class="container header-container">
             <a href="<?php echo url(''); ?>" class="app-logo">
-                <span class="logo-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
-                    </svg>
-                </span>
-                <span class="logo-text">domain<span>await</span></span>
+                <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 38px; width: auto; display: block;">
             </a>
             
             <nav class="app-nav">
@@ -238,7 +233,7 @@ if ($isUser) {
     <!-- Mobile Nav Popover (Modern Web Popover API) -->
     <div id="mobile-nav" popover="auto" class="mobile-nav-panel">
         <div class="mobile-nav-header">
-            <span class="logo-text">domain<span>await</span></span>
+            <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 32px; width: auto; display: block;">
             <button class="menu-close" popovertargetaction="hide" popovertarget="mobile-nav" aria-label="Kapat">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>

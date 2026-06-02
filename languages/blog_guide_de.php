@@ -9,7 +9,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>Die absoluten Grundlagen von Domainnamen</h2>
-<p>Wenn Sie planen, eine Website zu erstellen, einen Online-Shop zu eröffnen oder einen Blog zu starten, ist der erste Begriff, auf den Sie stoßen werden, ein "Domainname". Aber was genau ist das? Einfach ausgedrückt ist ein Domainname die Adresse, die Personen in die Adresszeile ihres Browsers eingeben, um Ihre Website zu besuchen. Zum Beispiel ist <code>domainawait.com</code> ein Domainname.</p>
+<p>Wenn Sie planen, eine Website zu erstellen, einen Online-Shop zu eröffnen oder einen Blog zu starten, ist der erste Begriff, auf den Sie stoßen werden, ein "Domainname". Aber was genau ist das? Einfach ausgedrückt ist ein Domainname die Adresse, die Personen in die Adresszeile ihres Browsers eingeben, um Ihre Website zu besuchen. Zum Beispiel ist <code>TLDix.com</code> ein Domainname.</p>
 
 <h3>Domains vs. Webhosting: Die Haus-Analogie</h3>
 <p>Eine der häufigsten Verwechslungen für Anfänger ist der Unterschied zwischen einem Domainnamen und Webhosting. Um es zu verstehen, stellen Sie sich Ihre Website wie ein physisches Haus vor:</p>
@@ -66,7 +66,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>Was ist eine TLD?</h2>
-<p>Eine Top-Level-Domain (TLD) ist die Endung, die ganz am Ende eines Domainnamens nach dem letzten Punkt erscheint. Bei <code>domainawait.com</code> ist die TLD <code>.com</code>. Das Internet unterstützt mittlerweile Tausende von verschiedenen Endungen, die nach Zweck und Region kategorisiert sind.</p>
+<p>Eine Top-Level-Domain (TLD) ist die Endung, die ganz am Ende eines Domainnamens nach dem letzten Punkt erscheint. Bei <code>TLDix.com</code> ist die TLD <code>.com</code>. Das Internet unterstützt mittlerweile Tausende von verschiedenen Endungen, die nach Zweck und Region kategorisiert sind.</p>
 
 <h3>Die Hauptkategorien von Endungen</h3>
 <ol>

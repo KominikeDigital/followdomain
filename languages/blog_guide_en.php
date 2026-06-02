@@ -9,7 +9,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>The Absolute Basics of Domain Names</h2>
-<p>If you are planning to build a website, launch an online store, or start a blog, the first term you will encounter is a "domain name." But what exactly is it? In simple terms, a domain name is the address people type into their browser address bar to visit your website. For example, <code>domainawait.com</code> is a domain name.</p>
+<p>If you are planning to build a website, launch an online store, or start a blog, the first term you will encounter is a "domain name." But what exactly is it? In simple terms, a domain name is the address people type into their browser address bar to visit your website. For example, <code>TLDix.com</code> is a domain name.</p>
 
 <h3>Domains vs. Web Hosting: The House Analogy</h3>
 <p>One of the most common confusions for beginners is the difference between a domain name and web hosting. To understand it, think of your website as a physical house:</p>
@@ -66,7 +66,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>What is a TLD?</h2>
-<p>A Top-Level Domain (TLD) is the suffix that appears at the very end of a domain name, following the final dot. In <code>domainawait.com</code>, the TLD is <code>.com</code>. The internet now supports thousands of different extensions, which are categorized by their purpose and region.</p>
+<p>A Top-Level Domain (TLD) is the suffix that appears at the very end of a domain name, following the final dot. In <code>TLDix.com</code>, the TLD is <code>.com</code>. The internet now supports thousands of different extensions, which are categorized by their purpose and region.</p>
 
 <h3>The Main Categories of Extensions</h3>
 <ol>

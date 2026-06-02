@@ -1,7 +1,7 @@
 <?php
 // German Translations
 return [
-    'site_title' => 'domainawait',
+    'site_title' => 'TLDix',
     'logo_domain' => 'domain',
     'logo_await' => 'await',
     
@@ -73,8 +73,8 @@ return [
     'feature_3_title' => 'Premium-Integrationen',
     'feature_3_desc' => 'Verbinden Sie Cloudflare, richten Sie Webhooks ein und exportieren Sie Listen als CSV.',
     'faq_title' => 'Häufig gestellte Fragen',
-    'faq_1_q' => 'Wie funktioniert domainawait?',
-    'faq_1_a' => 'domainawait fragt die WHOIS/RDAP-Informationen der von Ihnen eingegebenen Domains ab, speichert sie in der Datenbank und aktualisiert sie über regelmäßige Hintergrundaufgaben.',
+    'faq_1_q' => 'Wie funktioniert TLDix?',
+    'faq_1_a' => 'TLDix fragt die WHOIS/RDAP-Informationen der von Ihnen eingegebenen Domains ab, speichert sie in der Datenbank und aktualisiert sie über regelmäßige Hintergrundaufgaben.',
     'faq_2_q' => 'Wann werden Erinnerungen gesendet?',
     'faq_2_a' => 'Das System sendet Ihnen automatisch E-Mail-Warnungen basierend auf den Erinnerungstagen, die Sie in Ihrem Benutzerbereich auswählen.',
     'faq_3_q' => 'Wie integriert es sich in cPanel?',
@@ -368,7 +368,7 @@ return [
     
     // API Docs Page
     'api_docs_title' => 'REST-API-Dokumentation',
-    'api_docs_sub' => 'Integrieren Sie domainawait-Abfragen direkt in Ihre benutzerdefinierten Dashboard-Anwendungen.',
+    'api_docs_sub' => 'Integrieren Sie TLDix-Abfragen direkt in Ihre benutzerdefinierten Dashboard-Anwendungen.',
     
     // Trending Page
     'trending_page_title' => 'Trend-Domains',

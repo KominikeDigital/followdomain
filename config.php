@@ -23,10 +23,10 @@ $config = [
     // Default Ad & SEO Settings
     'ad_status' => 'off', // 'on' or 'off'
     'seo_keywords' => 'domain, tracking, whois, expired domains',
-    'seo_author' => 'domainawait',
+    'seo_author' => 'TLDix',
     
     // Site Identity
-    'site_title' => 'domainawait',
+    'site_title' => 'TLDix',
     'site_description' => 'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.',
     
     // Affiliate Links — Domain Registrars
@@ -120,8 +120,8 @@ $config = [
     'smtp_port' => 2525,
     'smtp_user' => '',
     'smtp_pass' => '',
-    'smtp_from_email' => 'alerts@domainawait.local',
-    'smtp_from_name' => 'domainawait Alerts',
+    'smtp_from_email' => 'alerts@tldix.local',
+    'smtp_from_name' => 'TLDix Alerts',
 ];
 
 return $config;

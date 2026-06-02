@@ -121,7 +121,7 @@ function runCronJobs($pdo) {
             <body>
                 <div class='container'>
                     <div class='card'>
-                        <a href='http://{$_SERVER['HTTP_HOST']}' class='logo'>domainawait</a>
+                        <a href='http://{$_SERVER['HTTP_HOST']}' class='logo'>TLDix</a>
                         <h1>Alan Adı Yenileme Bildirimi</h1>
                         <p>Merhaba <strong>{$username}</strong>,</p>
                         <p>Takip listenizdeki <span style='color:#ffffff; font-weight:bold;'>{$domainName}</span> alan adının <span class='highlight'>{$timeLabel}!</span></p>
@@ -134,8 +134,8 @@ function runCronJobs($pdo) {
                         </div>
                     </div>
                     <div class='footer'>
-                        Bu e-posta, {$domainName} alan adını domainawait üzerinde takibe aldığınız için gönderilmiştir.<br>
-                        &copy; " . date('Y') . " domainawait. Tüm hakları saklıdır.
+                        Bu e-posta, {$domainName} alan adını TLDix üzerinde takibe aldığınız için gönderilmiştir.<br>
+                        &copy; " . date('Y') . " TLDix. Tüm hakları saklıdır.
                     </div>
                 </div>
             </body>
@@ -236,7 +236,7 @@ function runCronJobs($pdo) {
             <body>
                 <div class='container'>
                     <div class='card'>
-                        <a href='http://{$_SERVER['HTTP_HOST']}' class='logo'>domainawait</a>
+                        <a href='http://{$_SERVER['HTTP_HOST']}' class='logo'>TLDix</a>
                         <h1>Hosting Yenileme Bildirimi</h1>
                         <p>Merhaba <strong>{$username}</strong>,</p>
                         <p>Takip listenizdeki <span style='color:#ffffff; font-weight:bold;'>{$domainName}</span> alan adına bağlı <strong>{$provider}</strong> hosting paketinizin <span class='highlight'>{$timeLabel}!</span></p>
@@ -248,8 +248,8 @@ function runCronJobs($pdo) {
                         </div>
                     </div>
                     <div class='footer'>
-                        Bu e-posta, {$domainName} alan adının bağlı olduğu hosting paketini domainawait üzerinde takibe aldığınız için gönderilmiştir.<br>
-                        &copy; " . date('Y') . " domainawait. Tüm hakları saklıdır.
+                        Bu e-posta, {$domainName} alan adının bağlı olduğu hosting paketini TLDix üzerinde takibe aldığınız için gönderilmiştir.<br>
+                        &copy; " . date('Y') . " TLDix. Tüm hakları saklıdır.
                     </div>
                 </div>
             </body>

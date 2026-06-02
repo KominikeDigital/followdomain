@@ -9,7 +9,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>Alan Adlarının Temel Mantığı</h2>
-<p>Bir web sitesi kurmayı, çevrimiçi bir mağaza açmayı veya bir blog başlatmayı planlıyorsanız, karşılaşacağınız ilk terim "alan adı" (domain) olacaktır. Peki bu tam olarak nedir? Basitçe söylemek gerekirse alan adı, insanların web sitenizi ziyaret etmek için tarayıcı adres çubuğuna yazdıkları adrestir. Örneğin, <code>domainawait.com</code> bir alan adıdır.</p>
+<p>Bir web sitesi kurmayı, çevrimiçi bir mağaza açmayı veya bir blog başlatmayı planlıyorsanız, karşılaşacağınız ilk terim "alan adı" (domain) olacaktır. Peki bu tam olarak nedir? Basitçe söylemek gerekirse alan adı, insanların web sitenizi ziyaret etmek için tarayıcı adres çubuğuna yazdıkları adrestir. Örneğin, <code>TLDix.com</code> bir alan adıdır.</p>
 
 <h3>Alan Adı ve Web Hosting Farkı: Ev Analojisi</h3>
 <p>Yeni başlayanların en sık karıştırdığı konulardan biri alan adı ile web hosting (barındırma) arasındaki farktır. Bunu anlamak için web sitenizi fiziksel bir ev olarak düşünün:</p>
@@ -66,7 +66,7 @@ return [
         'image' => 'assets/images/blog/domain_tracking.png',
         'date' => '2026-05-30',
         'content' => '<h2>TLD Nedir?</h2>
-<p>Üst Düzey Alan Adı (TLD), bir alan adının en sonunda, son noktadan sonra gelen uzantıdır. <code>domainawait.com</code> adresinde TLD uzantısı <code>.com</code>\'dur. İnternet artık kullanım amaçlarına ve bölgelere göre kategorize edilmiş binlerce farklı uzantıyı desteklemektedir.</p>
+<p>Üst Düzey Alan Adı (TLD), bir alan adının en sonunda, son noktadan sonra gelen uzantıdır. <code>TLDix.com</code> adresinde TLD uzantısı <code>.com</code>\'dur. İnternet artık kullanım amaçlarına ve bölgelere göre kategorize edilmiş binlerce farklı uzantıyı desteklemektedir.</p>
 
 <h3>Ana Uzantı Kategorileri</h3>
 <ol>

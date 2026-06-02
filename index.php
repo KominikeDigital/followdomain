@@ -2,6 +2,7 @@
 // Start session for admin/user auth
 session_start();
 
+
 // Handle Language Selection Change
 if (isset($_GET['lang'])) {
     $langParam = trim($_GET['lang']);
@@ -180,12 +181,12 @@ switch ($route) {
             if ($res['success']) {
                 $userEmail = trim($_POST['email']);
                 $userName = trim($_POST['username']);
-                $subject = "Welcome to domainawait!";
+                $subject = "Welcome to TLDix!";
                 $messageHtml = "
-                <h2>Welcome to domainawait!</h2>
+                <h2>Welcome to TLDix!</h2>
                 <p>Hello <strong>" . esc($userName) . "</strong>,</p>
                 <p>Your account has been successfully created. You can now start tracking your domain names and hosting servers, configure custom alert intervals, and use our Developer API.</p>
-                <p>Best regards,<br>domainawait Team</p>
+                <p>Best regards,<br>TLDix Team</p>
                 ";
                 sendEmailNotification($userEmail, $subject, $messageHtml);
                 
@@ -220,11 +221,11 @@ switch ($route) {
                     $stmtUpdate = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
                     $stmtUpdate->execute([$passwordHash, $user['id']]);
                     
-                    $subject = "domainawait Şifre Sıfırlama";
+                    $subject = "TLDix Şifre Sıfırlama";
                     $messageHtml = "
                     <h2>Şifre Sıfırlama Talebi</h2>
                     <p>Merhaba <strong>" . esc($user['username']) . "</strong>,</p>
-                    <p>domainawait hesabınız için şifre sıfırlama talebinde bulundunuz.</p>
+                    <p>TLDix hesabınız için şifre sıfırlama talebinde bulundunuz.</p>
                     <p>Geçici şifreniz: <strong style='font-size: 1.2rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #000;'>" . esc($tempPassword) . "</strong></p>
                     <p>Lütfen bu şifreyi kullanarak giriş yapın ve ardından hesap panelinizden şifrenizi değiştirin.</p>
                     ";
@@ -594,8 +595,8 @@ switch ($route) {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_test_email') {
                 $testEmail = filter_input(INPUT_POST, 'test_email', FILTER_SANITIZE_EMAIL);
                 if (isValidEmail($testEmail)) {
-                    $subject = "domainawait E-posta Bildirim Testi";
-                    $htmlMessage = "<h1>domainawait E-posta Testi Başarılı!</h1><p>Bu e-posta, sistem ayarlarınızın doğru şekilde çalıştığını doğrulamak amacıyla gönderilmiştir.</p><p>Sunucu saati: " . date('Y-m-d H:i:s') . "</p>";
+                    $subject = "TLDix E-posta Bildirim Testi";
+                    $htmlMessage = "<h1>TLDix E-posta Testi Başarılı!</h1><p>Bu e-posta, sistem ayarlarınızın doğru şekilde çalıştığını doğrulamak amacıyla gönderilmiştir.</p><p>Sunucu saati: " . date('Y-m-d H:i:s') . "</p>";
                     $sent = sendEmailNotification($testEmail, $subject, $htmlMessage);
                     if ($sent) {
                         $_SESSION['test_email_success'] = "Test e-postası başarıyla gönderildi: " . $testEmail;

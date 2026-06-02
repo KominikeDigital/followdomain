@@ -15,12 +15,7 @@
             <!-- Brand Info Column -->
             <div class="footer-info">
                 <a href="<?php echo url(''); ?>" class="app-logo">
-                    <span class="logo-icon" style="color: var(--color-primary); display: inline-flex;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    <span class="logo-text">domain<span>await</span></span>
+                    <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 38px; width: auto; display: block;">
                 </a>
                 <p class="footer-desc"><?php echo __('footer_logo_sub'); ?></p>
                 
@@ -90,7 +85,7 @@
         <!-- Bottom Rights & Meta Badge Slot -->
         <div class="footer-bottom">
             <div class="container footer-bottom-container">
-                <p>&copy; <?php echo date('Y'); ?> domainawait. <?php echo __('footer_all_rights'); ?></p>
+                <p>&copy; <?php echo date('Y'); ?> TLDix. <?php echo __('footer_all_rights'); ?></p>
                 <div class="footer-meta">
                     <span class="meta-badge">Hourly Check Sync</span>
                     <span class="meta-badge">RDAP Over HTTPS</span>
