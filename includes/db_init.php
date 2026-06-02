@@ -57,6 +57,8 @@ function initializeDatabase($pdo, $dbType) {
             api_queries_today INTEGER DEFAULT 0,
             last_api_query_date TEXT DEFAULT '',
             webhook_url TEXT NULL,
+            is_verified INTEGER DEFAULT 0,
+            verification_token TEXT NULL,
             created_at TEXT
         )";
 
@@ -205,6 +207,8 @@ function initializeDatabase($pdo, $dbType) {
             api_queries_today INT DEFAULT 0,
             last_api_query_date VARCHAR(10) DEFAULT '',
             webhook_url TEXT NULL,
+            is_verified TINYINT DEFAULT 0,
+            verification_token VARCHAR(100) NULL,
             created_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
@@ -300,7 +304,9 @@ function initializeDatabase($pdo, $dbType) {
         'api_plan' => "TEXT DEFAULT 'free'",
         'api_queries_today' => 'INTEGER DEFAULT 0',
         'last_api_query_date' => "TEXT DEFAULT ''",
-        'webhook_url' => 'TEXT NULL'
+        'webhook_url' => 'TEXT NULL',
+        'is_verified' => 'INTEGER DEFAULT 0',
+        'verification_token' => 'TEXT NULL'
     ];
     
     if ($dbType === 'mysql') {
@@ -309,7 +315,9 @@ function initializeDatabase($pdo, $dbType) {
             'api_plan' => "VARCHAR(50) DEFAULT 'free'",
             'api_queries_today' => 'INT DEFAULT 0',
             'last_api_query_date' => "VARCHAR(10) DEFAULT ''",
-            'webhook_url' => 'TEXT NULL'
+            'webhook_url' => 'TEXT NULL',
+            'is_verified' => 'TINYINT DEFAULT 0',
+            'verification_token' => 'VARCHAR(100) NULL'
         ];
     }
     
