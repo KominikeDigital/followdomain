@@ -643,7 +643,7 @@ html[data-theme="light"] .admin-card textarea {
                     formData.append('smtp_from_name', fromName);
                     formData.append('test_target_email', targetEmail);
 
-                    fetch('<?php echo url("admin/test-smtp-live"); ?>', {
+                    fetch('<?php echo url("manage-secure-panel/test-smtp-live"); ?>', {
                         method: 'POST',
                         body: formData
                     })

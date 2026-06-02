@@ -143,7 +143,7 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
             $route = 'domain_search';
         } elseif ($path === 'domain-search/ajax') {
             $route = 'domain_search_ajax';
-        } elseif ($path === 'admin/test-smtp-live') {
+        } elseif ($path === 'admin/test-smtp-live' || $path === 'manage-secure-panel/test-smtp-live') {
             $route = 'admin_test_smtp_live';
         }
     }
@@ -964,8 +964,8 @@ switch ($route) {
 
     case 'admin_test_smtp_live':
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-            header('HTTP/1.1 403 Forbidden');
-            echo json_encode(['success' => false, 'log' => 'Forbidden']);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'log' => 'Hata: Yönetici oturumu aktif değil. Lütfen sayfayı yenileyip tekrar giriş yapın.']);
             exit;
         }
 
