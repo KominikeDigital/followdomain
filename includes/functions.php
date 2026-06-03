@@ -162,7 +162,7 @@ function getFormattedEmail($templateKey, $replacements = []) {
         
         'mail_tpl_user_forgot' => '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #6366f1; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>',
         
-        'mail_tpl_admin_register' => '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li></ul><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>',
+        'mail_tpl_admin_register' => '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li><li><strong>Doğrulama Maili Durumu:</strong> {mail_status}</li></ul><p><strong>Kullanıcı Doğrulama Bağlantısı:</strong> <a href="{verify_url}">{verify_url}</a></p><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>',
         
         'mail_tpl_admin_forgot' => '<h2>Şifre Sıfırlama Bildirimi</h2><p>Aşağıdaki kullanıcı şifre sıfırlama talebinde bulundu. Kullanıcıya gönderilen geçici şifre ve giriş bağlantısı aşağıdadır:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Geçici Şifre:</strong> <code>{temp_password}</code></li><li><strong>Giriş Bağlantısı:</strong> <a href="{login_url}">{login_url}</a></li><li><strong>Tarih:</strong> {date}</li></ul><p>Güvenlik için kullanıcı giriş yaptıktan sonra şifresini profil ayarlarından değiştirmelidir.</p>',
         
@@ -179,6 +179,19 @@ function getFormattedEmail($templateKey, $replacements = []) {
         }
         if (array_key_exists('login_url', $replacements) && strpos($templateContent, '{login_url}') === false) {
             $templateContent .= '<p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Giriş bağlantısı: <a href="{login_url}">{login_url}</a></p>';
+        }
+    }
+
+    if ($templateKey === 'mail_tpl_user_verify' && array_key_exists('verify_url', $replacements) && strpos($templateContent, '{verify_url}') === false) {
+        $templateContent .= '<p><a href="{verify_url}" class="btn">E-postamı Doğrula</a></p><p>Doğrulama bağlantısı: <a href="{verify_url}">{verify_url}</a></p>';
+    }
+
+    if ($templateKey === 'mail_tpl_admin_register') {
+        if (array_key_exists('mail_status', $replacements) && strpos($templateContent, '{mail_status}') === false) {
+            $templateContent .= '<p><strong>Doğrulama Maili Durumu:</strong> {mail_status}</p>';
+        }
+        if (array_key_exists('verify_url', $replacements) && $replacements['verify_url'] !== '' && strpos($templateContent, '{verify_url}') === false) {
+            $templateContent .= '<p><strong>Kullanıcı Doğrulama Bağlantısı:</strong> <a href="{verify_url}">{verify_url}</a></p>';
         }
     }
     
@@ -292,9 +305,70 @@ function getExpirationProgress($registrationDate, $expirationDate) {
 }
 
 /**
+ * Read a cached raw WHOIS/RDAP lookup result, including unregistered domains
+ */
+function getCachedDomainLookup($pdo, $domainName, $ttlSeconds) {
+    try {
+        $stmt = $pdo->prepare("SELECT result_json, last_checked FROM domain_lookup_cache WHERE domain_name = ?");
+        $stmt->execute([$domainName]);
+        $cached = $stmt->fetch();
+        if (!$cached || empty($cached['result_json'])) {
+            return null;
+        }
+
+        $lastChecked = strtotime($cached['last_checked'] ?? '');
+        if (!$lastChecked || time() - $lastChecked > $ttlSeconds) {
+            return null;
+        }
+
+        $decoded = json_decode($cached['result_json'], true);
+        return is_array($decoded) ? $decoded : null;
+    } catch (Throwable $e) {
+        error_log("WHOIS cache read failed for $domainName: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Store a raw WHOIS/RDAP lookup result for cost control
+ */
+function storeDomainLookupCache($pdo, $domainName, $info) {
+    try {
+        $registered = isset($info['registered']) && $info['registered'] ? 1 : 0;
+        $json = json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $now = date('Y-m-d H:i:s');
+        $stmt = $pdo->prepare("
+            INSERT INTO domain_lookup_cache (domain_name, registered, result_json, last_checked)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(domain_name) DO UPDATE SET
+                registered = excluded.registered,
+                result_json = excluded.result_json,
+                last_checked = excluded.last_checked
+        ");
+        $stmt->execute([$domainName, $registered, $json, $now]);
+    } catch (PDOException $e) {
+        try {
+            $stmt = $pdo->prepare("SELECT domain_name FROM domain_lookup_cache WHERE domain_name = ?");
+            $stmt->execute([$domainName]);
+            if ($stmt->fetch()) {
+                $upd = $pdo->prepare("UPDATE domain_lookup_cache SET registered = ?, result_json = ?, last_checked = ? WHERE domain_name = ?");
+                $upd->execute([$registered, $json, $now, $domainName]);
+            } else {
+                $ins = $pdo->prepare("INSERT INTO domain_lookup_cache (domain_name, registered, result_json, last_checked) VALUES (?, ?, ?, ?)");
+                $ins->execute([$domainName, $registered, $json, $now]);
+            }
+        } catch (Throwable $fallbackError) {
+            error_log("WHOIS cache write failed for $domainName: " . $fallbackError->getMessage());
+        }
+    }
+}
+
+/**
  * Asynchronously checks a domain and updates it in background
  */
 function getOrUpdateDomain($pdo, $domainName, $forceRefresh = false) {
+    global $config;
+
     $domainName = cleanDomainName($domainName);
     if (!$domainName) return null;
     
@@ -305,17 +379,25 @@ function getOrUpdateDomain($pdo, $domainName, $forceRefresh = false) {
     
     $now = date('Y-m-d H:i:s');
     
-    // If not found or cached more than 24 hours (or forced)
+    $cacheTtl = max(3600, (int)($config['whois_cache_ttl_seconds'] ?? 172800));
+
+    // If not found or cached more than configured TTL (or forced)
     $shouldUpdate = $forceRefresh || !$domain;
     if ($domain) {
         $lastChecked = strtotime($domain['last_checked']);
-        if (time() - $lastChecked > 86400) {
+        if (!$lastChecked || time() - $lastChecked > $cacheTtl) {
             $shouldUpdate = true;
         }
     }
     
     if ($shouldUpdate) {
-        $info = fetchDomainInfo($domainName);
+        $info = (!$forceRefresh) ? getCachedDomainLookup($pdo, $domainName, $cacheTtl) : null;
+        if (!$info) {
+            $info = fetchDomainInfo($domainName);
+            if ($info && !empty($info['success'])) {
+                storeDomainLookupCache($pdo, $domainName, $info);
+            }
+        }
         if ($info && $info['success']) {
             if (!$info['registered']) {
                 // Domain is unregistered / available
@@ -387,17 +469,74 @@ function getOrUpdateDomain($pdo, $domainName, $forceRefresh = false) {
 /**
  * Custom SMTP Client and email sender
  */
+function encodeEmailHeader($value) {
+    $value = trim((string)$value);
+    if ($value === '') return '';
+    if (function_exists('mb_encode_mimeheader')) {
+        return mb_encode_mimeheader($value, 'UTF-8', 'B', "\r\n");
+    }
+    return '=?UTF-8?B?' . base64_encode($value) . '?=';
+}
+
+function formatEmailAddress($email, $name = '') {
+    $email = trim((string)$email);
+    $name = trim((string)$name);
+    if ($name === '') {
+        return '<' . $email . '>';
+    }
+    return encodeEmailHeader($name) . ' <' . $email . '>';
+}
+
+function readSmtpResponse($socket) {
+    $data = "";
+    while (true) {
+        $line = fgets($socket, 512);
+        if ($line === false) {
+            break;
+        }
+        $data .= $line;
+        if (strlen($line) >= 4 && $line[3] !== '-') {
+            break;
+        }
+    }
+    return $data;
+}
+
+function expectSmtpResponse($socket, $expectedCodes, $context) {
+    $response = readSmtpResponse($socket);
+    $code = (int)substr($response, 0, 3);
+    if (!in_array($code, (array)$expectedCodes, true)) {
+        error_log("SMTP $context failed: " . trim($response));
+        return false;
+    }
+    return $response;
+}
+
 function sendEmailNotification($to, $subject, $messageHtml) {
     global $config;
     
-    $fromEmail = $config['smtp_from_email'] ?? 'alerts@tldix.local';
-    $fromName = $config['smtp_from_name'] ?? 'TLDix Alerts';
+    $to = trim((string)$to);
+    $fromEmail = trim((string)($config['smtp_from_email'] ?? 'alerts@tldix.local'));
+    $fromName = trim((string)($config['smtp_from_name'] ?? 'TLDix Alerts'));
+
+    if (!isValidEmail($to)) {
+        error_log("Email skipped: invalid recipient address ($to).");
+        return false;
+    }
+
+    if (!isValidEmail($fromEmail)) {
+        error_log("Email skipped: invalid sender address ($fromEmail).");
+        return false;
+    }
     
     // Headers for HTML mail
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $headers .= "From: " . $fromName . " <" . $fromEmail . ">\r\n";
+    $headers .= "From: " . formatEmailAddress($fromEmail, $fromName) . "\r\n";
     $headers .= "Reply-To: " . $fromEmail . "\r\n";
+    $headers .= "Return-Path: " . $fromEmail . "\r\n";
+    $headers .= "Date: " . date(DATE_RFC2822) . "\r\n";
+    $headers .= "Message-ID: <" . bin2hex(random_bytes(12)) . "@" . preg_replace('/^.*@/', '', $fromEmail) . ">\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion();
     
     try {
@@ -438,65 +577,105 @@ function sendEmailNotification($to, $subject, $messageHtml) {
                 error_log("SMTP connection failed: $errstr ($errno)");
                 return false;
             }
+            stream_set_timeout($socket, 20);
 
-            $getResponse = function($socket) {
-                $data = "";
-                while (true) {
-                    $line = fgets($socket, 512);
-                    if ($line === false) {
-                        break;
-                    }
-                    $data .= $line;
-                    if (strpos($line, "\r\n") !== false) {
-                        if (strlen($line) >= 4 && $line[3] !== '-') {
-                            break;
-                        }
-                    }
-                }
-                return $data;
-            };
-
-            $getResponse($socket); // Read banner
+            if (!expectSmtpResponse($socket, [220], 'banner')) {
+                fclose($socket);
+                return false;
+            }
 
             // HELO
             $serverName = $_SERVER['SERVER_NAME'] ?? ($_SERVER['HTTP_HOST'] ?? 'localhost');
             fwrite($socket, "EHLO " . $serverName . "\r\n");
-            $getResponse($socket);
+            $ehloResponse = expectSmtpResponse($socket, [250], 'EHLO');
+            if (!$ehloResponse) {
+                fwrite($socket, "HELO " . $serverName . "\r\n");
+                if (!expectSmtpResponse($socket, [250], 'HELO')) {
+                    fclose($socket);
+                    return false;
+                }
+            }
+
+            $securePref = strtolower(trim((string)($config['smtp_secure'] ?? '')));
+            $shouldStartTls = ($securePref === 'tls' || ($port === 587 && stripos((string)$ehloResponse, 'STARTTLS') !== false));
+            if ($shouldStartTls && strpos($host, 'ssl://') !== 0) {
+                fwrite($socket, "STARTTLS\r\n");
+                if (!expectSmtpResponse($socket, [220], 'STARTTLS')) {
+                    fclose($socket);
+                    return false;
+                }
+                $cryptoMethod = STREAM_CRYPTO_METHOD_TLS_CLIENT;
+                if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) {
+                    $cryptoMethod |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
+                }
+                if (!@stream_socket_enable_crypto($socket, true, $cryptoMethod)) {
+                    error_log("SMTP STARTTLS failed: could not enable TLS encryption.");
+                    fclose($socket);
+                    return false;
+                }
+                fwrite($socket, "EHLO " . $serverName . "\r\n");
+                if (!expectSmtpResponse($socket, [250], 'EHLO after STARTTLS')) {
+                    fclose($socket);
+                    return false;
+                }
+            }
 
             // AUTH LOGIN if credentials are provided
             if (!empty($username) && !empty($password)) {
                 fwrite($socket, "AUTH LOGIN\r\n");
-                $getResponse($socket);
+                if (!expectSmtpResponse($socket, [334], 'AUTH LOGIN')) {
+                    fclose($socket);
+                    return false;
+                }
 
                 fwrite($socket, base64_encode($username) . "\r\n");
-                $getResponse($socket);
+                if (!expectSmtpResponse($socket, [334], 'AUTH username')) {
+                    fclose($socket);
+                    return false;
+                }
 
                 fwrite($socket, base64_encode($password) . "\r\n");
-                $getResponse($socket);
+                if (!expectSmtpResponse($socket, [235], 'AUTH password')) {
+                    fclose($socket);
+                    return false;
+                }
             }
 
             // MAIL FROM
             fwrite($socket, "MAIL FROM: <$fromEmail>\r\n");
-            $getResponse($socket);
+            if (!expectSmtpResponse($socket, [250], 'MAIL FROM')) {
+                fclose($socket);
+                return false;
+            }
 
             // RCPT TO
             fwrite($socket, "RCPT TO: <$to>\r\n");
-            $getResponse($socket);
+            if (!expectSmtpResponse($socket, [250, 251], 'RCPT TO')) {
+                fclose($socket);
+                return false;
+            }
 
             // DATA
             fwrite($socket, "DATA\r\n");
-            $getResponse($socket);
+            if (!expectSmtpResponse($socket, [354], 'DATA')) {
+                fclose($socket);
+                return false;
+            }
 
             // Email Body
-            $body = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+            $body = "Subject: " . encodeEmailHeader($subject) . "\r\n";
             $body .= "To: <$to>\r\n";
-            $body .= "From: $fromName <$fromEmail>\r\n";
+            $body .= "From: " . formatEmailAddress($fromEmail, $fromName) . "\r\n";
+            $body .= "Reply-To: <$fromEmail>\r\n";
             $body .= "MIME-Version: 1.0\r\n";
             $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
             $body .= $messageHtml . "\r\n.\r\n";
 
             fwrite($socket, $body);
-            $getResponse($socket);
+            if (!expectSmtpResponse($socket, [250], 'message body')) {
+                fclose($socket);
+                return false;
+            }
 
             // QUIT
             fwrite($socket, "QUIT\r\n");
@@ -510,11 +689,61 @@ function sendEmailNotification($to, $subject, $messageHtml) {
         }
 
         // Fallback to PHP's built-in mail() function
-        return mail($to, $subject, $messageHtml, $headers);
+        $encodedSubject = encodeEmailHeader($subject);
+        $params = (stripos(PHP_OS, 'WIN') === 0) ? '' : '-f' . escapeshellarg($fromEmail);
+        $sent = $params !== ''
+            ? mail($to, $encodedSubject, $messageHtml, $headers, $params)
+            : mail($to, $encodedSubject, $messageHtml, $headers);
+        if (!$sent) {
+            error_log("PHP mail() returned false for recipient $to.");
+        }
+        return $sent;
     } catch (Throwable $e) {
         error_log("Email sending failed: " . $e->getMessage());
         return false;
     }
+}
+
+function sendUserVerificationEmail($email, $username, $token) {
+    $verifyUrl = absolute_url('verify-email?token=' . $token);
+    $messageHtml = getFormattedEmail('mail_tpl_user_verify', [
+        'username' => esc($username),
+        'verify_url' => $verifyUrl
+    ]);
+    return sendEmailNotification($email, 'TLDix E-posta Doğrulama', $messageHtml);
+}
+
+function sendAdminRegistrationNotification($email, $username, $mailSent, $token = '') {
+    global $config;
+
+    $adminEmail = $config['admin_notification_email'] ?? '';
+    if (empty($adminEmail)) {
+        return false;
+    }
+
+    $subjectPrefix = $mailSent ? 'Yeni Üye Kaydı' : 'Yeni Üye Kaydı - Doğrulama Maili Gönderilemedi';
+    $verifyUrl = $token ? absolute_url('verify-email?token=' . $token) : '';
+    $messageHtml = getFormattedEmail('mail_tpl_admin_register', [
+        'username' => esc($username),
+        'email' => esc($email),
+        'date' => date('Y-m-d H:i:s'),
+        'verify_url' => $verifyUrl,
+        'mail_status' => $mailSent ? 'Kullanıcı doğrulama e-postası gönderildi.' : 'Kullanıcı doğrulama e-postası gönderilemedi. SMTP/PHP mail loglarını kontrol edin.'
+    ]);
+
+    if (!$mailSent) {
+        $messageHtml = getEmailTemplateWrapper(
+            '<h2>Yeni Üye Kaydı - Mail Sorunu</h2>' .
+            '<p>Kullanıcı hesabı oluşturuldu ancak doğrulama e-postası gönderilemedi.</p>' .
+            '<ul><li><strong>Kullanıcı Adı:</strong> ' . esc($username) . '</li>' .
+            '<li><strong>E-posta:</strong> ' . esc($email) . '</li>' .
+            '<li><strong>Tarih:</strong> ' . date('Y-m-d H:i:s') . '</li>' .
+            ($verifyUrl ? '<li><strong>Doğrulama Linki:</strong> <a href="' . esc($verifyUrl) . '">' . esc($verifyUrl) . '</a></li>' : '') .
+            '</ul><p>Lütfen SMTP ayarlarını ve alıcı domain teslimatını kontrol edin.</p>'
+        );
+    }
+
+    return sendEmailNotification($adminEmail, $subjectPrefix . ': ' . $username, $messageHtml);
 }
 
 /**
@@ -647,6 +876,257 @@ function getDomainPriceComparison($domainName, $config) {
     }
     
     return $comparison;
+}
+
+/**
+ * Build a Whop checkout URL with TLDix user metadata attached as query params
+ */
+function buildWhopCheckoutUrl($baseUrl, $params = []) {
+    $baseUrl = trim((string)$baseUrl);
+    if ($baseUrl === '') return '';
+
+    $query = http_build_query(array_filter($params, function ($value) {
+        return $value !== null && $value !== '';
+    }));
+    if ($query === '') return $baseUrl;
+
+    return $baseUrl . (strpos($baseUrl, '?') === false ? '?' : '&') . $query;
+}
+
+/**
+ * Read request headers with lowercase keys for webhook verification
+ */
+function getRequestHeadersLower() {
+    $headers = [];
+    if (function_exists('getallheaders')) {
+        foreach (getallheaders() as $key => $value) {
+            $headers[strtolower($key)] = $value;
+        }
+        return $headers;
+    }
+
+    foreach ($_SERVER as $key => $value) {
+        if (strpos($key, 'HTTP_') === 0) {
+            $name = strtolower(str_replace('_', '-', substr($key, 5)));
+            $headers[$name] = $value;
+        }
+    }
+    return $headers;
+}
+
+function decodeStandardWebhookSecret($secret) {
+    $secret = trim((string)$secret);
+    if ($secret === '') return '';
+    if (strpos($secret, 'whsec_') === 0) {
+        $decoded = base64_decode(substr($secret, 6), true);
+        return $decoded !== false ? $decoded : substr($secret, 6);
+    }
+    $decoded = base64_decode($secret, true);
+    return $decoded !== false ? $decoded : $secret;
+}
+
+function parseStandardWebhookSignatures($signatureHeader) {
+    $signatures = [];
+    foreach (preg_split('/\s+/', trim((string)$signatureHeader)) as $part) {
+        if ($part === '') continue;
+        $bits = explode(',', $part, 2);
+        $signatures[] = count($bits) === 2 ? $bits[1] : $part;
+    }
+    return $signatures;
+}
+
+/**
+ * Verify Standard Webhooks HMAC-SHA256 signatures used by Whop webhooks
+ */
+function verifyStandardWebhookSignature($payload, $headers, $secret, $toleranceSeconds = 300) {
+    $webhookId = trim((string)($headers['webhook-id'] ?? ''));
+    $timestamp = trim((string)($headers['webhook-timestamp'] ?? ''));
+    $signatureHeader = trim((string)($headers['webhook-signature'] ?? ''));
+
+    if ($webhookId === '' || $timestamp === '' || $signatureHeader === '') {
+        return false;
+    }
+
+    if (!ctype_digit($timestamp) || abs(time() - (int)$timestamp) > $toleranceSeconds) {
+        return false;
+    }
+
+    $secretBytes = decodeStandardWebhookSecret($secret);
+    if ($secretBytes === '') {
+        return false;
+    }
+
+    $signedContent = $webhookId . '.' . $timestamp . '.' . $payload;
+    $expected = base64_encode(hash_hmac('sha256', $signedContent, $secretBytes, true));
+    foreach (parseStandardWebhookSignatures($signatureHeader) as $signature) {
+        if (hash_equals($expected, $signature)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function findNestedValueByKeys($payload, $keys) {
+    if (!is_array($payload)) return null;
+    foreach ($payload as $key => $value) {
+        if (in_array(strtolower((string)$key), $keys, true) && !is_array($value) && $value !== '') {
+            return $value;
+        }
+        if (is_array($value)) {
+            $found = findNestedValueByKeys($value, $keys);
+            if ($found !== null && $found !== '') {
+                return $found;
+            }
+        }
+    }
+    return null;
+}
+
+function findNestedEmail($payload) {
+    if (!is_array($payload)) return null;
+    foreach ($payload as $key => $value) {
+        if (!is_array($value) && stripos((string)$key, 'email') !== false && isValidEmail((string)$value)) {
+            return strtolower(trim((string)$value));
+        }
+        if (is_array($value)) {
+            $found = findNestedEmail($value);
+            if ($found) return $found;
+        }
+    }
+    return null;
+}
+
+function detectWhopPlan($payload) {
+    $plan = strtolower((string)(findNestedValueByKeys($payload, ['tldix_plan', 'plan', 'plan_key', 'tier']) ?? ''));
+    if (in_array($plan, ['bronze', 'silver', 'gold'], true)) {
+        return $plan;
+    }
+
+    $payloadText = strtolower(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    foreach (['gold', 'silver', 'bronze'] as $candidate) {
+        if (strpos($payloadText, $candidate) !== false) {
+            return $candidate;
+        }
+    }
+
+    $amount = findNestedValueByKeys($payload, ['amount', 'total', 'subtotal', 'price', 'value']);
+    $amount = is_numeric($amount) ? (float)$amount : 0.0;
+    if ($amount >= 9900) return 'gold';
+    if ($amount >= 2900) return 'silver';
+    if ($amount >= 900) return 'bronze';
+    if ($amount >= 99) return 'gold';
+    if ($amount >= 29) return 'silver';
+    if ($amount >= 9) return 'bronze';
+
+    return 'bronze';
+}
+
+/**
+ * Verify and process Whop plan webhooks
+ */
+function processWhopWebhook($pdo, $rawPayload, $headers) {
+    global $config;
+
+    $secret = trim((string)($config['whop_webhook_secret'] ?? ''));
+    if ($secret === '') {
+        $secret = trim((string)getenv('WHOP_WEBHOOK_SECRET'));
+    }
+    if ($secret === '') {
+        error_log('Whop webhook rejected: whop_webhook_secret is not configured.');
+        return ['status' => 503, 'body' => ['success' => false, 'error' => 'webhook_secret_missing']];
+    }
+
+    if (!verifyStandardWebhookSignature($rawPayload, $headers, $secret)) {
+        error_log('Whop webhook rejected: signature verification failed.');
+        return ['status' => 401, 'body' => ['success' => false, 'error' => 'invalid_signature']];
+    }
+
+    $payload = json_decode($rawPayload, true);
+    if (!is_array($payload)) {
+        return ['status' => 400, 'body' => ['success' => false, 'error' => 'invalid_json']];
+    }
+
+    $eventId = trim((string)($headers['webhook-id'] ?? findNestedValueByKeys($payload, ['id', 'event_id']) ?? bin2hex(random_bytes(8))));
+    $eventType = strtolower(trim((string)(findNestedValueByKeys($payload, ['type', 'event_type']) ?? 'unknown')));
+    $now = date('Y-m-d H:i:s');
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO webhook_events (provider, event_id, event_type, payload, processed, created_at) VALUES ('whop', ?, ?, ?, 0, ?)");
+        $stmt->execute([$eventId, $eventType, $rawPayload, $now]);
+    } catch (PDOException $e) {
+        return ['status' => 200, 'body' => ['success' => true, 'duplicate' => true]];
+    }
+
+    $activateEvents = ['payment.succeeded', 'invoice.paid', 'membership.activated', 'membership.created'];
+    $deactivateEvents = ['membership.deactivated', 'membership.cancelled', 'membership.canceled', 'refund.created', 'payment.failed'];
+    $shouldActivate = in_array($eventType, $activateEvents, true) || preg_match('/(paid|succeeded|activated|created)$/', $eventType);
+    $shouldDeactivate = in_array($eventType, $deactivateEvents, true) || preg_match('/(deactivated|cancelled|canceled|refunded|failed)$/', $eventType);
+
+    if (!$shouldActivate && !$shouldDeactivate) {
+        $pdo->prepare("UPDATE webhook_events SET processed = 1 WHERE provider = 'whop' AND event_id = ?")->execute([$eventId]);
+        return ['status' => 200, 'body' => ['success' => true, 'ignored' => true, 'event_type' => $eventType]];
+    }
+
+    $userId = findNestedValueByKeys($payload, ['tldix_user_id', 'user_id', 'client_reference_id']);
+    $user = null;
+    if (is_numeric($userId) && (int)$userId > 0) {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([(int)$userId]);
+        $user = $stmt->fetch();
+    }
+
+    if (!$user) {
+        $email = findNestedEmail($payload);
+        if ($email) {
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+        }
+    }
+
+    if (!$user) {
+        return ['status' => 202, 'body' => ['success' => false, 'pending' => true, 'error' => 'user_not_found']];
+    }
+
+    $plan = detectWhopPlan($payload);
+    $orderId = (string)(findNestedValueByKeys($payload, ['order_id', 'payment_id', 'invoice_id', 'membership_id', 'receipt_id']) ?? $eventId);
+    $amountRaw = findNestedValueByKeys($payload, ['amount', 'total', 'subtotal', 'price', 'value']);
+    $amount = is_numeric($amountRaw) ? (float)$amountRaw : 0.0;
+    if ($amount > 1000) $amount = $amount / 100;
+    $currency = strtoupper((string)(findNestedValueByKeys($payload, ['currency', 'currency_code']) ?? 'USD'));
+
+    if ($shouldDeactivate) {
+        $pdo->prepare("UPDATE users SET api_plan = 'free', pending_plan = NULL WHERE id = ?")->execute([$user['id']]);
+        if (function_exists('logActivity')) {
+            logActivity($pdo, $user['id'], "Whop aboneliği pasifleştirildi. Plan free olarak güncellendi. Event: $eventType");
+        }
+        $pdo->prepare("UPDATE webhook_events SET processed = 1 WHERE provider = 'whop' AND event_id = ?")->execute([$eventId]);
+        return ['status' => 200, 'body' => ['success' => true, 'user_id' => (int)$user['id'], 'plan' => 'free']];
+    }
+
+    $pdo->prepare("UPDATE users SET api_plan = ?, pending_plan = NULL WHERE id = ?")->execute([$plan, $user['id']]);
+    $stmt = $pdo->prepare("
+        INSERT INTO payments (user_id, plan, amount, currency, method, status, reference, notes, whop_order_id, created_at, confirmed_at)
+        VALUES (?, ?, ?, ?, 'whop', 'confirmed', ?, ?, ?, ?, ?)
+    ");
+    $stmt->execute([
+        $user['id'],
+        $plan,
+        $amount > 0 ? $amount : 0,
+        $currency ?: 'USD',
+        $orderId,
+        'Whop webhook: ' . $eventType,
+        $orderId,
+        $now,
+        $now
+    ]);
+    if (function_exists('logActivity')) {
+        logActivity($pdo, $user['id'], "Whop ödemesi onaylandı. Plan " . strtoupper($plan) . " aktif edildi.");
+    }
+    $pdo->prepare("UPDATE webhook_events SET processed = 1 WHERE provider = 'whop' AND event_id = ?")->execute([$eventId]);
+
+    return ['status' => 200, 'body' => ['success' => true, 'user_id' => (int)$user['id'], 'plan' => $plan]];
 }
 
 /**

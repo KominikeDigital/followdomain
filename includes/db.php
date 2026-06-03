@@ -17,11 +17,36 @@ try {
     
     if ($dbType === 'sqlite') {
         $dbPath = $config['sqlite_path'];
+        $dbDir = dirname($dbPath);
+        if (!is_dir($dbDir)) {
+            mkdir($dbDir, 0750, true);
+        }
+
+        $legacyPath = realpath(__DIR__ . '/../database.sqlite');
+        $targetPath = realpath($dbDir) ? realpath($dbDir) . DIRECTORY_SEPARATOR . basename($dbPath) : $dbPath;
+        if ($legacyPath && !file_exists($dbPath) && realpath(dirname($legacyPath)) !== realpath($dbDir)) {
+            $migrated = @rename($legacyPath, $dbPath);
+            if (!$migrated && @copy($legacyPath, $dbPath)) {
+                @unlink($legacyPath);
+                $migrated = true;
+            }
+            if ($migrated) {
+                @chmod($dbPath, 0600);
+            }
+            foreach (['-wal', '-shm'] as $suffix) {
+                $legacySidecar = $legacyPath . $suffix;
+                if ($migrated && file_exists($legacySidecar)) {
+                    @rename($legacySidecar, $targetPath . $suffix);
+                }
+            }
+        }
+
         $pdo = new PDO("sqlite:" . $dbPath);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         
         // Optimize SQLite performance
+        $pdo->exec("PRAGMA busy_timeout = 5000");
         $pdo->exec("PRAGMA journal_mode = WAL");
         $pdo->exec("PRAGMA synchronous = NORMAL");
     } else {

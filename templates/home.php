@@ -15,6 +15,12 @@ $homeTrending = $stmt->fetchAll();
     <div class="hero-content">
         <h1 class="hero-title"><?php echo __('hero_title'); ?></h1>
         <p class="hero-subtitle"><?php echo __('hero_subtitle'); ?></p>
+
+        <div class="hero-free-strip">
+            <span class="hero-free-badge"><?php echo __('hero_free_badge'); ?></span>
+            <a href="<?php echo url('register'); ?>" class="btn btn-primary hero-free-cta"><?php echo __('hero_free_cta'); ?></a>
+            <span class="hero-free-note"><?php echo __('hero_free_note'); ?></span>
+        </div>
         
         <div class="search-container-glass">
             <form action="<?php echo url(''); ?>" method="GET" class="search-form" id="searchForm">
@@ -211,4 +217,3 @@ $homeTrending = $stmt->fetchAll();
         </button>
     </div>
 </section>
-

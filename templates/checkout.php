@@ -9,6 +9,8 @@ global $config, $pdo;
 
 $userId   = $_SESSION['user_id'] ?? 0;
 $username = $_SESSION['username'] ?? '';
+$currentUser = function_exists('getCurrentUser') ? getCurrentUser($pdo) : null;
+$userEmail = $currentUser['email'] ?? '';
 
 $plan = isset($_GET['plan']) ? trim($_GET['plan']) : 'bronze';
 if (!in_array($plan, ['bronze', 'silver', 'gold'])) $plan = 'bronze';
@@ -46,6 +48,18 @@ $whopLinks = [
     'silver' => $config['whop_link_silver'] ?? '',
     'gold'   => $config['whop_link_gold']   ?? '',
 ];
+$checkoutRefSecret = $config['whop_webhook_secret'] ?? ($config['admin_password'] ?? 'tldix');
+$checkoutRef = hash_hmac('sha256', $userId . '|' . $userEmail . '|' . $plan, $checkoutRefSecret);
+$whopCheckoutUrl = !empty($whopLinks[$plan]) ? buildWhopCheckoutUrl($whopLinks[$plan], [
+    'prefill_user' => $username,
+    'prefill_email' => $userEmail,
+    'tldix_user_id' => $userId,
+    'tldix_plan' => $plan,
+    'tldix_ref' => $checkoutRef,
+    'metadata[tldix_user_id]' => $userId,
+    'metadata[tldix_plan]' => $plan,
+    'metadata[tldix_ref]' => $checkoutRef
+]) : '';
 
 // Bank info from config
 $bankName    = $config['bank_name']         ?? 'Belirtilmemiş';
@@ -126,7 +140,7 @@ $bankNotes   = $config['bank_notes']        ?? 'Havale açıklamasına kullanıc
                         <p style="color: var(--color-text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.6;">
                             Kredi kartı, Apple Pay, Google Pay ve daha fazlasını destekleyen Whop.com altyapısı üzerinden ödeme yapın. Plan aktivasyonu otomatik gerçekleşir.
                         </p>
-                        <a href="<?php echo esc($whopLinks[$plan]); ?>?prefill_user=<?php echo urlencode($username); ?>" target="_blank" class="btn btn-primary" style="padding: 0.85rem 2.5rem; font-size: 1rem;">
+                        <a href="<?php echo esc($whopCheckoutUrl); ?>" target="_blank" class="btn btn-primary" style="padding: 0.85rem 2.5rem; font-size: 1rem;">
                             🔐 Güvenli Ödeme Yap — <?php echo $pd['label']; ?>
                         </a>
                         <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 1rem;">Whop'ta ödeme tamamlandıktan sonra planınız otomatik aktif olacaktır.</p>

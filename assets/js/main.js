@@ -23,6 +23,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Registration password strength meter
+    const regPass = document.getElementById('regPass');
+    const strengthBox = document.getElementById('passwordStrength');
+    if (regPass && strengthBox) {
+        const strengthText = document.getElementById('passwordStrengthText');
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const ruleNodes = Array.from(strengthBox.querySelectorAll('[data-rule]'));
+
+        const updatePasswordStrength = () => {
+            const value = regPass.value || '';
+            const checks = {
+                length: value.length >= 8,
+                case: /[a-z]/.test(value) && /[A-Z]/.test(value),
+                number: /\d/.test(value),
+                symbol: /[^a-zA-Z0-9]/.test(value)
+            };
+            let score = Object.values(checks).filter(Boolean).length;
+            if (value.length >= 12 && score >= 3) score += 1;
+
+            const level = score >= 4 ? 'strong' : score === 3 ? 'good' : score === 2 ? 'fair' : 'weak';
+            strengthBox.setAttribute('data-score', level);
+            if (strengthText) {
+                strengthText.textContent = strengthBox.dataset[level] || level;
+            }
+            if (strengthBar) {
+                strengthBar.style.width = `${Math.max(1, Math.min(score, 4)) * 25}%`;
+            }
+            ruleNodes.forEach((node) => {
+                const rule = node.getAttribute('data-rule');
+                node.classList.toggle('met', !!checks[rule]);
+            });
+
+            if (value.length > 0 && score < 3) {
+                regPass.setCustomValidity(strengthBox.dataset.invalid || 'Please choose a stronger password.');
+            } else {
+                regPass.setCustomValidity('');
+            }
+        };
+
+        regPass.addEventListener('input', updatePasswordStrength);
+        const registerForm = regPass.closest('form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', () => {
+                updatePasswordStrength();
+            });
+        }
+        updatePasswordStrength();
+    }
+
     // 2. Expiration Countdown Timer (Real-time update)
     const timerElement = document.getElementById('countdownTimer');
     if (timerElement) {

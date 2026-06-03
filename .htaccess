@@ -53,6 +53,7 @@ RewriteRule ^cron/?$ index.php?route=cron [QSA,L]
 
 # Checkout & Payment
 RewriteRule ^checkout/?$ index.php?route=checkout [QSA,L]
+RewriteRule ^webhook/whop/?$ index.php?route=webhook_whop [QSA,L]
 
 # Domain Sale Page
 RewriteRule ^domains-for-sale/?$ index.php?route=domains_for_sale [QSA,L]

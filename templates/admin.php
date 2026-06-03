@@ -30,15 +30,13 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'confirm_payment' && !empty($_POST['payment_id'])) {
         try {
             $pid = (int)$_POST['payment_id'];
-            $pay = $pdo->prepare("SELECT * FROM payments WHERE id = ?")->execute([$pid]) 
-                   ? $pdo->prepare("SELECT * FROM payments WHERE id = ?"): null;
             $pay = $pdo->prepare("SELECT * FROM payments WHERE id = ?");
             $pay->execute([$pid]);
             $payRow = $pay->fetch();
             if ($payRow) {
                 $pdo->prepare("UPDATE payments SET status = 'confirmed', confirmed_at = ? WHERE id = ?")
                     ->execute([date('Y-m-d H:i:s'), $pid]);
-                $pdo->prepare("UPDATE users SET api_plan = ? WHERE id = ?")
+                $pdo->prepare("UPDATE users SET api_plan = ?, pending_plan = NULL WHERE id = ?")
                     ->execute([$payRow['plan'], $payRow['user_id']]);
                 $settingsSaved = true;
             }
@@ -55,7 +53,7 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Manual plan change by admin
     if ($action === 'admin_set_plan' && !empty($_POST['user_id']) && !empty($_POST['plan'])) {
         $plan = in_array($_POST['plan'], ['free','bronze','silver','gold']) ? $_POST['plan'] : 'free';
-        $pdo->prepare("UPDATE users SET api_plan = ? WHERE id = ?")
+        $pdo->prepare("UPDATE users SET api_plan = ?, pending_plan = NULL WHERE id = ?")
             ->execute([$plan, (int)$_POST['user_id']]);
         $settingsSaved = true;
     }
@@ -88,7 +86,7 @@ if ($isAdmin) {
     $totalUsers     = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
     try { $adminDomains = $pdo->query("SELECT * FROM domains ORDER BY follower_count DESC LIMIT 50")->fetchAll(); } catch(Exception $e){}
     try {
-        $members = $pdo->query("SELECT id, username, email, created_at, api_plan, (SELECT COUNT(*) FROM user_domains WHERE user_id = users.id) AS domain_count FROM users ORDER BY created_at DESC")->fetchAll();
+        $members = $pdo->query("SELECT id, username, email, created_at, api_plan, pending_plan, (SELECT COUNT(*) FROM user_domains WHERE user_id = users.id) AS domain_count FROM users ORDER BY created_at DESC")->fetchAll();
     } catch(Exception $e){ $members = []; }
     try {
         $totalClicks   = $pdo->query("SELECT COUNT(*) FROM affiliate_clicks")->fetchColumn();
@@ -768,12 +766,12 @@ html[data-theme="light"] .admin-card textarea {
                             <h3>👥 Yeni Üye Bildirimi (Yönetici)</h3>
                             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
                                 Yeni bir üye kaydolduğunda belirlenen admin bildirim e-postasına gönderilir.<br>
-                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Yeni Üyenin Adı), <code>{email}</code> (Yeni Üyenin E-postası), <code>{date}</code> (Kayıt Tarihi)
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{username}</code> (Yeni Üyenin Adı), <code>{email}</code> (Yeni Üyenin E-postası), <code>{date}</code> (Kayıt Tarihi), <code>{mail_status}</code> (Doğrulama Maili Durumu), <code>{verify_url}</code> (Doğrulama Bağlantısı)
                             </p>
                             <div class="form-group">
                                 <label>HTML İçerik (Body)</label>
                                 <textarea name="settings[mail_tpl_admin_register]" rows="15" class="code-editor"><?php 
-                                    $default = '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li></ul><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>';
+                                    $default = '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li><li><strong>Doğrulama Maili Durumu:</strong> {mail_status}</li></ul><p><strong>Kullanıcı Doğrulama Bağlantısı:</strong> <a href="{verify_url}">{verify_url}</a></p><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>';
                                     echo esc($config['mail_tpl_admin_register'] ?? $default); 
                                 ?></textarea>
                             </div>
@@ -1321,6 +1319,9 @@ html[data-theme="light"] .admin-card textarea {
                                                 <span style="background:<?php echo $pc2; ?>22; color:<?php echo $pc2; ?>; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700; text-transform:uppercase;">
                                                     <?php echo esc($m['api_plan']); ?>
                                                 </span>
+                                                <?php if (!empty($m['pending_plan'])): ?>
+                                                    <div style="margin-top:0.3rem; color:var(--color-warning); font-size:0.7rem; white-space:nowrap;">Bekleyen: <?php echo esc(strtoupper($m['pending_plan'])); ?></div>
+                                                <?php endif; ?>
                                             </td>
                                             <td style="color: var(--color-primary); font-weight:700;"><?php echo (int)$m['domain_count']; ?></td>
                                             <td style="color:var(--color-text-muted); font-size:0.82rem;"><?php echo formatDate($m['created_at'], 'd M Y'); ?></td>

@@ -9,7 +9,7 @@ if (count(get_included_files()) === 1) {
 $config = [
     // Database Configuration
     'db_type' => 'sqlite', // 'sqlite' or 'mysql'
-    'sqlite_path' => __DIR__ . '/database.sqlite',
+    'sqlite_path' => getenv('TLDIX_SQLITE_PATH') ?: dirname(__DIR__) . '/tldix_data/database.sqlite',
     
     'mysql_host' => 'localhost',
     'mysql_db' => 'domain_tracker',
@@ -122,6 +122,8 @@ $config = [
     'smtp_pass' => '',
     'smtp_from_email' => 'alerts@tldix.local',
     'smtp_from_name' => 'TLDix Alerts',
+    'whois_cache_ttl_seconds' => 172800,
+    'whop_webhook_secret' => getenv('WHOP_WEBHOOK_SECRET') ?: '',
 ];
 
 return $config;

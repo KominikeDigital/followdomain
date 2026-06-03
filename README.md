@@ -49,7 +49,7 @@ TLDix/
 ├── config.php                  # Uygulama yapılandırması (DB, SMTP, affiliate vb.)
 ├── api.php                     # Public JSON API endpoint
 ├── .htaccess                   # Apache mod_rewrite kuralları
-├── database.sqlite             # SQLite veritabanı (SQLite modunda)
+├── ../tldix_data/database.sqlite # SQLite veritabanı (web root dışında)
 │
 ├── assets/
 │   ├── css/
@@ -116,7 +116,8 @@ http://127.0.0.1:8000/manage-secure-panel
 
 1. Tüm dosyaları `public_html/` içine yükleyin
 2. `.htaccess` aktif olmalı (`AllowOverride All`)
-3. `database.sqlite` için yazma izni: `chmod 666`
+3. `public_html` dışında `tldix_data/` klasörü oluşturun ve PHP kullanıcısına yazma izni verin
+4. SQLite kullanıyorsanız `config.php` içindeki `sqlite_path` değerini web root dışındaki dosyaya yönlendirin
 
 ---
 
@@ -173,6 +174,7 @@ return [
     // Admin
     'admin_email'      => 'emre.ce@gmail.com',
     'admin_password'   => '...hash...',  // password_hash() ile
+    'sqlite_path'      => dirname(__DIR__) . '/tldix_data/database.sqlite',
     
     // Affiliate — her biri /go?to=KEY üzerinden
     'affiliate_namecheap'  => 'https://...',
@@ -185,6 +187,7 @@ return [
     
     // Whop
     'whop_api_key'         => '',
+    'whop_webhook_secret'  => 'whsec_...',
     'whop_link_bronze'     => 'https://whop.com/checkout/...',
     
     // Banka
@@ -269,8 +272,9 @@ UTM parametresi: `/go?to=namecheap&utm_source=renewal_cta`
 5. Admin → Ödemeler sekmesine yapıştırın
 6. API Keys bölümünden API key alın → admin panele yapıştırın
 7. Webhook URL'i Whop'a tanımlayın: `https://yourdomain.com/webhook/whop`
+8. Whop webhook signing secret değerini admin panelindeki `Whop Webhook Secret` alanına kaydedin
 
-> **Not:** Whop Webhook otomasyonu henüz aktif değil. Ödeme onayları şu an manuel yapılmaktadır.
+> **Not:** Whop Webhook otomasyonu aktiftir. İmza doğrulaması geçerse ödeme event'i kullanıcıya bağlanır ve plan otomatik güncellenir. Havale/EFT ödemeleri manuel admin onayıyla devam eder.
 
 ### Premium Kısıtlama
 
@@ -338,7 +342,7 @@ Tam dokümantasyon: `/docs`
 - [ ] `config.php` → `admin_password` için gerçek hash oluşturun (`php -r "echo password_hash('SIFRENIZ', PASSWORD_BCRYPT);"`)
 - [ ] SMTP ayarlarını yapılandırın ve test e-postası gönderin
 - [ ] SSL sertifikası kurun (HTTPS zorunlu)
-- [ ] `database.sqlite` dosyasını `public_html` dışına taşıyın ve `config.php`'de yolu güncelleyin
+- [x] Varsayılan `database.sqlite` yolu `public_html` dışına taşındı (`../tldix_data/database.sqlite`)
 - [ ] `.htaccess` — `database.sqlite` ve `config.php`'ye web erişimini engelleyin
 - [ ] `display_errors = Off` — `php.ini` veya `.htaccess` ile
 
@@ -415,8 +419,8 @@ Cloudflare Registrar affiliate programı **yoktur** (at-cost satıyor). Ekrana s
 - Sadece admin veya ödeme onayı ile plan değişir
 
 **Kullanıcı Yönetimi:**
-- Tüm eski kullanıcılar silindi
-- Yeni admin kullanıcısı: `emre@kominikee.com` / `161224.Dora` — GOLD plan, tam yetkili
+- Admin veya test kullanıcı şifrelerini README içinde düz metin olarak tutmayın; her zaman `password_hash()` çıktısı kullanın
+- Eski kullanıcı ve domain verileri SQLite yedeğinden geri yüklenebilir
 - Admin panelinden üye silme ve plan değiştirme arayüzü
 
 **Light Mode:**

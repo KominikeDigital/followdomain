@@ -6,6 +6,19 @@ if (count(get_included_files()) === 1) {
 }
 
 /**
+ * Calculate password strength for new registrations
+ */
+function getPasswordStrengthScore($password) {
+    $score = 0;
+    if (strlen($password) >= 8) $score++;
+    if (preg_match('/[a-z]/', $password) && preg_match('/[A-Z]/', $password)) $score++;
+    if (preg_match('/\d/', $password)) $score++;
+    if (preg_match('/[^a-zA-Z0-9]/', $password)) $score++;
+    if (strlen($password) >= 12) $score++;
+    return $score;
+}
+
+/**
  * Register a new user
  */
 function registerUser($pdo, $username, $email, $password, $plan = 'free') {
@@ -21,8 +34,12 @@ function registerUser($pdo, $username, $email, $password, $plan = 'free') {
         return ['success' => false, 'message' => 'Kullanıcı adı en az 3 karakter olmalıdır.'];
     }
     
-    if (strlen($password) < 6) {
-        return ['success' => false, 'message' => 'Şifre en az 6 karakter olmalıdır.'];
+    if (strlen($password) < 8) {
+        return ['success' => false, 'message' => 'Şifre en az 8 karakter olmalıdır.'];
+    }
+
+    if (getPasswordStrengthScore($password) < 3) {
+        return ['success' => false, 'message' => 'Lütfen büyük/küçük harf, rakam ve özel karakter içeren daha güçlü bir şifre belirleyin.'];
     }
     
     // Check if username already exists
@@ -45,8 +62,9 @@ function registerUser($pdo, $username, $email, $password, $plan = 'free') {
     $verificationToken = bin2hex(random_bytes(16));
     
     try {
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, api_plan, created_at, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
-        $stmt->execute([$username, $email, $passwordHash, $apiKey, $plan, $now, $verificationToken]);
+        $pendingPlan = in_array($plan, ['bronze', 'silver', 'gold'], true) ? $plan : null;
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, api_plan, pending_plan, created_at, is_verified, verification_token) VALUES (?, ?, ?, ?, 'free', ?, ?, 0, ?)");
+        $stmt->execute([$username, $email, $passwordHash, $apiKey, $pendingPlan, $now, $verificationToken]);
         $userId = $pdo->lastInsertId();
         
         // Log activity
@@ -56,7 +74,8 @@ function registerUser($pdo, $username, $email, $password, $plan = 'free') {
             'success' => true, 
             'message' => 'Kayıt başarıyla oluşturuldu!',
             'verification_token' => $verificationToken,
-            'user_id' => $userId
+            'user_id' => $userId,
+            'pending_plan' => $pendingPlan
         ];
     } catch (PDOException $e) {
         return ['success' => false, 'message' => 'Kayıt sırasında bir hata oluştu: ' . $e->getMessage()];
@@ -80,7 +99,15 @@ function loginUser($pdo, $usernameOrEmail, $password) {
     
     if ($user && password_verify($password, $user['password_hash'])) {
         if ((int)($user['is_verified'] ?? 0) === 0) {
-            return ['success' => false, 'message' => 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.'];
+            return [
+                'success' => false,
+                'message' => 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.',
+                'needs_verification' => true,
+                'user_id' => $user['id'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'verification_token' => $user['verification_token']
+            ];
         }
         
         $_SESSION['user_id'] = $user['id'];

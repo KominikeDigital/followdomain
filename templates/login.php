@@ -63,7 +63,28 @@ $action = isset($_GET['action']) ? $_GET['action'] : (isset($route) ? ($route ==
                 
                 <div class="form-group">
                     <label for="regPass"><?php echo __('label_password'); ?></label>
-                    <input type="password" id="regPass" name="password" required placeholder="<?php echo esc(__('placeholder_register_password')); ?>" minlength="6">
+                    <input type="password" id="regPass" name="password" required placeholder="<?php echo esc(__('placeholder_register_password')); ?>" minlength="8" autocomplete="new-password">
+                    <div class="password-strength"
+                         id="passwordStrength"
+                         data-weak="<?php echo esc(__('password_strength_weak')); ?>"
+                         data-fair="<?php echo esc(__('password_strength_fair')); ?>"
+                         data-good="<?php echo esc(__('password_strength_good')); ?>"
+                         data-strong="<?php echo esc(__('password_strength_strong')); ?>"
+                         data-invalid="<?php echo esc(__('password_strength_invalid')); ?>">
+                        <div class="password-strength-head">
+                            <span><?php echo __('password_strength_label'); ?></span>
+                            <strong id="passwordStrengthText"><?php echo __('password_strength_weak'); ?></strong>
+                        </div>
+                        <div class="password-strength-bar" aria-hidden="true">
+                            <span id="passwordStrengthBar"></span>
+                        </div>
+                        <ul class="password-strength-rules" aria-live="polite">
+                            <li data-rule="length"><?php echo __('password_rule_length'); ?></li>
+                            <li data-rule="case"><?php echo __('password_rule_case'); ?></li>
+                            <li data-rule="number"><?php echo __('password_rule_number'); ?></li>
+                            <li data-rule="symbol"><?php echo __('password_rule_symbol'); ?></li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 1.5rem;">

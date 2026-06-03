@@ -110,6 +110,8 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
             exit;
         } elseif ($path === 'checkout') {
             $route = 'checkout';
+        } elseif ($path === 'webhook/whop') {
+            $route = 'webhook_whop';
         } elseif ($path === 'domains-for-sale') {
             $route = 'domains_for_sale';
         } elseif ($path === 'go') {
@@ -174,6 +176,21 @@ $pageDesc = $config['site_description'];
 
 // Handle specific page logic before loading template headers
 switch ($route) {
+    case 'webhook_whop':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'error' => 'method_not_allowed']);
+            exit;
+        }
+
+        $rawPayload = file_get_contents('php://input') ?: '';
+        $result = processWhopWebhook($pdo, $rawPayload, getRequestHeadersLower());
+        http_response_code($result['status']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($result['body'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+
     case 'login':
     case 'register':
         if (isLoggedIn()) {
@@ -192,6 +209,15 @@ switch ($route) {
                 exit;
             } else {
                 $authError = $res['message'];
+                if (!empty($res['needs_verification']) && !empty($res['verification_token'])) {
+                    $resent = sendUserVerificationEmail($res['email'], $res['username'], $res['verification_token']);
+                    if ($resent) {
+                        $authError = 'E-posta adresinizi doğrulamanız gerekiyor. Doğrulama bağlantısını tekrar gönderdik.';
+                    } else {
+                        $authError = 'E-posta adresinizi doğrulamanız gerekiyor ancak doğrulama e-postası gönderilemedi. Lütfen site yöneticisiyle iletişime geçin.';
+                        sendAdminRegistrationNotification($res['email'], $res['username'], false, $res['verification_token']);
+                    }
+                }
             }
         }
         
@@ -205,35 +231,19 @@ switch ($route) {
                 $token = $res['verification_token'];
                 
                 try {
-                    // Send verification email
-                    $subject = "TLDix E-posta Doğrulama";
-                    $verifyUrl = absolute_url('verify-email?token=' . $token);
-                    $messageHtml = getFormattedEmail('mail_tpl_user_verify', [
-                        'username' => esc($userName),
-                        'verify_url' => $verifyUrl
-                    ]);
-                    $mailSent = sendEmailNotification($userEmail, $subject, $messageHtml);
+                    $mailSent = sendUserVerificationEmail($userEmail, $userName, $token);
+                    sendAdminRegistrationNotification($userEmail, $userName, $mailSent, $token);
 
-                    if (!$mailSent) {
+                    if ($mailSent) {
+                        $authSuccess = "Kayıt başarılı! Lütfen hesabınızı doğrulamak için e-posta adresinize gönderdiğimiz bağlantıya tıklayın.";
+                    } else {
                         error_log("Failed to send verification email to $userEmail");
-                    }
-
-                    // Admin notification email
-                    $adminEmail = $config['admin_notification_email'] ?? '';
-                    if (!empty($adminEmail)) {
-                        $adminSubject = "Yeni Üye Kaydı (Doğrulama Bekleniyor): " . $userName;
-                        $adminMessage = getFormattedEmail('mail_tpl_admin_register', [
-                            'username' => esc($userName),
-                            'email' => esc($userEmail),
-                            'date' => date('Y-m-d H:i:s')
-                        ]);
-                        sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
+                        $authError = "Hesabınız oluşturuldu ancak doğrulama e-postası gönderilemedi. Lütfen e-posta ayarlarını kontrol etmesi için site yöneticisiyle iletişime geçin.";
                     }
                 } catch (Throwable $e) {
                     error_log("Registration notification failed for $userEmail: " . $e->getMessage());
+                    $authError = "Hesabınız oluşturuldu ancak e-posta bildirimi sırasında bir sorun oluştu.";
                 }
-                
-                $authSuccess = "Kayıt başarılı! Lütfen hesabınızı doğrulamak için e-posta adresinize gönderdiğimiz bağlantıya tıklayın.";
             } else {
                 $authError = $res['message'];
             }
@@ -331,18 +341,19 @@ switch ($route) {
                 ]);
                 sendEmailNotification($user['email'], $subject, $messageHtml);
                 
+                $requestedPlan = $user['pending_plan'] ?? 'free';
+
                 // Notify admin that verification is complete and account is active
                 $adminEmail = $config['admin_notification_email'] ?? '';
                 if (!empty($adminEmail)) {
                     $adminSubject = "Üyelik Doğrulandı: " . $user['username'];
-                    $adminMessage = "<h2>Üyelik Doğrulama Bildirimi</h2><p>Yeni kayıt olan kullanıcının e-posta adresi doğrulandı ve hesabı aktif hale getirildi:</p><ul><li><strong>Kullanıcı Adı:</strong> " . esc($user['username']) . "</li><li><strong>E-posta:</strong> " . esc($user['email']) . "</li><li><strong>Plan:</strong> " . esc(strtoupper($user['api_plan'])) . "</li></ul>";
+                    $adminMessage = "<h2>Üyelik Doğrulama Bildirimi</h2><p>Yeni kayıt olan kullanıcının e-posta adresi doğrulandı ve hesabı aktif hale getirildi:</p><ul><li><strong>Kullanıcı Adı:</strong> " . esc($user['username']) . "</li><li><strong>E-posta:</strong> " . esc($user['email']) . "</li><li><strong>Aktif Plan:</strong> FREE</li><li><strong>Bekleyen Plan:</strong> " . esc(strtoupper($requestedPlan ?: 'free')) . "</li></ul>";
                     sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
                 }
                 
-                // Redirect logic: If paid plan, redirect to checkout, else redirect to panel
-                $plan = $user['api_plan'] ?? 'free';
-                if (in_array($plan, ['bronze', 'silver', 'gold'])) {
-                    header("Location: " . url("checkout?plan=" . urlencode($plan)));
+                // Redirect logic: If a paid plan was selected, redirect to checkout, else redirect to panel
+                if (in_array($requestedPlan, ['bronze', 'silver', 'gold'], true)) {
+                    header("Location: " . url("checkout?plan=" . urlencode($requestedPlan)));
                 } else {
                     header("Location: " . url("panel"));
                 }

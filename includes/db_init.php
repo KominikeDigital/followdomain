@@ -54,6 +54,7 @@ function initializeDatabase($pdo, $dbType) {
             password_hash TEXT NOT NULL,
             api_key TEXT UNIQUE NULL,
             api_plan TEXT DEFAULT 'free',
+            pending_plan TEXT NULL,
             api_queries_today INTEGER DEFAULT 0,
             last_api_query_date TEXT DEFAULT '',
             webhook_url TEXT NULL,
@@ -157,6 +158,24 @@ function initializeDatabase($pdo, $dbType) {
             created_at TEXT,
             confirmed_at TEXT
         )";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS domain_lookup_cache (
+            domain_name TEXT PRIMARY KEY,
+            registered INTEGER DEFAULT 0,
+            result_json TEXT NOT NULL,
+            last_checked TEXT NOT NULL
+        )";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS webhook_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider TEXT NOT NULL,
+            event_id TEXT NOT NULL,
+            event_type TEXT,
+            payload TEXT,
+            processed INTEGER DEFAULT 0,
+            created_at TEXT,
+            UNIQUE(provider, event_id)
+        )";
     } else {
         // MySQL
         $queries[] = "CREATE TABLE IF NOT EXISTS settings (
@@ -204,6 +223,7 @@ function initializeDatabase($pdo, $dbType) {
             password_hash VARCHAR(255) NOT NULL,
             api_key VARCHAR(255) UNIQUE NULL,
             api_plan VARCHAR(50) DEFAULT 'free',
+            pending_plan VARCHAR(50) NULL,
             api_queries_today INT DEFAULT 0,
             last_api_query_date VARCHAR(10) DEFAULT '',
             webhook_url TEXT NULL,
@@ -292,6 +312,39 @@ function initializeDatabase($pdo, $dbType) {
             content_de LONGTEXT,
             created_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS payments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            plan VARCHAR(50) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            currency VARCHAR(10) DEFAULT 'USD',
+            method VARCHAR(50) NOT NULL,
+            status VARCHAR(50) DEFAULT 'pending',
+            reference TEXT NULL,
+            notes TEXT NULL,
+            whop_order_id VARCHAR(255) NULL,
+            created_at DATETIME NULL,
+            confirmed_at DATETIME NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS domain_lookup_cache (
+            domain_name VARCHAR(255) PRIMARY KEY,
+            registered TINYINT(1) DEFAULT 0,
+            result_json LONGTEXT NOT NULL,
+            last_checked DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS webhook_events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            provider VARCHAR(50) NOT NULL,
+            event_id VARCHAR(255) NOT NULL,
+            event_type VARCHAR(100) NULL,
+            payload LONGTEXT NULL,
+            processed TINYINT(1) DEFAULT 0,
+            created_at DATETIME NULL,
+            UNIQUE KEY provider_event_unique (provider, event_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     }
     
     foreach ($queries as $q) {
@@ -302,6 +355,7 @@ function initializeDatabase($pdo, $dbType) {
     $columnsToAdd = [
         'api_key' => 'TEXT NULL',
         'api_plan' => "TEXT DEFAULT 'free'",
+        'pending_plan' => 'TEXT NULL',
         'api_queries_today' => 'INTEGER DEFAULT 0',
         'last_api_query_date' => "TEXT DEFAULT ''",
         'webhook_url' => 'TEXT NULL',
@@ -313,6 +367,7 @@ function initializeDatabase($pdo, $dbType) {
         $columnsToAdd = [
             'api_key' => 'VARCHAR(255) UNIQUE NULL',
             'api_plan' => "VARCHAR(50) DEFAULT 'free'",
+            'pending_plan' => 'VARCHAR(50) NULL',
             'api_queries_today' => 'INT DEFAULT 0',
             'last_api_query_date' => "VARCHAR(10) DEFAULT ''",
             'webhook_url' => 'TEXT NULL',
@@ -350,6 +405,25 @@ function initializeDatabase($pdo, $dbType) {
         }
     }
 
+    // Add new payment columns to older installations
+    $paymentCols = [
+        'whop_order_id' => 'TEXT NULL',
+        'confirmed_at' => 'TEXT NULL',
+    ];
+    if ($dbType === 'mysql') {
+        $paymentCols = [
+            'whop_order_id' => 'VARCHAR(255) NULL',
+            'confirmed_at' => 'DATETIME NULL',
+        ];
+    }
+    foreach ($paymentCols as $col => $definition) {
+        try {
+            $pdo->exec("ALTER TABLE payments ADD COLUMN $col $definition");
+        } catch (PDOException $e) {
+            // Fails silently if column already exists
+        }
+    }
+
 
     // Seed default admin user if users table is empty
     try {
@@ -373,7 +447,9 @@ function initializeDatabase($pdo, $dbType) {
         "CREATE INDEX IF NOT EXISTS idx_user_domains_user ON user_domains (user_id)",
         "CREATE INDEX IF NOT EXISTS idx_user_domains_name ON user_domains (domain_name)",
         "CREATE INDEX IF NOT EXISTS idx_user_hostings_user ON user_hostings (user_id)",
-        "CREATE INDEX IF NOT EXISTS idx_followers_domain ON followers (domain_id)"
+        "CREATE INDEX IF NOT EXISTS idx_followers_domain ON followers (domain_id)",
+        "CREATE INDEX IF NOT EXISTS idx_domain_lookup_cache_checked ON domain_lookup_cache (last_checked)",
+        "CREATE INDEX IF NOT EXISTS idx_payments_whop_order ON payments (whop_order_id)"
     ];
     
     if ($dbType === 'mysql') {
@@ -381,7 +457,9 @@ function initializeDatabase($pdo, $dbType) {
             "CREATE INDEX idx_user_domains_user ON user_domains (user_id)",
             "CREATE INDEX idx_user_domains_name ON user_domains (domain_name)",
             "CREATE INDEX idx_user_hostings_user ON user_hostings (user_id)",
-            "CREATE INDEX idx_followers_domain ON followers (domain_id)"
+            "CREATE INDEX idx_followers_domain ON followers (domain_id)",
+            "CREATE INDEX idx_domain_lookup_cache_checked ON domain_lookup_cache (last_checked)",
+            "CREATE INDEX idx_payments_whop_order ON payments (whop_order_id)"
         ];
     }
     
