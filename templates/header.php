@@ -114,8 +114,9 @@ if ($isUser) {
 
     <header class="app-header">
         <div class="container header-container">
-            <a href="<?php echo url(''); ?>" class="app-logo">
-                <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 50px; width: auto; display: block;">
+            <a href="<?php echo url(''); ?>" class="app-logo logo-mark logo-mark-header" aria-label="TLDix">
+                <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img logo-img-light">
+                <img src="<?php echo url('assets/images/dark-logo.png'); ?>" alt="" class="logo-img logo-img-dark" aria-hidden="true">
             </a>
             
             <nav class="app-nav">
@@ -213,7 +214,10 @@ if ($isUser) {
     <!-- Mobile Nav Popover (Modern Web Popover API) -->
     <div id="mobile-nav" popover="auto" class="mobile-nav-panel">
         <div class="mobile-nav-header">
-            <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 40px; width: auto; display: block;">
+            <a href="<?php echo url(''); ?>" class="app-logo logo-mark logo-mark-mobile" aria-label="TLDix" onclick="document.getElementById('mobile-nav').hidePopover();">
+                <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img logo-img-light">
+                <img src="<?php echo url('assets/images/dark-logo.png'); ?>" alt="" class="logo-img logo-img-dark" aria-hidden="true">
+            </a>
             <button class="menu-close" popovertargetaction="hide" popovertarget="mobile-nav" aria-label="Kapat">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>

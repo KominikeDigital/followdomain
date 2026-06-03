@@ -14,8 +14,9 @@
             
             <!-- Brand Info Column -->
             <div class="footer-info">
-                <a href="<?php echo url(''); ?>" class="app-logo">
-                    <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img" style="height: 55px; width: auto; display: block;">
+                <a href="<?php echo url(''); ?>" class="app-logo logo-mark logo-mark-footer" aria-label="TLDix">
+                    <img src="<?php echo url('assets/images/logo.png'); ?>" alt="TLDix Logo" class="logo-img logo-img-light">
+                    <img src="<?php echo url('assets/images/dark-logo.png'); ?>" alt="" class="logo-img logo-img-dark" aria-hidden="true">
                 </a>
                 <p class="footer-desc"><?php echo __('footer_logo_sub'); ?></p>
                 
