@@ -60,7 +60,10 @@ $googleVerificationToken = normalizeGoogleSearchConsoleToken($config['google_sea
 $bingVerificationToken = normalizeBingVerificationToken($config['bing_verification'] ?? '');
 $googleAnalyticsId = normalizeGoogleAnalyticsId($config['google_analytics_id'] ?? '');
 $googleTagManagerId = normalizeGoogleTagManagerId($config['google_tag_manager'] ?? '');
-$googleAdsensePublisherId = normalizeGoogleAdsensePublisherId($config['<meta name="google-adsense-account" content="ca-pub-8595320911699983">'] ?? '');
+$googleAdsensePublisherId = normalizeGoogleAdsensePublisherId($config['google_adsense_id'] ?? '');
+if ($googleAdsensePublisherId === '') {
+    $googleAdsensePublisherId = 'pub-8595320911699983';
+}
 $cloudflareAnalyticsToken = normalizeCloudflareAnalyticsToken($config['cf_analytics_token'] ?? '');
 $customHeadCode = trim((string)($config['custom_head_code'] ?? ''));
 ?>
@@ -152,7 +155,8 @@ $customHeadCode = trim((string)($config['custom_head_code'] ?? ''));
 
     <!-- Google AdSense -->
     <?php if ($googleAdsensePublisherId !== ''): ?>
-        <script async crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-<?php echo esc($googleAdsensePublisherId); ?>"></script>
+        <meta name="google-adsense-account" content="ca-<?php echo esc($googleAdsensePublisherId); ?>">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-<?php echo esc($googleAdsensePublisherId); ?>" crossorigin="anonymous"></script>
     <?php endif; ?>
 
     <!-- Cloudflare Web Analytics -->
