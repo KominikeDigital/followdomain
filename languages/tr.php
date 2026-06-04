@@ -345,7 +345,7 @@ return [
     
     // Price Comparison Widget
     'price_comparison_title' => 'Alan Adı Kayıt - Fiyat Karşılaştırması',
-    'price_comparison_sub' => 'Bu alan adı kayıt edilebilir! Firmaların fiyatlarını karşılaştırın ve ortaklık linkleriyle hemen kaydedin.',
+    'price_comparison_sub' => 'Bu alan adı kayıt edilebilir. Güvenilir firmaları karşılaştırıp hemen kaydedebilirsiniz.',
     'col_priority' => 'Öncelik',
     'col_provider_name' => 'Firma',
     'col_service_type' => 'Tür',
@@ -488,7 +488,7 @@ return [
     
     // SSL Affiliate
     'ssl_recommendation_title' => 'SSL Güvenlik Sertifikaları',
-    'ssl_recommendation_desc' => 'Sitenizin güvenliğini artırmak ve arama motorlarında üst sıralara çıkmak için en ucuz SSL sertifikalarını ortaklarımız aracılığıyla satın alabilirsiniz.',
+    'ssl_recommendation_desc' => 'Sitenizin güvenliğini artırmak ve arama motorlarında üst sıralara çıkmak için uygun fiyatlı SSL sertifikalarını karşılaştırabilirsiniz.',
     'ssl_btn_namecheap' => 'Namecheap SSL Satın Al',
     'ssl_btn_ssls' => 'SSLs.com İndirimli Sertifikalar',
 
@@ -529,11 +529,11 @@ return [
     'sale_badge_godaddy_net' => 'GoDaddy Açık Artırma Ağı',
     'sale_badge_godaddy_brand' => 'GoDaddy Markası',
     'sale_badge_escrow' => 'Emanet & Premium',
-    'sale_badge_affiliate' => 'Satış Ortağı',
+    'sale_badge_affiliate' => 'Önerilen',
     'sale_badge_broker' => 'Küresel Domain Aracılığı',
     'sale_badge_marketplace' => 'Domain Pazarı API\'si',
     'sale_btn_visit' => 'Pazarı Ziyaret Et',
-    'sale_btn_join' => 'Ortaklık Programına Katıl',
+    'sale_btn_join' => 'Programı İncele',
 
     'provider_namecheap_desc' => 'Alan adı tescili ve ikincil piyasa alımlarında sektör lideri. Namecheap pazarı, güvenli emanet (escrow) sistemiyle bütçe dostu premium isimler bulmak için mükemmeldir.',
     'provider_afternic_desc' => 'GoDaddy tarafından desteklenen, dünyanın en büyük alan adı bayi ağı. Alan adlarınızı Afternic\'te listelemek, onları dünya çapında 85\'ten fazla lider kayıt firmasında görünür kılar.',

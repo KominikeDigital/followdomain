@@ -6,6 +6,14 @@ if (count(get_included_files()) === 1) {
 }
 ?>
 <div class="det-page-container">
+    <div class="det-brand-strip">
+        <img src="<?php echo url('detective/logo.webp'); ?>" alt="Detective Logo" class="det-brand-logo" loading="lazy">
+        <div class="det-brand-copy">
+            <span>Detective Social Intelligence</span>
+            <p>Username footprints, matching profiles, and brand identity checks in one focused search screen.</p>
+        </div>
+    </div>
+
     <div class="det-title-section">
         <h1><?php echo __('nav_social_search'); ?></h1>
         <p>Search usernames across 20+ major social networks in real-time. Find matching profiles instantly.</p>

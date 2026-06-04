@@ -345,7 +345,7 @@ return [
     
     // Price Comparison Widget
     'price_comparison_title' => 'Register Domain - Price Comparison',
-    'price_comparison_sub' => 'This domain is available! Compare prices across registrars and register via affiliate links.',
+    'price_comparison_sub' => 'This domain is available. Compare trusted providers and register it when you are ready.',
     'col_priority' => 'Priority',
     'col_provider_name' => 'Registrar',
     'col_service_type' => 'Service Type',
@@ -488,7 +488,7 @@ return [
     
     // SSL Affiliate
     'ssl_recommendation_title' => 'SSL Security Certificates',
-    'ssl_recommendation_desc' => 'Secure your web application and improve search engine rankings. Buy affordable SSL certificates via our trusted partners.',
+    'ssl_recommendation_desc' => 'Secure your web application and improve search engine rankings by comparing affordable SSL certificate providers.',
     'ssl_btn_namecheap' => 'Buy Namecheap SSL',
     'ssl_btn_ssls' => 'SSLs.com Discount Certificates',
 
@@ -529,11 +529,11 @@ return [
     'sale_badge_godaddy_net' => 'GoDaddy Auction Network',
     'sale_badge_godaddy_brand' => 'GoDaddy Brand',
     'sale_badge_escrow' => 'Escrow & Premium',
-    'sale_badge_affiliate' => 'Affiliate Partner',
+    'sale_badge_affiliate' => 'Recommended',
     'sale_badge_broker' => 'Global Domain Brokerage',
     'sale_badge_marketplace' => 'Domain Marketplace API',
     'sale_btn_visit' => 'Visit Marketplace',
-    'sale_btn_join' => 'Become an Affiliate',
+    'sale_btn_join' => 'Explore Program',
 
     'provider_namecheap_desc' => 'Industry leader in domain registrations and aftermarket acquisitions. Namecheap\'s marketplace is perfect for finding budget-friendly premium names with secure escrow.',
     'provider_afternic_desc' => 'The world\'s largest domain reseller network, powered by GoDaddy. Listing your domains on Afternic distributes them to over 85 top registrars globally.',

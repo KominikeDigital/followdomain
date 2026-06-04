@@ -197,7 +197,7 @@ if ($isUser) {
                     </div>
                 <?php else: ?>
                     <a href="<?php echo url('login'); ?>" class="btn btn-secondary btn-nav"><?php echo __('nav_login'); ?></a>
-                    <a href="<?php echo url('register'); ?>" class="btn btn-primary btn-nav-accent"><?php echo __('nav_register'); ?></a>
+                    <a href="<?php echo url('register'); ?>" class="btn btn-primary btn-nav btn-nav-accent js-register-rotator" data-alt-text="Free"><?php echo __('nav_register'); ?></a>
                 <?php endif; ?>
                 
                 <button class="menu-toggle" aria-label="Menüyü Aç" aria-expanded="false" popovertarget="mobile-nav">

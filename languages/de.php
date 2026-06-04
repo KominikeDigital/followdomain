@@ -345,7 +345,7 @@ return [
     
     // Price Comparison Widget
     'price_comparison_title' => 'Domain registrieren - Preisvergleich',
-    'price_comparison_sub' => 'Diese Domain ist verfügbar! Vergleichen Sie Preise und registrieren Sie sich über Partner-Links.',
+    'price_comparison_sub' => 'Diese Domain ist verfügbar. Vergleichen Sie vertrauenswürdige Anbieter und registrieren Sie sie, wenn Sie bereit sind.',
     'col_priority' => 'Priorität',
     'col_provider_name' => 'Registrar',
     'col_service_type' => 'Dienstleistung',
@@ -488,7 +488,7 @@ return [
     
     // SSL Affiliate
     'ssl_recommendation_title' => 'SSL-Sicherheitszertifikate',
-    'ssl_recommendation_desc' => 'Sichern Sie Ihre Webanwendung und verbessern Sie Ihr Suchmaschinen-Ranking. Kaufen Sie günstige SSL-Zertifikate über unsere Partner.',
+    'ssl_recommendation_desc' => 'Sichern Sie Ihre Webanwendung und verbessern Sie Ihr Suchmaschinen-Ranking, indem Sie günstige SSL-Zertifikatsanbieter vergleichen.',
     'ssl_btn_namecheap' => 'Namecheap SSL kaufen',
     'ssl_btn_ssls' => 'SSLs.com Rabattierte Zertifikate',
 
@@ -529,11 +529,11 @@ return [
     'sale_badge_godaddy_net' => 'GoDaddy Auktionsnetzwerk',
     'sale_badge_godaddy_brand' => 'GoDaddy-Marke',
     'sale_badge_escrow' => 'Treuhand & Premium',
-    'sale_badge_affiliate' => 'Affiliate-Partner',
+    'sale_badge_affiliate' => 'Empfohlen',
     'sale_badge_broker' => 'Globaler Domain-Handel',
     'sale_badge_marketplace' => 'Domain-Marktplatz-API',
     'sale_btn_visit' => 'Marktplatz besuchen',
-    'sale_btn_join' => 'Partner werden',
+    'sale_btn_join' => 'Programm ansehen',
 
     'provider_namecheap_desc' => 'Branchenführer für Domainregistrierungen und Aftermarket-Akquisitionen. Der Marktplatz von Namecheap eignet sich perfekt, um budgetfreundliche Premium-Namen mit sicherem Treuhandservice zu finden.',
     'provider_afternic_desc' => 'Das weltweit größte Domain-Reseller-Netzwerk, betrieben von GoDaddy. Wenn Sie Ihre Domains bei Afternic listen, werden sie an über 85 führende Registrare weltweit verteilt.',

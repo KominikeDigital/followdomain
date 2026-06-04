@@ -18,10 +18,93 @@ document.addEventListener('DOMContentLoaded', () => {
         
         mobileNav.addEventListener('toggle', (event) => {
             if (event.newState === 'closed') {
-                menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.setAttribute('aria-expanded', 'false');
             }
         });
     }
+
+    // Header register CTA text rotator
+    const registerRotator = document.querySelector('.js-register-rotator');
+    if (registerRotator) {
+        const originalText = registerRotator.textContent.trim() || 'Register';
+        const altText = registerRotator.dataset.altText || 'Free';
+        const labels = [altText, originalText];
+        let labelIndex = 0;
+
+        registerRotator.textContent = labels[labelIndex];
+        setInterval(() => {
+            labelIndex = (labelIndex + 1) % labels.length;
+            registerRotator.classList.add('is-changing');
+            setTimeout(() => {
+                registerRotator.textContent = labels[labelIndex];
+                registerRotator.classList.remove('is-changing');
+            }, 160);
+        }, 3200);
+    }
+
+    // Flight information display animation for step titles
+    const flightTitles = document.querySelectorAll('.flight-display-title');
+    if (flightTitles.length) {
+        const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const animateFlightTitle = (node) => {
+            const finalText = node.dataset.flightText || node.textContent.trim();
+            let frame = 0;
+            const totalFrames = Math.max(16, finalText.length + 8);
+            clearInterval(node._flightTimer);
+            node._flightTimer = setInterval(() => {
+                const settled = Math.floor((frame / totalFrames) * finalText.length);
+                node.textContent = finalText
+                    .split('')
+                    .map((char, index) => {
+                        if (char === ' ') return ' ';
+                        if (index < settled) return char;
+                        return glyphs[Math.floor(Math.random() * glyphs.length)];
+                    })
+                    .join('');
+                frame++;
+                if (frame > totalFrames) {
+                    clearInterval(node._flightTimer);
+                    node.textContent = finalText;
+                }
+            }, 42);
+        };
+
+        const startFlightAnimations = () => {
+            flightTitles.forEach((node, index) => {
+                setTimeout(() => animateFlightTitle(node), index * 180);
+            });
+        };
+
+        const titleObserver = 'IntersectionObserver' in window
+            ? new IntersectionObserver((entries) => {
+                if (entries.some(entry => entry.isIntersecting)) {
+                    startFlightAnimations();
+                    titleObserver.disconnect();
+                }
+            }, { threshold: 0.3 })
+            : null;
+
+        if (titleObserver) {
+            flightTitles.forEach(node => titleObserver.observe(node));
+        } else {
+            startFlightAnimations();
+        }
+    }
+
+    // Price comparison tabs
+    document.querySelectorAll('[data-comparison-tabs]').forEach((widget) => {
+        const tabs = widget.querySelectorAll('[data-tab-target]');
+        const panels = widget.querySelectorAll('[data-tab-panel]');
+        tabs.forEach((tabButton) => {
+            tabButton.addEventListener('click', () => {
+                const target = tabButton.getAttribute('data-tab-target');
+                tabs.forEach((btn) => btn.classList.toggle('active', btn === tabButton));
+                panels.forEach((panel) => {
+                    panel.classList.toggle('active', panel.getAttribute('data-tab-panel') === target);
+                });
+            });
+        });
+    });
 
     // Registration password strength meter
     const regPass = document.getElementById('regPass');

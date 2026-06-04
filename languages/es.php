@@ -345,7 +345,7 @@ return [
     
     // Price Comparison Widget
     'price_comparison_title' => 'Registrar Dominio - Comparación de Precios',
-    'price_comparison_sub' => '¡Este dominio está disponible! Compare precios entre registradores y regístrelo mediante enlaces de afiliados.',
+    'price_comparison_sub' => 'Este dominio está disponible. Compare proveedores confiables y regístrelo cuando esté listo.',
     'col_priority' => 'Prioridad',
     'col_provider_name' => 'Registrador',
     'col_service_type' => 'Tipo de Servicio',
@@ -488,7 +488,7 @@ return [
     
     // SSL Affiliate
     'ssl_recommendation_title' => 'Certificados de Seguridad SSL',
-    'ssl_recommendation_desc' => 'Proteja su aplicación web y mejore su posicionamiento en buscadores. Compre certificados SSL económicos a través de nuestros socios de confianza.',
+    'ssl_recommendation_desc' => 'Proteja su aplicación web y mejore su posicionamiento en buscadores comparando proveedores de certificados SSL asequibles.',
     'ssl_btn_namecheap' => 'Comprar SSL en Namecheap',
     'ssl_btn_ssls' => 'Certificados con Descuento en SSLs.com',
 
@@ -529,11 +529,11 @@ return [
     'sale_badge_godaddy_net' => 'Red de Subastas GoDaddy',
     'sale_badge_godaddy_brand' => 'Marca GoDaddy',
     'sale_badge_escrow' => 'Depósito en Garantía & Premium',
-    'sale_badge_affiliate' => 'Socio Afiliado',
+    'sale_badge_affiliate' => 'Recomendado',
     'sale_badge_broker' => 'Corretaje Global de Dominios',
     'sale_badge_marketplace' => 'API de Mercado de Dominios',
     'sale_btn_visit' => 'Visitar Mercado',
-    'sale_btn_join' => 'Convertirse en Afiliado',
+    'sale_btn_join' => 'Explorar Programa',
 
     'provider_namecheap_desc' => 'Líder de la industria en registros de dominios y adquisiciones de mercado secundario. El mercado de Namecheap es perfecto para encontrar nombres premium económicos con depósito de garantía seguro.',
     'provider_afternic_desc' => 'La red de reventa de dominios más grande del mundo, respaldada por GoDaddy. Publicar sus dominios en Afternic los distribuye a más de 85 registradores principales en todo el mundo.',

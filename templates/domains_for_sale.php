@@ -5,7 +5,8 @@ if (count(get_included_files()) === 1) {
     exit('Direct access not allowed.');
 }
 
-global $config;
+global $config, $pdo;
+$recommendedSslProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_ssl_codes', 'ssl', ['namecheap_ssl', 'ssls', 'ssldragon']);
 
 // Define marketplace providers list with metadata
 $marketplaces = [
@@ -127,34 +128,21 @@ $marketplaces = [
             <?php echo __('ssl_recommendation_desc'); ?>
         </p>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 800px; margin: 0 auto;">
-            <!-- Namecheap SSL -->
-            <div class="glass-panel" style="border-radius: 16px; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; min-height: 220px;">
-                <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); filter: blur(60px); opacity: 0.15; pointer-events: none; border-radius: 50%;"></div>
-                <div>
-                    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.5rem;">Namecheap SSL</h3>
-                    <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; color: var(--color-text-secondary);">
-                        Dünyanın en güvenilir kayıt kuruluşundan, hızlı aktivasyonlu ve bütçe dostu SSL sertifikaları edinin.
-                    </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; max-width: 1100px; margin: 0 auto;">
+            <?php foreach ($recommendedSslProviders as $provider): ?>
+                <div class="glass-panel" style="border-radius: 16px; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; min-height: 220px;">
+                    <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); filter: blur(60px); opacity: 0.15; pointer-events: none; border-radius: 50%;"></div>
+                    <div>
+                        <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.5rem;"><?php echo esc($provider['name']); ?></h3>
+                        <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; color: var(--color-text-secondary);">
+                            <?php echo esc($provider['description']); ?>
+                        </p>
+                    </div>
+                    <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=ssl_sale_recommendation'); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn-ssl" style="text-align: center; justify-content: center; gap: 0.5rem; font-weight: bold; width: 100%;">
+                        <span><?php echo esc($provider['button_label']); ?></span>
+                    </a>
                 </div>
-                <a href="<?php echo url('go?to=namecheap_ssl'); ?>" target="_blank" rel="noopener" class="btn btn-secondary" style="border-color: rgba(16, 185, 129, 0.4); color: #10b981; text-align: center; justify-content: center; gap: 0.5rem; font-weight: bold; width: 100%;">
-                    <span>🔐 <?php echo __('ssl_btn_namecheap'); ?></span>
-                </a>
-            </div>
-
-            <!-- SSLs.com -->
-            <div class="glass-panel" style="border-radius: 16px; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; min-height: 220px;">
-                <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); filter: blur(60px); opacity: 0.15; pointer-events: none; border-radius: 50%;"></div>
-                <div>
-                    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.5rem;">SSLs.com</h3>
-                    <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; color: var(--color-text-secondary);">
-                        Sadece güvenlik sertifikalarına odaklanmış, indirimli fiyatlar ve kolay kurulum araçları sunan uzman platform.
-                    </p>
-                </div>
-                <a href="<?php echo url('go?to=ssls'); ?>" target="_blank" rel="noopener" class="btn btn-secondary" style="border-color: rgba(16, 185, 129, 0.4); color: #10b981; text-align: center; justify-content: center; gap: 0.5rem; font-weight: bold; width: 100%;">
-                    <span>🔐 <?php echo __('ssl_btn_ssls'); ?></span>
-                </a>
-            </div>
+            <?php endforeach; ?>
         </div>
     </div>
 
@@ -162,11 +150,10 @@ $marketplaces = [
     <div class="glass-panel info-banner" style="margin-top: 4rem; padding: 2.5rem; border-radius: 16px; border: 1px dashed rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.02); display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
         <div style="font-size: 2.5rem;">💡</div>
         <div style="flex: 1; min-width: 280px;">
-            <h4 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--color-text-primary); margin-bottom: 0.5rem;">Premium Domain Satış Ortaklığı Nedir?</h4>
+            <h4 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--color-text-primary); margin-bottom: 0.5rem;">Premium Domain Satış Kanalları</h4>
             <p style="font-size: 0.92rem; line-height: 1.6; margin: 0; color: var(--color-text-secondary);">
-                Bu sayfadaki tüm platformlar aracılığıyla alan adlarınızı satabilir veya açık artırmalara katılabilirsiniz. Entegrasyon ortaklığı programlarımız sayesinde premium alan adı alımlarında en yüksek güvenlik standartları ve indirimlerden faydalanırsınız. Detaylar ve ortaklık bağlantılarınız yakında bu alanda güncellenecektir.
+                Bu sayfadaki platformlar aracılığıyla alan adlarınızı satabilir veya açık artırmaları inceleyebilirsiniz. Premium alan adı alımlarında güvenli ödeme, transfer ve fiyat karşılaştırma seçeneklerini tek ekranda değerlendirebilirsiniz.
             </p>
         </div>
     </div>
 </div>
-

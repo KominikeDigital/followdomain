@@ -38,6 +38,15 @@ function absolute_url($path = '') {
     return $protocol . $host . ($base !== '' ? '/' . $base : '') . '/' . $path;
 }
 
+function mediaUrl($path = '') {
+    $path = trim((string)$path);
+    if ($path === '') return '';
+    if (preg_match('/^(https?:\/\/|data:|\/\/)/i', $path)) {
+        return $path;
+    }
+    return url($path);
+}
+
 /**
  * Wraps dynamic email content in a premium HTML frame with site logo and footer
  */
@@ -236,6 +245,208 @@ function formatDate($dateStr, $format = 'd M Y, H:i') {
     if (!$dateStr) return 'N/A';
     $time = strtotime($dateStr);
     return $time ? date($format, $time) : 'N/A';
+}
+
+function sanitizeAffiliateCode($code) {
+    $code = strtolower(trim((string)$code));
+    $code = preg_replace('/[^a-z0-9_]+/', '_', $code);
+    return trim($code, '_');
+}
+
+function getBuiltInAffiliateProviders($cfg = null) {
+    if ($cfg === null) {
+        global $config;
+        $cfg = $config;
+    }
+
+    $defs = [
+        'namecheap' => ['Namecheap', 'domain', 'affiliate_namecheap', 'Budget-friendly domain registration and renewals.', 'View Deal', 10],
+        'godaddy' => ['GoDaddy', 'domain', 'affiliate_godaddy', 'Large registrar network with domain and business tools.', 'View Deal', 20],
+        'namesilo' => ['NameSilo', 'domain', 'affiliate_namesilo', 'Simple domain registration with transparent pricing.', 'View Deal', 30],
+        'porkbun' => ['Porkbun', 'domain', 'affiliate_porkbun', 'Low-cost registrar with developer-friendly DNS tools.', 'View Deal', 40],
+        'dynadot' => ['Dynadot', 'domain', 'affiliate_dynadot', 'Registrar and marketplace tools for domain investors.', 'View Deal', 50],
+        'spaceship' => ['Spaceship', 'domain', 'affiliate_spaceship', 'Modern registrar experience from the Namecheap team.', 'View Deal', 60],
+        'domainnameapi' => ['Domain Name API', 'domain', 'affiliate_domainnameapi', 'Registrar/reseller API for automated domain workflows.', 'View Deal', 70],
+
+        'hostinger' => ['Hostinger', 'hosting', 'affiliate_hostinger', 'Affordable hosting bundles for new websites and side projects.', 'View Hosting', 10],
+        'bluehost' => ['Bluehost', 'hosting', 'affiliate_bluehost', 'WordPress-friendly hosting plans for small teams.', 'View Hosting', 20],
+        'siteground' => ['SiteGround', 'hosting', 'affiliate_siteground', 'Managed hosting with strong support and performance.', 'View Hosting', 30],
+        'kinsta' => ['Kinsta', 'hosting', 'affiliate_kinsta', 'Premium managed WordPress hosting for growing businesses.', 'View Hosting', 40],
+        'wpengine' => ['WP Engine', 'hosting', 'affiliate_wpengine', 'Managed WordPress platform for professional teams.', 'View Hosting', 50],
+        'interserver' => ['InterServer', 'hosting', 'affiliate_interserver', 'Reliable hosting with flexible monthly pricing.', 'View Hosting', 60],
+
+        'namecheap_ssl' => ['Namecheap SSL', 'ssl', 'affiliate_namecheap_ssl', 'Budget-friendly SSL certificates with quick activation.', 'View SSL', 10],
+        'ssls' => ['SSLs.com', 'ssl', 'affiliate_ssls', 'Specialized SSL certificate marketplace with discount pricing.', 'View SSL', 20],
+        'ssldragon' => ['SSL Dragon', 'ssl', 'affiliate_ssldragon', 'SSL certificates and validation options for many use cases.', 'View SSL', 30],
+
+        'google_workspace' => ['Google Workspace', 'email', 'affiliate_google_workspace', 'Business email and collaboration tools for teams.', 'View Email', 10],
+        'zoho_mail' => ['Zoho Mail', 'email', 'affiliate_zoho_mail', 'Privacy-focused business email with flexible plans.', 'View Email', 20],
+        'titan_email' => ['Titan Email', 'email', 'affiliate_titan_email', 'Professional email hosting for domain owners.', 'View Email', 30],
+
+        'afternic' => ['Afternic', 'marketplace', 'affiliate_afternic', 'GoDaddy network marketplace for buying and selling domains.', 'Visit Marketplace', 10],
+        'sedo' => ['Sedo', 'marketplace', 'affiliate_sedo', 'Established domain marketplace and brokerage platform.', 'Visit Marketplace', 20],
+        'dan' => ['Dan.com', 'marketplace', 'affiliate_dan', 'Fast domain landing pages and sales workflow.', 'Visit Marketplace', 30],
+        'atom' => ['Atom', 'marketplace', 'affiliate_atom', 'Premium brand and domain marketplace.', 'Visit Marketplace', 40],
+        'dynadot_mkt' => ['Dynadot Marketplace', 'marketplace', 'affiliate_dynadot_mkt', 'Auction and marketplace tools from Dynadot.', 'Visit Marketplace', 50],
+    ];
+
+    $colors = [
+        'domain' => 'linear-gradient(135deg, #6366f1 0%, #2563eb 100%)',
+        'hosting' => 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)',
+        'ssl' => 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        'email' => 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        'marketplace' => 'linear-gradient(135deg, #8b5cf6 0%, #be185d 100%)',
+    ];
+
+    $providers = [];
+    foreach ($defs as $code => $def) {
+        [$name, $category, $key, $description, $buttonLabel, $sortOrder] = $def;
+        $providers[$code] = [
+            'id' => null,
+            'code' => $code,
+            'name' => $name,
+            'category' => $category,
+            'settings_key' => $key,
+            'target_url' => $cfg[$key] ?? '',
+            'description' => $description,
+            'button_label' => $buttonLabel,
+            'is_active' => 1,
+            'sort_order' => $sortOrder,
+            'source' => 'builtin',
+            'color' => $colors[$category] ?? $colors['domain'],
+        ];
+    }
+
+    return $providers;
+}
+
+function getAffiliateProviders($db = null, $cfg = null, $category = null, $includeInactive = false) {
+    if ($cfg === null) {
+        global $config;
+        $cfg = $config;
+    }
+    if ($db === null) {
+        global $pdo;
+        $db = $pdo;
+    }
+
+    $providers = getBuiltInAffiliateProviders($cfg);
+
+    if ($db instanceof PDO) {
+        try {
+            $rows = $db->query("SELECT * FROM affiliate_partners ORDER BY sort_order ASC, name ASC")->fetchAll();
+            foreach ($rows as $row) {
+                $code = sanitizeAffiliateCode($row['code'] ?? '');
+                if ($code === '') continue;
+                $isActive = (int)($row['is_active'] ?? 1);
+                if (!$includeInactive && !$isActive) continue;
+                $cat = in_array($row['category'] ?? 'domain', ['domain', 'hosting', 'ssl', 'email', 'marketplace'], true) ? $row['category'] : 'domain';
+                $providers[$code] = [
+                    'id' => $row['id'] ?? null,
+                    'code' => $code,
+                    'name' => $row['name'] ?? $code,
+                    'category' => $cat,
+                    'settings_key' => null,
+                    'target_url' => $row['target_url'] ?? '',
+                    'description' => $row['description'] ?? '',
+                    'button_label' => $row['button_label'] ?: 'View Deal',
+                    'is_active' => $isActive,
+                    'sort_order' => (int)($row['sort_order'] ?? 100),
+                    'source' => 'custom',
+                    'color' => [
+                        'domain' => 'linear-gradient(135deg, #6366f1 0%, #2563eb 100%)',
+                        'hosting' => 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)',
+                        'ssl' => 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        'email' => 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        'marketplace' => 'linear-gradient(135deg, #8b5cf6 0%, #be185d 100%)',
+                    ][$cat],
+                ];
+            }
+        } catch (Throwable $e) {
+            // Table may not exist until the next automatic migration has run.
+        }
+    }
+
+    $filtered = [];
+    foreach ($providers as $code => $provider) {
+        if ($category !== null && $provider['category'] !== $category) continue;
+        if (!$includeInactive && empty($provider['target_url'])) continue;
+        $filtered[$code] = $provider;
+    }
+
+    uasort($filtered, function ($a, $b) {
+        $sort = ((int)$a['sort_order']) <=> ((int)$b['sort_order']);
+        if ($sort !== 0) return $sort;
+        return strcasecmp($a['name'], $b['name']);
+    });
+
+    return $filtered;
+}
+
+function getAffiliateProviderByCode($pdo, $config, $providerCode) {
+    $providerCode = sanitizeAffiliateCode($providerCode);
+    if ($providerCode === '') return null;
+    $providers = getAffiliateProviders($pdo, $config, null, false);
+    return $providers[$providerCode] ?? null;
+}
+
+function appendUrlParam($targetUrl, $key, $value) {
+    $targetUrl = trim((string)$targetUrl);
+    if ($targetUrl === '' || $value === '') return $targetUrl;
+    return $targetUrl . (strpos($targetUrl, '?') === false ? '?' : '&') . rawurlencode($key) . '=' . rawurlencode($value);
+}
+
+function getAffiliateTargetUrl($pdo, $config, $providerCode, $queryDomain = '') {
+    $provider = getAffiliateProviderByCode($pdo, $config, $providerCode);
+    if (!$provider || empty($provider['target_url'])) return '';
+    $targetUrl = $provider['target_url'];
+    if ($queryDomain !== '') {
+        $targetUrl = appendUrlParam($targetUrl, 'query', $queryDomain);
+    }
+    return $targetUrl;
+}
+
+function parseSelectedProviderCodes($value, $defaultCodes = []) {
+    $value = trim((string)$value);
+    if ($value === '') return $defaultCodes;
+    $parts = preg_split('/[\s,;]+/', $value);
+    $codes = [];
+    foreach ($parts as $part) {
+        $code = sanitizeAffiliateCode($part);
+        if ($code !== '' && !in_array($code, $codes, true)) {
+            $codes[] = $code;
+        }
+    }
+    return $codes ?: $defaultCodes;
+}
+
+function getSelectedAffiliateProviders($pdo, $config, $settingKey, $category, $defaultCodes = [], $limit = 0) {
+    $providers = getAffiliateProviders($pdo, $config, $category, false);
+    $codes = parseSelectedProviderCodes($config[$settingKey] ?? '', $defaultCodes);
+    $selected = [];
+
+    foreach ($codes as $code) {
+        if (isset($providers[$code])) {
+            $selected[$code] = $providers[$code];
+        }
+    }
+
+    if (empty($selected)) {
+        $selected = $providers;
+    }
+
+    if ($limit > 0) {
+        $selected = array_slice($selected, 0, $limit, true);
+    }
+
+    return $selected;
+}
+
+function getPrimaryAffiliateProvider($pdo, $config, $settingKey, $category, $defaultCode) {
+    $code = sanitizeAffiliateCode($config[$settingKey] ?? $defaultCode);
+    $providers = getAffiliateProviders($pdo, $config, $category, false);
+    if (isset($providers[$code])) return $providers[$code];
+    return reset($providers) ?: null;
 }
 
 /**
@@ -841,6 +1052,8 @@ function addUserHosting($pdo, $userId, $provider, $domainName, $expDate, $alertS
  * Get domain pricing comparison matrix
  */
 function getDomainPriceComparison($domainName, $config) {
+    global $pdo;
+
     $parts = explode('.', $domainName);
     $tld = 'com';
     if (count($parts) > 1) {
@@ -851,27 +1064,22 @@ function getDomainPriceComparison($domainName, $config) {
     $pricingMatrix = $config['domain_prices'] ?? [];
     $prices = $pricingMatrix[$tld] ?? $pricingMatrix['com'] ?? [];
     
-    $providers = [
-        'Namecheap' => 'affiliate_namecheap',
-        'Hostinger' => 'affiliate_hostinger',
-        'NameSilo' => 'affiliate_namesilo',
-        'Porkbun' => 'affiliate_porkbun',
-        'Spaceship' => 'affiliate_spaceship',
-        'Dynadot' => 'affiliate_dynadot',
-        'Domain Name API' => 'affiliate_domainnameapi'
-    ];
+    $providers = getAffiliateProviders($pdo ?? null, $config, 'domain', false);
     
     $comparison = [];
-    foreach ($providers as $name => $key) {
+    foreach ($providers as $provider) {
+        $name = $provider['name'];
         $price = $prices[$name] ?? 'N/A';
-        
-        $providerCode = str_replace('affiliate_', '', $key);
-        $affUrl = url('go?to=' . urlencode($providerCode));
+        $affUrl = url('go?to=' . urlencode($provider['code']) . '&utm_source=price_comparison&query=' . urlencode($domainName));
         
         $comparison[] = [
             'provider' => $name,
             'price' => $price,
-            'aff_url' => $affUrl
+            'aff_url' => $affUrl,
+            'code' => $provider['code'],
+            'category' => $provider['category'],
+            'description' => $provider['description'],
+            'button_label' => $provider['button_label'],
         ];
     }
     
@@ -1209,6 +1417,69 @@ function getRegistrarLogo($provider) {
 /**
  * Load localized blog posts
  */
+function normalizeDatabaseBlogPost($row, $lang = 'en') {
+    if (!in_array($lang, ['en', 'tr', 'es', 'de'], true)) {
+        $lang = 'en';
+    }
+
+    $title = $row['title_' . $lang] ?? '';
+    $description = $row['description_' . $lang] ?? '';
+    $content = $row['content_' . $lang] ?? '';
+
+    foreach (['en', 'tr', 'es', 'de'] as $fallbackLang) {
+        if ($title === '' && !empty($row['title_' . $fallbackLang])) {
+            $title = $row['title_' . $fallbackLang];
+        }
+        if ($description === '' && !empty($row['description_' . $fallbackLang])) {
+            $description = $row['description_' . $fallbackLang];
+        }
+        if ($content === '' && !empty($row['content_' . $fallbackLang])) {
+            $content = $row['content_' . $fallbackLang];
+        }
+    }
+
+    if ($description === '' && $content !== '') {
+        $plainContent = strip_tags($content);
+        $description = trim(function_exists('mb_substr') ? mb_substr($plainContent, 0, 170, 'UTF-8') : substr($plainContent, 0, 170));
+    }
+
+    return [
+        'slug' => $row['slug'],
+        'title' => $title ?: $row['slug'],
+        'description' => $description,
+        'category' => $row['category'] ?: 'General',
+        'image' => $row['image_url'] ?: 'assets/images/blog/domain_tracking.png',
+        'date' => $row['created_at'] ?: date('Y-m-d'),
+        'content' => $content,
+        'seo_title' => $row['meta_title'] ?: $title,
+        'seo_description' => $row['meta_description'] ?: $description,
+        'source' => 'database',
+    ];
+}
+
+function getDatabaseBlogPosts($lang = 'en', $includeDrafts = false) {
+    global $pdo;
+    if (!$pdo instanceof PDO) return [];
+
+    try {
+        $sql = "SELECT * FROM blog_posts";
+        if (!$includeDrafts) {
+            $sql .= " WHERE COALESCE(status, 'published') = 'published'";
+        }
+        $sql .= " ORDER BY created_at DESC, id DESC";
+        $rows = $pdo->query($sql)->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
+
+    $posts = [];
+    foreach ($rows as $row) {
+        if (empty($row['slug'])) continue;
+        $posts[$row['slug']] = normalizeDatabaseBlogPost($row, $lang);
+    }
+    return $posts;
+}
+
 function getBlogPosts($lang = 'en') {
     if (!in_array($lang, ['en', 'tr', 'es', 'de'])) {
         $lang = 'en';
@@ -1232,6 +1503,11 @@ function getBlogPosts($lang = 'en') {
             $guidePosts = require $defaultGuidePath;
             $posts = array_merge($guidePosts, $posts);
         }
+    }
+
+    $dbPosts = getDatabaseBlogPosts($lang);
+    if (!empty($dbPosts)) {
+        $posts = array_merge($posts, $dbPosts);
     }
     
     return $posts;

@@ -133,6 +133,13 @@ function initializeDatabase($pdo, $dbType) {
             slug TEXT UNIQUE NOT NULL,
             category TEXT DEFAULT 'general',
             image_url TEXT,
+            status TEXT DEFAULT 'published',
+            meta_title TEXT,
+            meta_description TEXT,
+            description_en TEXT,
+            description_tr TEXT,
+            description_es TEXT,
+            description_de TEXT,
             title_en TEXT,
             title_tr TEXT,
             title_es TEXT,
@@ -141,7 +148,22 @@ function initializeDatabase($pdo, $dbType) {
             content_tr TEXT,
             content_es TEXT,
             content_de TEXT,
-            created_at TEXT
+            created_at TEXT,
+            updated_at TEXT
+        )";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS affiliate_partners (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            category TEXT DEFAULT 'domain',
+            target_url TEXT NOT NULL,
+            description TEXT,
+            button_label TEXT,
+            is_active INTEGER DEFAULT 1,
+            sort_order INTEGER DEFAULT 100,
+            created_at TEXT,
+            updated_at TEXT
         )";
 
         $queries[] = "CREATE TABLE IF NOT EXISTS payments (
@@ -302,6 +324,13 @@ function initializeDatabase($pdo, $dbType) {
             slug VARCHAR(255) UNIQUE NOT NULL,
             category VARCHAR(100) DEFAULT 'general',
             image_url TEXT,
+            status VARCHAR(30) DEFAULT 'published',
+            meta_title TEXT NULL,
+            meta_description TEXT NULL,
+            description_en TEXT NULL,
+            description_tr TEXT NULL,
+            description_es TEXT NULL,
+            description_de TEXT NULL,
             title_en TEXT,
             title_tr TEXT,
             title_es TEXT,
@@ -310,7 +339,22 @@ function initializeDatabase($pdo, $dbType) {
             content_tr LONGTEXT,
             content_es LONGTEXT,
             content_de LONGTEXT,
-            created_at DATETIME
+            created_at DATETIME,
+            updated_at DATETIME NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS affiliate_partners (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(100) UNIQUE NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            category VARCHAR(50) DEFAULT 'domain',
+            target_url TEXT NOT NULL,
+            description TEXT NULL,
+            button_label VARCHAR(120) NULL,
+            is_active TINYINT(1) DEFAULT 1,
+            sort_order INT DEFAULT 100,
+            created_at DATETIME NULL,
+            updated_at DATETIME NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
         $queries[] = "CREATE TABLE IF NOT EXISTS payments (
@@ -419,6 +463,37 @@ function initializeDatabase($pdo, $dbType) {
     foreach ($paymentCols as $col => $definition) {
         try {
             $pdo->exec("ALTER TABLE payments ADD COLUMN $col $definition");
+        } catch (PDOException $e) {
+            // Fails silently if column already exists
+        }
+    }
+
+    // Add blog management columns to older installations
+    $blogCols = [
+        'status' => "TEXT DEFAULT 'published'",
+        'meta_title' => 'TEXT NULL',
+        'meta_description' => 'TEXT NULL',
+        'description_en' => 'TEXT NULL',
+        'description_tr' => 'TEXT NULL',
+        'description_es' => 'TEXT NULL',
+        'description_de' => 'TEXT NULL',
+        'updated_at' => 'TEXT NULL',
+    ];
+    if ($dbType === 'mysql') {
+        $blogCols = [
+            'status' => "VARCHAR(30) DEFAULT 'published'",
+            'meta_title' => 'TEXT NULL',
+            'meta_description' => 'TEXT NULL',
+            'description_en' => 'TEXT NULL',
+            'description_tr' => 'TEXT NULL',
+            'description_es' => 'TEXT NULL',
+            'description_de' => 'TEXT NULL',
+            'updated_at' => 'DATETIME NULL',
+        ];
+    }
+    foreach ($blogCols as $col => $definition) {
+        try {
+            $pdo->exec("ALTER TABLE blog_posts ADD COLUMN $col $definition");
         } catch (PDOException $e) {
             // Fails silently if column already exists
         }

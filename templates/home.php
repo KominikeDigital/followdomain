@@ -51,19 +51,19 @@ $homeTrending = $stmt->fetchAll();
     <div class="steps-grid">
         <div class="step-card">
             <div class="step-num">01</div>
-            <h3><?php echo __('step_1_title'); ?></h3>
+            <h3 class="flight-display-title" data-flight-text="<?php echo esc(__('step_1_title')); ?>"><?php echo __('step_1_title'); ?></h3>
             <p><?php echo __('step_1_desc'); ?></p>
         </div>
         
         <div class="step-card">
             <div class="step-num">02</div>
-            <h3><?php echo __('step_2_title'); ?></h3>
+            <h3 class="flight-display-title" data-flight-text="<?php echo esc(__('step_2_title')); ?>"><?php echo __('step_2_title'); ?></h3>
             <p><?php echo __('step_2_desc'); ?></p>
         </div>
         
         <div class="step-card">
             <div class="step-num">03</div>
-            <h3><?php echo __('step_3_title'); ?></h3>
+            <h3 class="flight-display-title" data-flight-text="<?php echo esc(__('step_3_title')); ?>"><?php echo __('step_3_title'); ?></h3>
             <p><?php echo __('step_3_desc'); ?></p>
         </div>
     </div>
@@ -191,7 +191,7 @@ $homeTrending = $stmt->fetchAll();
             ?>
                 <div class="blog-slider-card">
                     <a href="<?php echo url('blog/' . $post['slug']); ?>" class="blog-card-image-link">
-                        <img src="<?php echo url($post['image']); ?>" alt="<?php echo esc($post['title']); ?>" loading="lazy">
+                        <img src="<?php echo esc(mediaUrl($post['image'])); ?>" alt="<?php echo esc($post['title']); ?>" loading="lazy">
                         <span class="blog-card-category"><?php echo esc($post['category']); ?></span>
                     </a>
                     <div class="blog-card-content">

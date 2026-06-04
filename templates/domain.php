@@ -5,11 +5,15 @@ if (count(get_included_files()) === 1) {
     exit('Direct access not allowed.');
 }
 
-global $config;
+global $config, $pdo;
 
 // Check if domainData was loaded by the router
 $hasData = isset($domainData) && is_array($domainData);
 $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['registered'] !== false);
+$primaryDomainProvider = getPrimaryAffiliateProvider($pdo, $config, 'domain_search_primary_provider', 'domain', 'namecheap');
+$recommendedHostingProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_hosting_codes', 'hosting', ['hostinger', 'bluehost', 'siteground']);
+$recommendedSslProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_ssl_codes', 'ssl', ['namecheap_ssl', 'ssls', 'ssldragon']);
+$emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
 
 ?>
 
@@ -51,7 +55,7 @@ $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['r
                     <!-- Expiration Countdown Card -->
                     <div class="glass-panel countdown-card">
                         <h3 class="card-subtitle"><?php echo __('countdown_title'); ?></h3>
-                        
+
                         <div class="countdown-timer" id="countdownTimer" data-time="<?php echo esc($domainData['expiration_date']); ?>">
                             <div class="timer-box">
                                 <span class="timer-number" id="cd-days"><?php echo sprintf('%02d', $cd['days']); ?></span>
@@ -104,7 +108,7 @@ $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['r
                                     <?php endif; ?>
                                 </h4>
                                 <p style="font-size: 0.82rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
-                                    En düşük fiyatlarla yenileyin. Affiliate ortaklarımız aracılığıyla kayıt veya yenileme yapabilirsiniz.
+                                    En düşük fiyatlarla yenileyin. Güvenilir domain sağlayıcıları üzerinden kayıt veya yenileme yapabilirsiniz.
                                 </p>
                             </div>
                         </div>
@@ -218,81 +222,111 @@ $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['r
                 <?php else: ?>
                     
                     <!-- AVAILABLE DOMAIN STATE -->
-                    <div class="glass-panel available-card text-center">
-                        <div class="available-icon">✓</div>
-                        <h2><?php echo __('domain_available_title'); ?></h2>
-                        <p class="available-desc"><?php echo sprintf(__('domain_available_desc'), esc($domainName)); ?></p>
-                        
-                        <div class="registration-cta-box">
-                            <a href="<?php echo esc($config['affiliate_namecheap']); ?>&query=<?php echo urlencode($domainName); ?>" target="_blank" rel="noopener" class="btn btn-primary btn-large">
-                                <?php echo __('register_with_namecheap'); ?>
-                            </a>
-                            <p class="cta-note"><?php echo __('register_note'); ?></p>
+                    <div class="glass-panel available-card">
+                        <div class="available-domain-hero">
+                            <div class="available-icon">✓</div>
+                            <div>
+                                <span class="comparison-kicker">Great News!</span>
+                                <h2><?php echo esc($domainName); ?> is available</h2>
+                                <p class="available-desc"><?php echo sprintf(__('domain_available_desc'), esc($domainName)); ?></p>
+                            </div>
                         </div>
 
-                        <!-- Price Comparison Table -->
-                        <div class="price-comparison-widget" style="margin-top: 3rem; text-align: left;">
-                            <h3 style="font-family: var(--font-display); font-size: 1.25rem; color: #ffffff; margin-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;"><?php echo __('price_comparison_title'); ?></h3>
-                            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">
-                                <?php echo __('price_comparison_sub'); ?>
-                            </p>
-                            
-                            <div class="table-responsive-container">
-                                <table class="trending-table" style="background: rgba(255, 255, 255, 0.01);">
-                                    <thead>
-                                        <tr>
-                                            <th><?php echo __('col_provider_name'); ?></th>
-                                            <th><?php echo __('col_priority_type'); ?></th>
-                                            <th><?php echo __('col_yearly_price'); ?></th>
-                                            <th class="text-right"><?php echo __('col_actions'); ?></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php 
-                                        $priceComparison = getDomainPriceComparison($domainName, $config);
-                                        
-                                        // Priority metadata for stars/badges
-                                        $priorityMeta = [
-                                            'Namecheap' => ['stars' => '⭐⭐⭐⭐⭐', 'badge' => 'Affiliate'],
-                                            'Hostinger' => ['stars' => '⭐⭐⭐⭐⭐', 'badge' => 'Affiliate'],
-                                            'NameSilo' => ['stars' => '⭐⭐⭐⭐', 'badge' => 'Affiliate + API'],
-                                            'Porkbun' => ['stars' => '⭐⭐⭐⭐', 'badge' => 'Affiliate'],
-                                            'Spaceship' => ['stars' => '⭐⭐', 'badge' => 'Affiliate'],
-                                            'Dynadot' => ['stars' => '⭐⭐', 'badge' => 'Affiliate'],
-                                            'Domain Name API' => ['stars' => '⭐⭐⭐', 'badge' => 'Reseller API']
-                                        ];
-                                        
-                                        foreach ($priceComparison as $comp): 
-                                            $meta = $priorityMeta[$comp['provider']] ?? ['stars' => '⭐⭐', 'badge' => 'Affiliate'];
-                                        ?>
-                                            <tr class="table-row-hover">
-                                                <td style="font-weight: bold; color: #ffffff; display: flex; align-items: center;">
-                                                    <?php echo getRegistrarLogo($comp['provider']); ?>
-                                                    <?php echo esc($comp['provider']); ?>
-                                                </td>
-                                                <td>
-                                                    <span style="color: #fbbf24; font-size: 0.8rem; margin-right: 0.5rem;"><?php echo $meta['stars']; ?></span>
-                                                    <span class="status-tag" style="font-size: 0.7rem;"><?php echo $meta['badge']; ?></span>
-                                                </td>
-                                                <td>
-                                                    <strong style="color: <?php echo ($comp['price'] === 'N/A') ? 'var(--color-text-muted)' : 'var(--color-success)'; ?>;">
-                                                        <?php echo esc($comp['price']); ?>
-                                                    </strong>
-                                                </td>
-                                                <td class="text-right">
-                                                    <?php if ($comp['price'] === 'N/A'): ?>
-                                                        <span class="text-muted" style="font-size: 0.85rem;"><?php echo __('not_supported'); ?></span>
-                                                    <?php else: ?>
-                                                        <a href="<?php echo esc($comp['aff_url']); ?>" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc;">
-                                                            <?php echo __('buy_now'); ?>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                        <?php if ($primaryDomainProvider): ?>
+                            <div class="registration-cta-box available-primary-provider">
+                                <div>
+                                    <strong>Register with <?php echo esc($primaryDomainProvider['name']); ?></strong>
+                                    <p class="cta-note"><?php echo __('register_note'); ?></p>
+                                </div>
+                                <a href="<?php echo url('go?to=' . urlencode($primaryDomainProvider['code']) . '&utm_source=available_domain&query=' . urlencode($domainName)); ?>" target="_blank" rel="noopener" class="btn btn-primary btn-large">
+                                    Register Now
+                                </a>
                             </div>
+                        <?php endif; ?>
+
+                        <?php
+                            $priceComparison = getDomainPriceComparison($domainName, $config);
+                            $domainBase = preg_replace('/\.[a-z0-9.-]+$/i', '', $domainName);
+                            $suggestedTlds = ['com', 'net', 'org', 'co', 'io', 'ai'];
+                            $suggestedDomains = [];
+                            foreach ($suggestedTlds as $suggestedTld) {
+                                $candidate = $domainBase . '.' . $suggestedTld;
+                                if ($candidate !== $domainName) {
+                                    $suggestedDomains[] = $candidate;
+                                }
+                            }
+                        ?>
+
+                        <div class="price-comparison-widget comparison-tabs" data-comparison-tabs>
+                            <div class="comparison-head">
+                                <div>
+                                    <h3><?php echo __('price_comparison_title'); ?></h3>
+                                    <p><?php echo __('price_comparison_sub'); ?></p>
+                                </div>
+                            </div>
+
+                            <div class="comparison-tab-list" role="tablist">
+                                <button type="button" class="comparison-tab active" data-tab-target="domains">Domains</button>
+                                <button type="button" class="comparison-tab" data-tab-target="hosting">Hosting</button>
+                                <button type="button" class="comparison-tab" data-tab-target="ssl">SSL</button>
+                                <button type="button" class="comparison-tab" data-tab-target="email">Email</button>
+                            </div>
+
+                            <div class="comparison-panel active" data-tab-panel="domains">
+                                <div class="comparison-provider-list">
+                                    <?php foreach ($priceComparison as $comp): ?>
+                                        <a href="<?php echo esc($comp['aff_url']); ?>" target="_blank" rel="noopener" class="comparison-provider-row">
+                                            <span class="comparison-provider-name">
+                                                <?php echo getRegistrarLogo($comp['provider']); ?>
+                                                <?php echo esc($comp['provider']); ?>
+                                            </span>
+                                            <span class="comparison-provider-desc"><?php echo esc($comp['description']); ?></span>
+                                            <strong><?php echo esc($comp['price']); ?>/yr</strong>
+                                            <span class="comparison-provider-action"><?php echo $comp['price'] === 'N/A' ? __('not_supported') : __('buy_now'); ?></span>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <?php if (!empty($suggestedDomains)): ?>
+                                    <div class="suggested-domain-block">
+                                        <div class="suggested-domain-head">
+                                            <h4>Suggested Domains</h4>
+                                            <span>Alternative extensions for the same name</span>
+                                        </div>
+                                        <div class="suggested-domain-list">
+                                            <?php foreach ($suggestedDomains as $candidate): ?>
+                                                <a href="<?php echo url('domain/' . urlencode($candidate)); ?>"><?php echo esc($candidate); ?></a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php
+                                $tabGroups = [
+                                    'hosting' => $recommendedHostingProviders,
+                                    'ssl' => $recommendedSslProviders,
+                                    'email' => $emailProviders,
+                                ];
+                            ?>
+                            <?php foreach ($tabGroups as $panelKey => $providers): ?>
+                                <div class="comparison-panel" data-tab-panel="<?php echo esc($panelKey); ?>">
+                                    <?php if (empty($providers)): ?>
+                                        <div class="comparison-empty">No <?php echo esc(strtoupper($panelKey)); ?> provider is selected yet.</div>
+                                    <?php else: ?>
+                                        <div class="comparison-provider-list">
+                                            <?php foreach ($providers as $provider): ?>
+                                                <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=price_comparison&query=' . urlencode($domainName)); ?>" target="_blank" rel="noopener" class="comparison-provider-row">
+                                                    <span class="comparison-provider-name"><?php echo esc($provider['name']); ?></span>
+                                                    <span class="comparison-provider-desc"><?php echo esc($provider['description']); ?></span>
+                                                    <strong>Recommended</strong>
+                                                    <span class="comparison-provider-action"><?php echo esc($provider['button_label']); ?></span>
+                                                </a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
@@ -331,35 +365,33 @@ $isRegistered = $hasData && (!isset($domainData['registered']) || $domainData['r
                     </div>
                 <?php endif; ?>
 
-                <!-- Hosting Affiliate Card -->
+                <!-- Hosting Recommendation Card -->
                 <div class="glass-panel affiliate-card">
                     <span class="affiliate-badge"><?php echo __('recommendation_badge'); ?></span>
                     <h3><?php echo __('hosting_recommendation_title'); ?></h3>
                     <p><?php echo __('hosting_recommendation_desc'); ?></p>
                     
                     <div class="affiliate-buttons">
-                        <a href="<?php echo url('go?to=hostinger'); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn hostinger">
-                            <span><?php echo __('hostinger_promo'); ?></span>
-                        </a>
-                        <a href="<?php echo url('go?to=bluehost'); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn bluehost">
-                            <span><?php echo __('bluehost_promo'); ?></span>
-                        </a>
+                        <?php foreach ($recommendedHostingProviders as $provider): ?>
+                            <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=hosting_recommendation&query=' . urlencode($domainName)); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn">
+                                <span><?php echo esc($provider['name']); ?></span>
+                            </a>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
-                <!-- SSL Affiliate Card -->
+                <!-- SSL Recommendation Card -->
                 <div class="glass-panel affiliate-card" style="margin-top: 1.5rem;">
                     <span class="affiliate-badge" style="background: linear-gradient(135deg, #10b981, #059669);"><?php echo __('recommendation_badge'); ?></span>
                     <h3><?php echo __('ssl_recommendation_title'); ?></h3>
                     <p><?php echo __('ssl_recommendation_desc'); ?></p>
                     
                     <div class="affiliate-buttons" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <a href="<?php echo url('go?to=namecheap_ssl'); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn" style="border-color: rgba(16, 185, 129, 0.4); color: #a7f3d0; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; padding: 0.75rem;">
-                            <span>🔐 <?php echo __('ssl_btn_namecheap'); ?></span>
-                        </a>
-                        <a href="<?php echo url('go?to=ssls'); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn" style="border-color: rgba(16, 185, 129, 0.4); color: #a7f3d0; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; padding: 0.75rem;">
-                            <span>🔐 <?php echo __('ssl_btn_ssls'); ?></span>
-                        </a>
+                        <?php foreach ($recommendedSslProviders as $provider): ?>
+                            <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=ssl_recommendation&query=' . urlencode($domainName)); ?>" target="_blank" rel="noopener" class="btn btn-secondary affiliate-btn affiliate-btn-ssl">
+                                <span><?php echo esc($provider['name']); ?></span>
+                            </a>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 

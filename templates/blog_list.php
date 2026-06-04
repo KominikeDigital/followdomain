@@ -19,7 +19,7 @@ global $blogPosts;
         <?php foreach ($blogPosts as $post): ?>
             <div class="blog-card glass-panel">
                 <div class="blog-card-image-wrapper">
-                    <img src="<?php echo url($post['image']); ?>" alt="<?php echo esc($post['title']); ?>" class="blog-card-image" loading="lazy">
+                    <img src="<?php echo esc(mediaUrl($post['image'])); ?>" alt="<?php echo esc($post['title']); ?>" class="blog-card-image" loading="lazy">
                 </div>
                 <div class="blog-card-content">
                     <div class="blog-meta">

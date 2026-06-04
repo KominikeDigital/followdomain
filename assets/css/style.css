@@ -252,9 +252,22 @@
 
     .btn-nav {
         padding: 0.5rem 1rem !important;
+        min-width: 100px;
+        min-height: 40px;
+        justify-content: center;
         background-color: rgba(99, 102, 241, 0.1);
         border: 1px solid rgba(99, 102, 241, 0.2);
         color: var(--color-primary) !important;
+    }
+
+    .btn-nav-accent {
+        color: #ffffff !important;
+        overflow: hidden;
+    }
+
+    .btn-nav-accent.is-changing {
+        transform: translateY(-1px) scale(0.98);
+        filter: brightness(1.08);
     }
 
     .btn-nav:hover {
@@ -573,6 +586,27 @@
     font-size: 1.35rem;
     margin-bottom: 1rem;
     color: #ffffff;
+}
+
+.flight-display-title {
+    display: inline-flex;
+    min-height: 1.8rem;
+    align-items: center;
+    font-family: "Inter", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    font-size: 1.08rem !important;
+    line-height: 1.3;
+    padding: 0.28rem 0.45rem;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.52);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="light"] .flight-display-title {
+    background: rgba(15, 23, 42, 0.06);
+    border-color: rgba(15, 23, 42, 0.1);
 }
 
 .step-card p {
@@ -1051,6 +1085,256 @@
 
 .affiliate-btn.bluehost {
     border-left-color: #00bcd4;
+}
+
+.affiliate-btn-ssl {
+    border-color: rgba(16, 185, 129, 0.36);
+    border-left-color: #10b981;
+    color: #a7f3d0;
+}
+
+html[data-theme="light"] .affiliate-btn-ssl {
+    color: #047857;
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(4, 120, 87, 0.24);
+    border-left-color: #10b981;
+}
+
+.available-domain-hero {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+.comparison-kicker {
+    display: inline-block;
+    color: var(--color-success);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    margin-bottom: 0.25rem;
+}
+
+.available-primary-provider {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.available-primary-provider strong {
+    display: block;
+    color: var(--color-text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.comparison-tabs {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.comparison-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.comparison-head h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem;
+}
+
+.comparison-head p {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.comparison-tab-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.comparison-tab {
+    border: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--color-text-secondary);
+    border-radius: 8px;
+    padding: 0.62rem 0.75rem;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.comparison-tab.active {
+    color: #ffffff;
+    background: var(--color-primary-gradient);
+    border-color: transparent;
+}
+
+.comparison-panel {
+    display: none;
+}
+
+.comparison-panel.active {
+    display: block;
+}
+
+.comparison-provider-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.comparison-provider-row {
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) minmax(180px, 1.2fr) auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.8rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.comparison-provider-row:hover {
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-1px);
+}
+
+.comparison-provider-name {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-primary);
+    font-weight: 800;
+}
+
+.comparison-provider-desc {
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.comparison-provider-row strong {
+    color: var(--color-success);
+    white-space: nowrap;
+}
+
+.comparison-provider-action {
+    color: var(--color-primary);
+    font-weight: 800;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.comparison-empty {
+    border: 1px dashed var(--color-border);
+    border-radius: 10px;
+    padding: 1rem;
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+.suggested-domain-block {
+    margin-top: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.suggested-domain-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.suggested-domain-head h4 {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.suggested-domain-head span {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+
+.suggested-domain-list {
+    display: grid;
+    gap: 0;
+}
+
+.suggested-domain-list a {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.suggested-domain-list a:last-child {
+    border-bottom: none;
+}
+
+.suggested-domain-list a::after {
+    content: "Check";
+    color: var(--color-primary);
+    font-weight: 800;
+    font-size: 0.8rem;
+}
+
+html[data-theme="light"] .comparison-tab {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+html[data-theme="light"] .comparison-tab.active {
+    color: #fff;
+    background: var(--color-primary-gradient);
+    border-color: transparent;
+}
+
+html[data-theme="light"] .comparison-provider-row,
+html[data-theme="light"] .available-primary-provider {
+    background: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 760px) {
+    .comparison-tab-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .comparison-provider-row {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+    .available-primary-provider,
+    .available-domain-hero,
+    .suggested-domain-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .available-primary-provider .btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 /* --------------------------------------------------
@@ -3017,6 +3301,19 @@ html[data-theme="light"] .btn-secondary:hover {
     background: rgba(0, 0, 0, 0.08);
 }
 
+html[data-theme="light"] .btn-secondary.affiliate-btn-ssl {
+    color: #047857;
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(4, 120, 87, 0.28);
+    border-left-color: #10b981;
+}
+
+html[data-theme="light"] .btn-secondary.affiliate-btn-ssl:hover {
+    color: #065f46;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(4, 120, 87, 0.36);
+}
+
 /* --------------------------------------------------
    Theme Dropdown Picker Styles
    -------------------------------------------------- */
@@ -4295,6 +4592,45 @@ html[data-theme="light"] .mkt-icon-badge {
     padding: 0 1rem;
 }
 
+.det-brand-strip {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 720px;
+    margin: 0 auto 1.75rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.det-brand-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.det-brand-copy span {
+    display: block;
+    color: var(--color-text-primary);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-bottom: 0.25rem;
+}
+
+.det-brand-copy p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+html[data-theme="light"] .det-brand-strip {
+    background: rgba(255, 255, 255, 0.72);
+}
+
 .det-title-section {
     text-align: center;
     margin-bottom: 2.5rem;
@@ -4472,6 +4808,70 @@ html[data-theme="light"] .mkt-icon-badge {
     margin-top: 2rem;
 }
 
+.domain-search-comparison {
+    margin-top: 2rem;
+}
+
+.domain-search-results-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.domain-result-row {
+    display: grid;
+    grid-template-columns: auto minmax(180px, 1fr) auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    text-decoration: none;
+}
+
+.domain-result-row:hover {
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-1px);
+}
+
+.domain-result-status-dot {
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 999px;
+    background: var(--color-error);
+}
+
+.domain-result-row.available .domain-result-status-dot {
+    background: var(--color-success);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.domain-result-row strong {
+    font-family: var(--font-display);
+    font-size: 1rem;
+}
+
+.domain-result-row span:not(.domain-result-status-dot) {
+    color: var(--color-text-secondary);
+    font-weight: 700;
+}
+
+.domain-result-row.available span:not(.domain-result-status-dot) {
+    color: var(--color-success);
+}
+
+.domain-result-row em {
+    color: var(--color-primary);
+    font-style: normal;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+html[data-theme="light"] .domain-result-row {
+    background: rgba(255, 255, 255, 0.72);
+}
+
 .det-card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -4619,6 +5019,9 @@ html[data-theme="light"] .det-overlay p {
     .det-action-btns .btn { width: 100%; }
     .det-stats { flex-wrap: wrap; }
     .det-results { grid-template-columns: 1fr; }
+    .det-brand-strip { flex-direction: column; text-align: center; }
+    .domain-result-row { grid-template-columns: auto 1fr; }
+    .domain-result-row em { grid-column: 2; }
 }
 
 /* User Panel Shell Layout */

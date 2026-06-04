@@ -19,6 +19,9 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Save Settings
     if ($action === 'save_settings' && isset($_POST['settings']) && is_array($_POST['settings'])) {
         foreach ($_POST['settings'] as $key => $value) {
+            if (is_array($value)) {
+                $value = implode(',', array_filter(array_map('sanitizeAffiliateCode', $value)));
+            }
             $pdo->prepare("DELETE FROM settings WHERE key_name = ?")->execute([$key]);
             $pdo->prepare("INSERT INTO settings (key_name, val_value) VALUES (?, ?)")->execute([$key, $value]);
             $config[$key] = $value;
@@ -67,6 +70,156 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
         $settingsSaved = true;
     }
+
+    if ($action === 'send_template_test_email') {
+        $targetEmail = trim($_POST['template_test_email'] ?? '');
+        $templateKey = trim($_POST['template_key'] ?? 'mail_tpl_user_verify');
+        $allowedTemplates = ['mail_tpl_user_register','mail_tpl_user_verify','mail_tpl_user_forgot','mail_tpl_admin_register','mail_tpl_admin_forgot','mail_tpl_domain_expiry','mail_tpl_hosting_expiry'];
+        if (!isValidEmail($targetEmail) || !in_array($templateKey, $allowedTemplates, true)) {
+            $adminError = 'Test maili için geçerli bir e-posta adresi ve şablon seçin.';
+        } else {
+            $sampleReplacements = [
+                'username' => 'demo_user',
+                'email' => $targetEmail,
+                'date' => date('Y-m-d H:i:s'),
+                'mail_status' => 'Test gönderimi',
+                'verify_url' => absolute_url('verify-email?token=demo-token'),
+                'temp_password' => 'Demo#2026',
+                'login_url' => absolute_url('login'),
+                'domain_name' => 'example.com',
+                'expiry_date' => date('Y-m-d H:i:s', strtotime('+14 days')),
+                'days_left' => '14',
+                'panel_url' => absolute_url('panel/domains'),
+                'hosting_provider' => 'Demo Hosting',
+            ];
+            $draftContent = trim($_POST['template_test_content'] ?? '');
+            if ($draftContent !== '') {
+                $config[$templateKey] = $draftContent;
+            }
+            $subjectMap = [
+                'mail_tpl_user_register' => 'TLDix Test: Hoş Geldiniz',
+                'mail_tpl_user_verify' => 'TLDix Test: E-posta Doğrulama',
+                'mail_tpl_user_forgot' => 'TLDix Test: Şifre Sıfırlama',
+                'mail_tpl_admin_register' => 'TLDix Test: Yeni Üye Bildirimi',
+                'mail_tpl_admin_forgot' => 'TLDix Test: Şifre Sıfırlama Bildirimi',
+                'mail_tpl_domain_expiry' => 'TLDix Test: Domain Hatırlatma',
+                'mail_tpl_hosting_expiry' => 'TLDix Test: Hosting Hatırlatma',
+            ];
+            $sent = sendEmailNotification($targetEmail, $subjectMap[$templateKey], getFormattedEmail($templateKey, $sampleReplacements));
+            if ($sent) {
+                $_SESSION['admin_flash_success'] = 'Test maili gönderildi: ' . $targetEmail;
+            } else {
+                $_SESSION['admin_flash_error'] = 'Test maili gönderilemedi. SMTP ayarlarını ve logları kontrol edin.';
+            }
+            header("Location: " . url("manage-secure-panel?tab=email-templates&sub=" . urlencode($templateKey)));
+            exit;
+        }
+    }
+
+    if ($action === 'save_blog_post') {
+        $blogId = (int)($_POST['blog_id'] ?? 0);
+        $slug = trim($_POST['slug'] ?? '');
+        $titleForSlug = trim($_POST['title_en'] ?? ($_POST['title_tr'] ?? ''));
+        if ($slug === '') {
+            $slug = slugifyCategory($titleForSlug);
+        } else {
+            $slug = slugifyCategory(str_replace('-', ' ', $slug));
+        }
+        $status = in_array($_POST['status'] ?? 'published', ['published', 'draft'], true) ? $_POST['status'] : 'published';
+        $category = trim($_POST['category'] ?? 'General') ?: 'General';
+        $imageUrl = trim($_POST['image_url'] ?? '') ?: 'assets/images/blog/domain_tracking.png';
+        $now = date('Y-m-d H:i:s');
+
+        if ($slug === '' || $titleForSlug === '') {
+            $adminError = 'Blog için en az bir başlık ve slug gereklidir.';
+        } else {
+            $data = [
+                $slug,
+                $category,
+                $imageUrl,
+                $status,
+                trim($_POST['meta_title'] ?? ''),
+                trim($_POST['meta_description'] ?? ''),
+                trim($_POST['description_en'] ?? ''),
+                trim($_POST['description_tr'] ?? ''),
+                trim($_POST['description_es'] ?? ''),
+                trim($_POST['description_de'] ?? ''),
+                trim($_POST['title_en'] ?? ''),
+                trim($_POST['title_tr'] ?? ''),
+                trim($_POST['title_es'] ?? ''),
+                trim($_POST['title_de'] ?? ''),
+                trim($_POST['content_en'] ?? ''),
+                trim($_POST['content_tr'] ?? ''),
+                trim($_POST['content_es'] ?? ''),
+                trim($_POST['content_de'] ?? ''),
+                $now
+            ];
+
+            if ($blogId > 0) {
+                $stmt = $pdo->prepare("UPDATE blog_posts SET slug=?, category=?, image_url=?, status=?, meta_title=?, meta_description=?, description_en=?, description_tr=?, description_es=?, description_de=?, title_en=?, title_tr=?, title_es=?, title_de=?, content_en=?, content_tr=?, content_es=?, content_de=?, updated_at=? WHERE id=?");
+                $stmt->execute(array_merge($data, [$blogId]));
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO blog_posts (slug, category, image_url, status, meta_title, meta_description, description_en, description_tr, description_es, description_de, title_en, title_tr, title_es, title_de, content_en, content_tr, content_es, content_de, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute($data);
+            }
+            $_SESSION['admin_flash_success'] = 'Blog yazısı kaydedildi.';
+            header("Location: " . url("manage-secure-panel?tab=blog"));
+            exit;
+        }
+    }
+
+    if ($action === 'delete_blog_post' && !empty($_POST['blog_id'])) {
+        $pdo->prepare("DELETE FROM blog_posts WHERE id = ?")->execute([(int)$_POST['blog_id']]);
+        $_SESSION['admin_flash_success'] = 'Blog yazısı silindi.';
+        header("Location: " . url("manage-secure-panel?tab=blog"));
+        exit;
+    }
+
+    if ($action === 'add_affiliate_partner') {
+        $code = sanitizeAffiliateCode($_POST['code'] ?? ($_POST['name'] ?? ''));
+        $name = trim($_POST['name'] ?? '');
+        $category = in_array($_POST['category'] ?? 'domain', ['domain','hosting','ssl','email','marketplace'], true) ? $_POST['category'] : 'domain';
+        $targetUrl = trim($_POST['target_url'] ?? '');
+        if ($code === '' || $name === '' || $targetUrl === '') {
+            $adminError = 'Yeni firma için ad, kod ve URL gereklidir.';
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO affiliate_partners (code, name, category, target_url, description, button_label, is_active, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$code, $name, $category, $targetUrl, trim($_POST['description'] ?? ''), trim($_POST['button_label'] ?? 'View Deal'), (int)($_POST['is_active'] ?? 1), (int)($_POST['sort_order'] ?? 100), date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
+            $_SESSION['admin_flash_success'] = 'Affiliate firma eklendi.';
+            header("Location: " . url("manage-secure-panel?tab=affiliate"));
+            exit;
+        }
+    }
+
+    if ($action === 'save_affiliate_partners' && !empty($_POST['partners']) && is_array($_POST['partners'])) {
+        foreach ($_POST['partners'] as $id => $partner) {
+            $pid = (int)$id;
+            if ($pid <= 0) continue;
+            $category = in_array($partner['category'] ?? 'domain', ['domain','hosting','ssl','email','marketplace'], true) ? $partner['category'] : 'domain';
+            $pdo->prepare("UPDATE affiliate_partners SET name=?, category=?, target_url=?, description=?, button_label=?, is_active=?, sort_order=?, updated_at=? WHERE id=?")
+                ->execute([
+                    trim($partner['name'] ?? ''),
+                    $category,
+                    trim($partner['target_url'] ?? ''),
+                    trim($partner['description'] ?? ''),
+                    trim($partner['button_label'] ?? ''),
+                    (int)($partner['is_active'] ?? 0),
+                    (int)($partner['sort_order'] ?? 100),
+                    date('Y-m-d H:i:s'),
+                    $pid
+                ]);
+        }
+        $_SESSION['admin_flash_success'] = 'Affiliate firmalar güncellendi.';
+        header("Location: " . url("manage-secure-panel?tab=affiliate"));
+        exit;
+    }
+
+    if ($action === 'delete_affiliate_partner' && !empty($_POST['partner_id'])) {
+        $pdo->prepare("DELETE FROM affiliate_partners WHERE id = ?")->execute([(int)$_POST['partner_id']]);
+        $_SESSION['admin_flash_success'] = 'Affiliate firma silindi.';
+        header("Location: " . url("manage-secure-panel?tab=affiliate"));
+        exit;
+    }
 }
 
 // ── Fetch data ───────────────────────────────────────────────────────────────
@@ -79,6 +232,9 @@ $affiliateStats = [];
 $recentClicks   = [];
 $payments       = [];
 $adminDomains   = [];
+$blogRows       = [];
+$customAffiliateRows = [];
+$allAffiliateProviders = [];
 
 if ($isAdmin) {
     $totalDomains   = $pdo->query("SELECT COUNT(*) FROM domains")->fetchColumn();
@@ -96,12 +252,34 @@ if ($isAdmin) {
     try {
         $payments = $pdo->query("SELECT p.*, u.username, u.email FROM payments p LEFT JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC")->fetchAll();
     } catch(Exception $e){ $payments = []; }
+    try {
+        $blogRows = $pdo->query("SELECT * FROM blog_posts ORDER BY created_at DESC, id DESC")->fetchAll();
+    } catch(Exception $e){ $blogRows = []; }
+    try {
+        $customAffiliateRows = $pdo->query("SELECT * FROM affiliate_partners ORDER BY sort_order ASC, name ASC")->fetchAll();
+    } catch(Exception $e){ $customAffiliateRows = []; }
+    $allAffiliateProviders = getAffiliateProviders($pdo, $config, null, true);
 }
 
 // Active tab
 $activeTab = $_GET['tab'] ?? 'dashboard';
-$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','domains','members','payments','affiliate-stats','integrations'];
+$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','domains','members','payments','affiliate-stats','integrations','blog'];
 if (!in_array($activeTab, $validTabs)) $activeTab = 'dashboard';
+
+$flashSuccess = $_SESSION['admin_flash_success'] ?? null;
+$flashError = $_SESSION['admin_flash_error'] ?? null;
+unset($_SESSION['admin_flash_success'], $_SESSION['admin_flash_error']);
+
+$editingBlogId = (int)($_GET['edit_blog'] ?? 0);
+$editingBlog = null;
+if ($editingBlogId > 0) {
+    foreach ($blogRows as $row) {
+        if ((int)$row['id'] === $editingBlogId) {
+            $editingBlog = $row;
+            break;
+        }
+    }
+}
 ?>
 
 <style>
@@ -296,6 +474,46 @@ html[data-theme="light"] .admin-card textarea {
 /* Commission badge */
 .comm-badge { font-size: 0.72rem; color: var(--color-success); font-weight: 600; margin-left: 0.35rem; }
 
+.admin-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.45rem;
+    padding: 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.025);
+}
+.admin-checkbox-grid label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+}
+.affiliate-admin-list {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.affiliate-admin-row {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 1rem;
+    background: rgba(255,255,255,0.025);
+}
+.affiliate-admin-row-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+.affiliate-admin-row-head label {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin: 0;
+}
+
 /* Page header */
 .admin-page-header {
     margin-bottom: 1.75rem;
@@ -361,6 +579,12 @@ html[data-theme="light"] .admin-card textarea {
     <?php if ($settingsSaved): ?>
         <div class="alert alert-success" style="margin-bottom: 1rem;">✅ İşlem başarıyla tamamlandı.</div>
     <?php endif; ?>
+    <?php if ($flashSuccess): ?>
+        <div class="alert alert-success" style="margin-bottom: 1rem;"><?php echo esc($flashSuccess); ?></div>
+    <?php endif; ?>
+    <?php if ($flashError): ?>
+        <div class="alert alert-error" style="margin-bottom: 1rem;"><?php echo esc($flashError); ?></div>
+    <?php endif; ?>
     <?php if ($adminError): ?>
         <div class="alert alert-error" style="margin-bottom: 1rem;"><?php echo esc($adminError); ?></div>
     <?php endif; ?>
@@ -371,59 +595,62 @@ html[data-theme="light"] .admin-card textarea {
         <!-- ── LEFT SIDEBAR ────────────────────────────────────── -->
         <aside class="admin-sidebar">
             <div class="admin-sidebar-logo">
-                🛡️ Admin Panel
+                Admin Panel
             </div>
 
             <button class="admin-sidebar-toggle" onclick="document.querySelector('.sidebar-nav').classList.toggle('open')">
-                ☰ Menü
+                Menü
             </button>
 
             <nav class="sidebar-nav">
                 <div class="sidebar-section-label">Genel Bakış</div>
                 <a href="?tab=dashboard" class="<?php echo $activeTab==='dashboard'?'active':''; ?>">
-                    📊 Dashboard
+                    Dashboard
                 </a>
 
                 <div class="sidebar-section-label">Ayarlar</div>
                 <a href="?tab=general" class="<?php echo $activeTab==='general'?'active':''; ?>">
-                    ⚙️ Genel & SEO
+                    Genel & SEO
                 </a>
                 <a href="?tab=email" class="<?php echo $activeTab==='email'?'active':''; ?>">
-                    📧 E-posta & SMTP
+                    E-posta & SMTP
                 </a>
                 <a href="?tab=email-templates" class="<?php echo $activeTab==='email-templates'?'active':''; ?>">
-                    📝 E-posta Şablonları
+                    E-posta Şablonları
                 </a>
                 <a href="?tab=ads" class="<?php echo $activeTab==='ads'?'active':''; ?>">
-                    📢 Reklam & Entegrasyon
+                    Reklam & Entegrasyon
                 </a>
 
                 <div class="sidebar-section-label">Gelir</div>
                 <a href="?tab=affiliate" class="<?php echo $activeTab==='affiliate'?'active':''; ?>">
-                    🔗 Affiliate URL'leri
+                    Affiliate URL'leri
                 </a>
                 <a href="?tab=payments" class="<?php echo $activeTab==='payments'?'active':''; ?>">
-                    💳 Ödemeler
+                    Ödemeler
                 </a>
                 <a href="?tab=affiliate-stats" class="<?php echo $activeTab==='affiliate-stats'?'active':''; ?>">
-                    📈 Affiliate İstatistik
+                    Affiliate İstatistik
                 </a>
 
                 <div class="sidebar-section-label">Kullanıcı & Domain</div>
+                <a href="?tab=blog" class="<?php echo $activeTab==='blog'?'active':''; ?>">
+                    Blog Yazıları
+                </a>
                 <a href="?tab=members" class="<?php echo $activeTab==='members'?'active':''; ?>">
-                    👥 Üyeler
+                    Üyeler
                 </a>
                 <a href="?tab=domains" class="<?php echo $activeTab==='domains'?'active':''; ?>">
-                    🌐 İzlenen Domainler
+                    İzlenen Domainler
                 </a>
                 <a href="?tab=integrations" class="<?php echo $activeTab==='integrations'?'active':''; ?>">
-                    🔌 Entegrasyon Kodları
+                    Entegrasyon Kodları
                 </a>
             </nav>
 
             <div class="sidebar-bottom">
-                <a href="<?php echo url(''); ?>" class="btn btn-secondary btn-sm w-full" style="margin-bottom: 0.5rem; text-align: center; display: block;">🏠 Siteye Git</a>
-                <a href="<?php echo url('manage-secure-panel?logout=1'); ?>" class="btn btn-secondary btn-sm w-full" style="text-align: center; display: block; color: var(--color-error); border-color: rgba(239,68,68,0.3);">🚪 Çıkış Yap</a>
+                <a href="<?php echo url(''); ?>" class="btn btn-secondary btn-sm w-full" style="margin-bottom: 0.5rem; text-align: center; display: block;">Siteye Git</a>
+                <a href="<?php echo url('manage-secure-panel?logout=1'); ?>" class="btn btn-secondary btn-sm w-full" style="text-align: center; display: block; color: var(--color-error); border-color: rgba(239,68,68,0.3);">Çıkış Yap</a>
             </div>
         </aside>
 
@@ -700,6 +927,34 @@ html[data-theme="light"] .admin-card textarea {
                     </div>
                 </div>
 
+                <div class="admin-card" style="margin-bottom: 2rem;">
+                    <h3>Test Mail Gönder</h3>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                        Seçtiğiniz şablonu örnek değişkenlerle istediğiniz e-posta adresine göndererek görünümü test edin.
+                    </p>
+                    <form action="?tab=email-templates" method="POST" style="display:grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr) auto; gap:0.75rem; align-items:end;">
+                        <input type="hidden" name="action" value="send_template_test_email">
+                        <textarea name="template_test_content" id="tpl_test_content" hidden></textarea>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Şablon</label>
+                            <select name="template_key" id="tpl_test_selector">
+                                <option value="mail_tpl_user_register">Hoş Geldiniz E-postası</option>
+                                <option value="mail_tpl_user_verify">E-posta Doğrulama</option>
+                                <option value="mail_tpl_user_forgot">Şifre Sıfırlama (Kullanıcı)</option>
+                                <option value="mail_tpl_admin_register">Yeni Üye Bildirimi</option>
+                                <option value="mail_tpl_admin_forgot">Şifre Sıfırlama Bildirimi</option>
+                                <option value="mail_tpl_domain_expiry">Domain Hatırlatma</option>
+                                <option value="mail_tpl_hosting_expiry">Hosting Hatırlatma</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Alıcı E-posta</label>
+                            <input type="email" name="template_test_email" placeholder="test@example.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Test Gönder</button>
+                    </form>
+                </div>
+
                 <form action="?tab=email-templates" method="POST" id="template_form">
                     <input type="hidden" name="action" value="save_settings">
                     
@@ -842,6 +1097,8 @@ html[data-theme="light"] .admin-card textarea {
                     document.querySelectorAll('.tpl-editor-pane').forEach(el => el.style.display = 'none');
                     const targetPane = document.getElementById('pane_' + val);
                     if (targetPane) targetPane.style.display = 'block';
+                    const testSelector = document.getElementById('tpl_test_selector');
+                    if (testSelector) testSelector.value = val;
                     
                     // Auto update action tab parameter on selector change
                     const urlParams = new URLSearchParams(window.location.search);
@@ -854,6 +1111,25 @@ html[data-theme="light"] .admin-card textarea {
                 window.addEventListener('DOMContentLoaded', () => {
                     const urlParams = new URLSearchParams(window.location.search);
                     const sub = urlParams.get('sub');
+                    const testSelector = document.getElementById('tpl_test_selector');
+                    if (testSelector) {
+                        testSelector.addEventListener('change', () => {
+                            const sel = document.getElementById('tpl_selector');
+                            if (sel) sel.value = testSelector.value;
+                            switchTemplate(testSelector.value);
+                        });
+                    }
+                    const testForm = document.getElementById('tpl_test_content') ? document.getElementById('tpl_test_content').closest('form') : null;
+                    if (testForm) {
+                        testForm.addEventListener('submit', () => {
+                            const selected = document.getElementById('tpl_test_selector').value;
+                            const pane = document.getElementById('pane_' + selected);
+                            const textarea = pane ? pane.querySelector('textarea') : null;
+                            if (textarea) {
+                                document.getElementById('tpl_test_content').value = textarea.value;
+                            }
+                        });
+                    }
                     if (sub) {
                         const sel = document.getElementById('tpl_selector');
                         if (sel) {
@@ -1035,6 +1311,24 @@ html[data-theme="light"] .admin-card textarea {
                     </div>
 
                     <div class="admin-card">
+                        <h3>E-posta Hizmetleri</h3>
+                        <div class="admin-form-row">
+                            <div class="form-group">
+                                <label>Google Workspace</label>
+                                <input type="url" name="settings[affiliate_google_workspace]" value="<?php echo esc($config['affiliate_google_workspace'] ?? ''); ?>">
+                            </div>
+                            <div class="form-group">
+                                <label>Zoho Mail</label>
+                                <input type="url" name="settings[affiliate_zoho_mail]" value="<?php echo esc($config['affiliate_zoho_mail'] ?? ''); ?>">
+                            </div>
+                            <div class="form-group">
+                                <label>Titan Email</label>
+                                <input type="url" name="settings[affiliate_titan_email]" value="<?php echo esc($config['affiliate_titan_email'] ?? ''); ?>">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
                         <h3>🏛️ Domain Satış Platformları</h3>
                         <div class="admin-form-row">
                             <div class="form-group">
@@ -1060,8 +1354,157 @@ html[data-theme="light"] .admin-card textarea {
                         </div>
                     </div>
 
+                    <div class="admin-card">
+                        <h3>Öneri Alanları</h3>
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                            Domain detay ve arama sonuçlarında hangi firmaların önerileceğini seçin.
+                        </p>
+                        <?php
+                            $selectedHostingCodes = parseSelectedProviderCodes($config['recommended_hosting_codes'] ?? '', ['hostinger','bluehost','siteground']);
+                            $selectedSslCodes = parseSelectedProviderCodes($config['recommended_ssl_codes'] ?? '', ['namecheap_ssl','ssls','ssldragon']);
+                            $domainProvidersForAdmin = getAffiliateProviders($pdo, $config, 'domain', true);
+                            $hostingProvidersForAdmin = getAffiliateProviders($pdo, $config, 'hosting', true);
+                            $sslProvidersForAdmin = getAffiliateProviders($pdo, $config, 'ssl', true);
+                        ?>
+                        <div class="admin-form-row">
+                            <div class="form-group">
+                                <label>Great News domain firması</label>
+                                <select name="settings[domain_search_primary_provider]">
+                                    <?php foreach ($domainProvidersForAdmin as $code => $provider): ?>
+                                        <option value="<?php echo esc($code); ?>" <?php echo (($config['domain_search_primary_provider'] ?? 'namecheap') === $code) ? 'selected' : ''; ?>>
+                                            <?php echo esc($provider['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Hosting önerilerinde göster</label>
+                                <div class="admin-checkbox-grid">
+                                    <?php foreach ($hostingProvidersForAdmin as $code => $provider): ?>
+                                        <label><input type="checkbox" name="settings[recommended_hosting_codes][]" value="<?php echo esc($code); ?>" <?php echo in_array($code, $selectedHostingCodes, true) ? 'checked' : ''; ?>> <?php echo esc($provider['name']); ?></label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>SSL önerilerinde göster</label>
+                                <div class="admin-checkbox-grid">
+                                    <?php foreach ($sslProvidersForAdmin as $code => $provider): ?>
+                                        <label><input type="checkbox" name="settings[recommended_ssl_codes][]" value="<?php echo esc($code); ?>" <?php echo in_array($code, $selectedSslCodes, true) ? 'checked' : ''; ?>> <?php echo esc($provider['name']); ?></label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">💾 Kaydet</button>
                 </form>
+
+                <div class="admin-card">
+                    <h3>Yeni Affiliate Firma Ekle</h3>
+                    <form action="?tab=affiliate" method="POST">
+                        <input type="hidden" name="action" value="add_affiliate_partner">
+                        <div class="admin-form-row">
+                            <div class="form-group">
+                                <label>Firma Adı</label>
+                                <input type="text" name="name" placeholder="Örn: MailerLite" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Kod</label>
+                                <input type="text" name="code" placeholder="mailerlite">
+                            </div>
+                            <div class="form-group">
+                                <label>Kategori</label>
+                                <select name="category">
+                                    <option value="domain">Domain</option>
+                                    <option value="hosting">Hosting</option>
+                                    <option value="ssl">SSL</option>
+                                    <option value="email">Email</option>
+                                    <option value="marketplace">Marketplace</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Affiliate URL</label>
+                                <input type="url" name="target_url" placeholder="https://..." required>
+                            </div>
+                            <div class="form-group">
+                                <label>Buton Metni</label>
+                                <input type="text" name="button_label" value="View Deal">
+                            </div>
+                            <div class="form-group">
+                                <label>Sıralama</label>
+                                <input type="text" name="sort_order" value="100">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Açıklama</label>
+                            <textarea name="description" rows="2" placeholder="Kısa açıklama"></textarea>
+                        </div>
+                        <label style="display:inline-flex; align-items:center; gap:0.45rem; margin-bottom:1rem;">
+                            <input type="checkbox" name="is_active" value="1" checked> Aktif
+                        </label>
+                        <br>
+                        <button type="submit" class="btn btn-primary">Firma Ekle</button>
+                    </form>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Özel Affiliate Firmalar</h3>
+                    <?php if (empty($customAffiliateRows)): ?>
+                        <p style="color: var(--color-text-muted);">Henüz özel firma eklenmedi.</p>
+                    <?php else: ?>
+                        <form action="?tab=affiliate" method="POST">
+                            <input type="hidden" name="action" value="save_affiliate_partners">
+                            <div class="affiliate-admin-list">
+                                <?php foreach ($customAffiliateRows as $partner): ?>
+                                    <div class="affiliate-admin-row">
+                                        <div class="affiliate-admin-row-head">
+                                            <strong><?php echo esc($partner['code']); ?></strong>
+                                            <label><input type="checkbox" name="partners[<?php echo (int)$partner['id']; ?>][is_active]" value="1" <?php echo (int)($partner['is_active'] ?? 1) === 1 ? 'checked' : ''; ?>> Aktif</label>
+                                        </div>
+                                        <div class="admin-form-row">
+                                            <div class="form-group">
+                                                <label>Firma Adı</label>
+                                                <input type="text" name="partners[<?php echo (int)$partner['id']; ?>][name]" value="<?php echo esc($partner['name']); ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Kategori</label>
+                                                <select name="partners[<?php echo (int)$partner['id']; ?>][category]">
+                                                    <?php foreach (['domain'=>'Domain','hosting'=>'Hosting','ssl'=>'SSL','email'=>'Email','marketplace'=>'Marketplace'] as $catCode=>$catLabel): ?>
+                                                        <option value="<?php echo $catCode; ?>" <?php echo ($partner['category'] ?? 'domain') === $catCode ? 'selected' : ''; ?>><?php echo $catLabel; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>URL</label>
+                                                <input type="url" name="partners[<?php echo (int)$partner['id']; ?>][target_url]" value="<?php echo esc($partner['target_url']); ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Buton</label>
+                                                <input type="text" name="partners[<?php echo (int)$partner['id']; ?>][button_label]" value="<?php echo esc($partner['button_label'] ?? 'View Deal'); ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Sıra</label>
+                                                <input type="text" name="partners[<?php echo (int)$partner['id']; ?>][sort_order]" value="<?php echo (int)($partner['sort_order'] ?? 100); ?>">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Açıklama</label>
+                                            <textarea name="partners[<?php echo (int)$partner['id']; ?>][description]" rows="2"><?php echo esc($partner['description'] ?? ''); ?></textarea>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Özel Firmaları Kaydet</button>
+                        </form>
+                        <?php foreach ($customAffiliateRows as $partner): ?>
+                            <form action="?tab=affiliate" method="POST" style="display:inline-block; margin-top:0.75rem; margin-right:0.5rem;" onsubmit="return confirm('Bu özel firmayı silmek istediğinize emin misiniz?')">
+                                <input type="hidden" name="action" value="delete_affiliate_partner">
+                                <input type="hidden" name="partner_id" value="<?php echo (int)$partner['id']; ?>">
+                                <button type="submit" class="btn btn-sm" style="background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.25);">Sil: <?php echo esc($partner['name']); ?></button>
+                            </form>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- ════════════════════════════════════════════════════
@@ -1276,6 +1719,142 @@ html[data-theme="light"] .admin-card textarea {
                         </div>
                     </div>
                 <?php endif; ?>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════
+                 TAB: BLOG
+            ════════════════════════════════════════════════════ -->
+            <div class="admin-tab-pane <?php echo $activeTab==='blog'?'active':''; ?>">
+                <div class="admin-page-header">
+                    <h2>Blog Yazıları</h2>
+                    <p>Yeni blog yazısı ekleyin, görsel ve SEO bilgilerini yönetin.</p>
+                </div>
+
+                <form action="?tab=blog" method="POST">
+                    <input type="hidden" name="action" value="save_blog_post">
+                    <input type="hidden" name="blog_id" value="<?php echo (int)($editingBlog['id'] ?? 0); ?>">
+
+                    <div class="admin-card">
+                        <h3><?php echo $editingBlog ? 'Blog Yazısını Düzenle' : 'Yeni Blog Yazısı'; ?></h3>
+                        <div class="admin-form-row">
+                            <div class="form-group">
+                                <label>Slug</label>
+                                <input type="text" name="slug" value="<?php echo esc($editingBlog['slug'] ?? ''); ?>" placeholder="ornek-blog-yazisi">
+                            </div>
+                            <div class="form-group">
+                                <label>Kategori</label>
+                                <input type="text" name="category" value="<?php echo esc($editingBlog['category'] ?? 'Domains'); ?>" placeholder="Domains">
+                            </div>
+                            <div class="form-group">
+                                <label>Görsel URL / Path</label>
+                                <input type="text" name="image_url" value="<?php echo esc($editingBlog['image_url'] ?? 'assets/images/blog/domain_tracking.png'); ?>" placeholder="assets/images/blog/domain_tracking.png">
+                            </div>
+                            <div class="form-group">
+                                <label>Yayın Durumu</label>
+                                <?php $editStatus = $editingBlog['status'] ?? 'published'; ?>
+                                <select name="status">
+                                    <option value="published" <?php echo $editStatus === 'published' ? 'selected' : ''; ?>>Yayında</option>
+                                    <option value="draft" <?php echo $editStatus === 'draft' ? 'selected' : ''; ?>>Taslak</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>SEO Ayarları</h3>
+                        <div class="form-group">
+                            <label>SEO Başlığı</label>
+                            <input type="text" name="meta_title" value="<?php echo esc($editingBlog['meta_title'] ?? ''); ?>" placeholder="Google başlığı">
+                        </div>
+                        <div class="form-group">
+                            <label>SEO Açıklaması</label>
+                            <textarea name="meta_description" rows="3" placeholder="Arama motoru açıklaması"><?php echo esc($editingBlog['meta_description'] ?? ''); ?></textarea>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>Başlık ve Kısa Açıklama</h3>
+                        <div class="admin-form-row">
+                            <?php foreach (['en'=>'English','tr'=>'Türkçe','es'=>'Español','de'=>'Deutsch'] as $code=>$label): ?>
+                                <div class="form-group">
+                                    <label>Başlık (<?php echo $label; ?>)</label>
+                                    <input type="text" name="title_<?php echo $code; ?>" value="<?php echo esc($editingBlog['title_' . $code] ?? ''); ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label>Kısa Açıklama (<?php echo $label; ?>)</label>
+                                    <textarea name="description_<?php echo $code; ?>" rows="3"><?php echo esc($editingBlog['description_' . $code] ?? ''); ?></textarea>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>Yazı İçeriği</h3>
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                            İçerik alanları HTML destekler. Paragraf için <code>&lt;p&gt;</code>, başlık için <code>&lt;h2&gt;</code> kullanabilirsiniz.
+                        </p>
+                        <?php foreach (['en'=>'English','tr'=>'Türkçe','es'=>'Español','de'=>'Deutsch'] as $code=>$label): ?>
+                            <div class="form-group">
+                                <label>İçerik (<?php echo $label; ?>)</label>
+                                <textarea name="content_<?php echo $code; ?>" rows="12" class="code-editor"><?php echo esc($editingBlog['content_' . $code] ?? ''); ?></textarea>
+                            </div>
+                        <?php endforeach; ?>
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                            <button type="submit" class="btn btn-primary">Blog Yazısını Kaydet</button>
+                            <?php if ($editingBlog): ?>
+                                <a href="<?php echo url('manage-secure-panel?tab=blog'); ?>" class="btn btn-secondary">Yeni Yazı Oluştur</a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="admin-card">
+                    <h3>Admin Blog Yazıları (<?php echo count($blogRows); ?>)</h3>
+                    <?php if (empty($blogRows)): ?>
+                        <p style="color: var(--color-text-muted);">Henüz admin panelinden eklenmiş blog yazısı yok.</p>
+                    <?php else: ?>
+                        <div class="table-responsive-container">
+                            <table class="trending-table" style="font-size: 0.84rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Başlık</th>
+                                        <th>Slug</th>
+                                        <th>Kategori</th>
+                                        <th>Durum</th>
+                                        <th>Tarih</th>
+                                        <th>İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($blogRows as $row): ?>
+                                        <tr class="table-row-hover">
+                                            <td><strong style="color: var(--color-text-primary);"><?php echo esc($row['title_tr'] ?: ($row['title_en'] ?: $row['slug'])); ?></strong></td>
+                                            <td><code><?php echo esc($row['slug']); ?></code></td>
+                                            <td><?php echo esc($row['category']); ?></td>
+                                            <td>
+                                                <span style="background:<?php echo ($row['status'] ?? 'published') === 'published' ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)'; ?>; color:<?php echo ($row['status'] ?? 'published') === 'published' ? '#10b981' : '#f59e0b'; ?>; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:700;">
+                                                    <?php echo ($row['status'] ?? 'published') === 'published' ? 'Yayında' : 'Taslak'; ?>
+                                                </span>
+                                            </td>
+                                            <td style="color: var(--color-text-muted); white-space:nowrap;"><?php echo formatDate($row['created_at'], 'Y-m-d'); ?></td>
+                                            <td style="white-space:nowrap;">
+                                                <a href="<?php echo url('manage-secure-panel?tab=blog&edit_blog=' . (int)$row['id']); ?>" class="btn btn-secondary btn-sm">Düzenle</a>
+                                                <?php if (($row['status'] ?? 'published') === 'published'): ?>
+                                                    <a href="<?php echo url('blog/' . urlencode($row['slug'])); ?>" target="_blank" class="btn btn-secondary btn-sm">Görüntüle</a>
+                                                <?php endif; ?>
+                                                <form method="POST" action="?tab=blog" style="display:inline;" onsubmit="return confirm('Bu blog yazısını silmek istediğinize emin misiniz?')">
+                                                    <input type="hidden" name="action" value="delete_blog_post">
+                                                    <input type="hidden" name="blog_id" value="<?php echo (int)$row['id']; ?>">
+                                                    <button type="submit" class="btn btn-sm" style="padding:4px 8px; background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.25);">Sil</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- ════════════════════════════════════════════════════

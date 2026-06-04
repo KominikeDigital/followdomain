@@ -764,8 +764,8 @@ switch ($route) {
             header("Location: " . url("blog"));
             exit;
         }
-        $pageTitle = $blogPost['title'] . " | " . $config['site_title'];
-        $pageDesc = $blogPost['description'];
+        $pageTitle = ($blogPost['seo_title'] ?? $blogPost['title']) . " | " . $config['site_title'];
+        $pageDesc = $blogPost['seo_description'] ?? $blogPost['description'];
         break;
 
     case 'checkout':
@@ -819,8 +819,8 @@ switch ($route) {
         $provider = isset($_GET['to']) ? trim($_GET['to']) : '';
         $targetUrl = '';
         if (!empty($provider)) {
-            $configKey = 'affiliate_' . $provider;
-            $targetUrl = $config[$configKey] ?? '';
+            $queryDomain = cleanDomainName($_GET['query'] ?? ($_GET['domain'] ?? ''));
+            $targetUrl = getAffiliateTargetUrl($pdo, $config, $provider, $queryDomain);
         }
         
         if (!empty($targetUrl)) {

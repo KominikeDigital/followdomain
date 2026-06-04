@@ -7,6 +7,10 @@ if (count(get_included_files()) === 1) {
 
 // Get pre-loaded query if redirected from home
 $initQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
+$primaryDomainProvider = getPrimaryAffiliateProvider($pdo, $config, 'domain_search_primary_provider', 'domain', 'namecheap');
+$recommendedHostingProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_hosting_codes', 'hosting', ['hostinger', 'bluehost', 'siteground']);
+$recommendedSslProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_ssl_codes', 'ssl', ['namecheap_ssl', 'ssls', 'ssldragon']);
+$emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
 ?>
 <div class="det-page-container">
     <div class="det-title-section">
@@ -32,11 +36,55 @@ $initQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
         <div class="det-progress" id="pBar"><div class="det-progress-fill" id="pFill"></div></div>
 
         <div class="det-cta-banner" id="domainCta">
-            💡 Looking to register an available domain at an affordable price? <a href="https://www.hostinger.com/tr/referral?REFERRALCODE=VKNEMRECEYZG" target="_blank">Get a great deal on Domain & Hosting here!</a>
+            Domain, hosting, SSL, and email options are separated below so you can compare the right service without noise.
         </div>
     </div>
 
-    <div class="det-results" id="resultsGrid"></div>
+    <div class="comparison-tabs domain-search-comparison" id="searchComparisonShell" data-comparison-tabs style="display:none;">
+        <div class="comparison-tab-list" role="tablist">
+            <button type="button" class="comparison-tab active" data-tab-target="domains">Domains</button>
+            <button type="button" class="comparison-tab" data-tab-target="hosting">Hosting</button>
+            <button type="button" class="comparison-tab" data-tab-target="ssl">SSL</button>
+            <button type="button" class="comparison-tab" data-tab-target="email">Email</button>
+        </div>
+
+        <div class="comparison-panel active" data-tab-panel="domains">
+            <div class="domain-search-results-list" id="resultsGrid"></div>
+            <div class="suggested-domain-block" id="suggestedDomainBlock" style="display:none;">
+                <div class="suggested-domain-head">
+                    <h4>Suggested Domains</h4>
+                    <span>Available alternatives from your search</span>
+                </div>
+                <div class="suggested-domain-list" id="suggestedDomainList"></div>
+            </div>
+        </div>
+
+        <?php
+            $tabGroups = [
+                'hosting' => $recommendedHostingProviders,
+                'ssl' => $recommendedSslProviders,
+                'email' => $emailProviders,
+            ];
+        ?>
+        <?php foreach ($tabGroups as $panelKey => $providers): ?>
+            <div class="comparison-panel" data-tab-panel="<?php echo esc($panelKey); ?>">
+                <?php if (empty($providers)): ?>
+                    <div class="comparison-empty">No <?php echo esc(strtoupper($panelKey)); ?> provider is selected yet.</div>
+                <?php else: ?>
+                    <div class="comparison-provider-list">
+                        <?php foreach ($providers as $provider): ?>
+                            <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=domain_search_' . urlencode($panelKey)); ?>" target="_blank" rel="noopener" class="comparison-provider-row">
+                                <span class="comparison-provider-name"><?php echo esc($provider['name']); ?></span>
+                                <span class="comparison-provider-desc"><?php echo esc($provider['description']); ?></span>
+                                <strong>Recommended</strong>
+                                <span class="comparison-provider-action"><?php echo esc($provider['button_label']); ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
 </div>
 
 <div class="det-overlay" id="scanOverlay">
@@ -52,6 +100,7 @@ $initQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
     let counts = { t: 0, b: 0, y: 0 };
     let isSearching = false;
     let lottiePlayer = null;
+    const primaryDomainProviderCode = <?php echo json_encode($primaryDomainProvider['code'] ?? 'namecheap'); ?>;
 
     function initLottie() {
         try {
@@ -91,7 +140,13 @@ $initQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
         if (!cleanQuery) return;
 
         const grid = document.getElementById('resultsGrid');
+        const shell = document.getElementById('searchComparisonShell');
+        const suggestedBlock = document.getElementById('suggestedDomainBlock');
+        const suggestedList = document.getElementById('suggestedDomainList');
         grid.innerHTML = '';
+        suggestedList.innerHTML = '';
+        suggestedBlock.style.display = 'none';
+        shell.style.display = 'block';
         allResults = [];
         counts = { t: 0, b: 0, y: 0 };
         updateStats();
@@ -122,27 +177,35 @@ $initQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
                         const isAvailable = (res.status === 'found');
                         const card = document.createElement('a');
                         card.target = '_blank';
+                        const fullDomain = `${res.label}${res.site}`;
                         
                         if (isAvailable) {
-                            card.href = 'https://www.hostinger.com/tr/referral?REFERRALCODE=VKNEMRECEYZG';
-                            card.className = 'det-card found';
+                            card.href = getUrl(`go?to=${encodeURIComponent(primaryDomainProviderCode)}&utm_source=domain_search&query=${encodeURIComponent(fullDomain)}`);
+                            card.className = 'domain-result-row available';
                         } else {
-                            card.href = res.url; // Whois page
-                            card.className = 'det-card not-found';
+                            card.href = getUrl(`domain/${encodeURIComponent(fullDomain)}`);
+                            card.className = 'domain-result-row taken';
                         }
 
-                        const statusLabel = isAvailable ? 'AVAILABLE' : 'TAKEN';
-                        const ctaText = isAvailable ? 'Register Now' : 'Whois Details';
+                        const statusLabel = isAvailable ? 'Available' : 'Taken';
+                        const ctaText = isAvailable ? 'Register Now' : 'Details';
 
                         card.innerHTML = `
-                            <div class="dot"></div>
-                            <div>
-                                <div class="det-card-label">${res.label}${res.site}</div>
-                                <div class="det-card-title">${statusLabel}</div>
-                                <div class="det-card-status">${ctaText}</div>
-                            </div>
+                            <span class="domain-result-status-dot"></span>
+                            <strong>${fullDomain}</strong>
+                            <span>${statusLabel}</span>
+                            <em>${ctaText}</em>
                         `;
                         grid.appendChild(card);
+
+                        if (isAvailable) {
+                            const suggestedLink = document.createElement('a');
+                            suggestedLink.href = getUrl(`go?to=${encodeURIComponent(primaryDomainProviderCode)}&utm_source=suggested_domain&query=${encodeURIComponent(fullDomain)}`);
+                            suggestedLink.target = '_blank';
+                            suggestedLink.rel = 'noopener';
+                            suggestedLink.textContent = fullDomain;
+                            suggestedList.appendChild(suggestedLink);
+                        }
                     });
 
                     updateStats();
@@ -165,6 +228,9 @@ $initQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
         isSearching = false;
         document.getElementById('searchBtn').disabled = false;
         document.getElementById('domainCta').style.display = 'block';
+        if (suggestedList.children.length > 0 && counts.y > 0) {
+            suggestedBlock.style.display = 'block';
+        }
     }
 
     function updateStats() {

@@ -13,7 +13,7 @@ global $blogPost;
     </a>
     
     <div class="blog-detail-hero-image-wrapper">
-        <img src="<?php echo url($blogPost['image']); ?>" alt="<?php echo esc($blogPost['title']); ?>" class="blog-detail-hero-image">
+        <img src="<?php echo esc(mediaUrl($blogPost['image'])); ?>" alt="<?php echo esc($blogPost['title']); ?>" class="blog-detail-hero-image">
     </div>
     
     <article class="blog-detail-article">

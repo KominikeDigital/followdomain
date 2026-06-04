@@ -50,6 +50,11 @@ $config = [
     'affiliate_namecheap_ssl' => 'https://www.namecheap.com/security/ssl-certificates/?aff=your_aff_id',
     'affiliate_ssls'          => 'https://www.ssls.com/?aff=your_aff_id',
     'affiliate_ssldragon'     => 'https://www.ssldragon.com/?aff=your_aff_id',
+
+    // Affiliate Links — Business Email
+    'affiliate_google_workspace' => 'https://workspace.google.com/',
+    'affiliate_zoho_mail'        => 'https://www.zoho.com/mail/',
+    'affiliate_titan_email'      => 'https://titan.email/',
     
     // Affiliate Links — Domain Marketplace
     'affiliate_afternic'      => 'https://www.afternic.com/?ref=your_ref_id',
@@ -124,6 +129,11 @@ $config = [
     'smtp_from_name' => 'TLDix Alerts',
     'whois_cache_ttl_seconds' => 172800,
     'whop_webhook_secret' => getenv('WHOP_WEBHOOK_SECRET') ?: '',
+
+    // Affiliate display controls
+    'recommended_hosting_codes' => 'hostinger,bluehost,siteground',
+    'recommended_ssl_codes' => 'namecheap_ssl,ssls,ssldragon',
+    'domain_search_primary_provider' => 'namecheap',
 ];
 
 return $config;
