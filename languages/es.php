@@ -14,6 +14,7 @@ return [
     'nav_track' => 'Seguir',
     'nav_trending' => 'Tendencias',
     'nav_api' => 'API',
+    'nav_contact' => 'Contacto',
     'nav_logout' => 'Cerrar Sesión',
     'nav_login' => 'Iniciar Sesión',
     'nav_register' => 'Registrarse',
@@ -30,6 +31,7 @@ return [
     'footer_system' => 'Sistema',
     'footer_admin' => 'Acceso Admin',
     'footer_panel' => 'Panel de Usuario',
+    'footer_social' => 'Redes Sociales',
     'footer_all_rights' => 'Todos los derechos reservados. Totalmente compatible con la infraestructura de cPanel.',
     'status_online' => 'Todos los sistemas en línea',
     
@@ -565,5 +567,18 @@ return [
     
     // New Services
     'nav_social_search' => 'Búsqueda Social',
-    'nav_domain_search' => 'Búsqueda de Dominio'
+    'nav_domain_search' => 'Búsqueda de Dominio',
+    'contact_kicker' => 'Contacto',
+    'contact_title' => 'Contacto',
+    'contact_intro' => 'Envíenos preguntas sobre seguimiento de expiración de dominios, alertas, acceso API o soporte de cuenta.',
+    'contact_meta_description' => 'Contacte con TLDix para seguimiento de expiración de dominios, alertas y preguntas sobre domain watchers.',
+    'contact_name_label' => 'Nombre',
+    'contact_email_label' => 'Email',
+    'contact_subject_label' => 'Asunto',
+    'contact_message_label' => 'Mensaje',
+    'contact_submit' => 'Enviar Mensaje',
+    'contact_success' => 'Su mensaje ha sido enviado. Le responderemos pronto.',
+    'contact_error_required' => 'Ingrese su nombre, una dirección de email válida y su mensaje.',
+    'contact_error_send' => 'Su mensaje no pudo enviarse ahora. Escriba directamente a hello@tldix.com.',
+    'contact_default_subject' => 'Nuevo mensaje del formulario de contacto'
 ];

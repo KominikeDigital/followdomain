@@ -14,6 +14,7 @@ return [
     'nav_track' => 'Überwachen',
     'nav_trending' => 'Trends',
     'nav_api' => 'API',
+    'nav_contact' => 'Kontakt',
     'nav_logout' => 'Abmelden',
     'nav_login' => 'Anmelden',
     'nav_register' => 'Registrieren',
@@ -30,6 +31,7 @@ return [
     'footer_system' => 'System',
     'footer_admin' => 'Admin-Anmeldung',
     'footer_panel' => 'Benutzerbereich',
+    'footer_social' => 'Soziale Medien',
     'footer_all_rights' => 'Alle Rechte vorbehalten. Vollständig kompatibel mit der cPanel-Infrastruktur.',
     'status_online' => 'Alle Systeme online',
     
@@ -565,5 +567,18 @@ return [
     
     // New Services
     'nav_social_search' => 'Soziale Suche',
-    'nav_domain_search' => 'Domain-Suche'
+    'nav_domain_search' => 'Domain-Suche',
+    'contact_kicker' => 'Kontakt',
+    'contact_title' => 'Kontakt',
+    'contact_intro' => 'Senden Sie uns Fragen zu Domain-Ablaufverfolgung, Benachrichtigungen, API-Zugang oder Konto-Support.',
+    'contact_meta_description' => 'Kontaktieren Sie TLDix zu Domain-Ablaufverfolgung, Benachrichtigungen und Domain-Watcher-Fragen.',
+    'contact_name_label' => 'Name',
+    'contact_email_label' => 'E-Mail',
+    'contact_subject_label' => 'Betreff',
+    'contact_message_label' => 'Nachricht',
+    'contact_submit' => 'Nachricht Senden',
+    'contact_success' => 'Ihre Nachricht wurde gesendet. Wir melden uns bald bei Ihnen.',
+    'contact_error_required' => 'Bitte geben Sie Ihren Namen, eine gültige E-Mail-Adresse und Ihre Nachricht ein.',
+    'contact_error_send' => 'Ihre Nachricht konnte derzeit nicht gesendet werden. Bitte schreiben Sie direkt an hello@tldix.com.',
+    'contact_default_subject' => 'Neue Kontaktformular-Nachricht'
 ];

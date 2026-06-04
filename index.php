@@ -103,6 +103,17 @@ if (empty($config['site_url']) || strpos($config['site_url'], 'followdomain1.kom
     $config['site_url'] = 'https://tldix.com';
 }
 
+$currentSiteTitle = trim((string)($config['site_title'] ?? ''));
+if ($currentSiteTitle === '' || $currentSiteTitle === 'TLDix') {
+    $config['site_title'] = 'TLDix.com';
+}
+
+$legacySiteDescription = 'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.';
+$currentSiteDescription = trim((string)($config['site_description'] ?? ''));
+if ($currentSiteDescription === '' || $currentSiteDescription === $legacySiteDescription) {
+    $config['site_description'] = 'Domain Expiration Tracker, Alerts & Domain Watchers';
+}
+
 if (empty($config['seo_og_image']) || strpos($config['seo_og_image'], 'followdomain1.kominikee.com') !== false) {
     $config['seo_og_image'] = rtrim($config['site_url'], '/') . '/assets/images/logo.png';
 }
@@ -172,6 +183,8 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
             $route = 'expiring';
         } elseif ($path === 'docs') {
             $route = 'docs';
+        } elseif ($path === 'contact') {
+            $route = 'contact';
         } elseif ($path === 'admin') {
             header("Location: " . url(""));
             exit;
@@ -239,6 +252,9 @@ if ($route === 'home' && isset($_GET['q'])) {
 
 // Global page variables
 $pageTitle = $config['site_title'];
+if ($route === 'home' && !empty($config['site_description'])) {
+    $pageTitle .= ' | ' . $config['site_description'];
+}
 $pageDesc = $config['site_description'];
 
 // Handle specific page logic before loading template headers
@@ -284,6 +300,7 @@ switch ($route) {
         $addSitemapUrl('social-search', '0.7', 'weekly');
         $addSitemapUrl('domain-search', '0.7', 'weekly');
         $addSitemapUrl('docs', '0.7', 'monthly');
+        $addSitemapUrl('contact', '0.6', 'monthly');
         $addSitemapUrl('blog', '0.8', 'daily');
         $addSitemapUrl('privacy-policy', '0.3', 'yearly');
         $addSitemapUrl('terms-of-service', '0.3', 'yearly');
@@ -765,6 +782,55 @@ switch ($route) {
         
     case 'docs':
         $pageTitle = "API Dokümantasyonu | " . $config['site_title'];
+        break;
+
+    case 'contact':
+        $contactSuccess = null;
+        $contactError = null;
+        $pageTitle = __('contact_title', 'Contact') . " | " . $config['site_title'];
+        $pageDesc = __('contact_meta_description', 'Contact TLDix for domain expiration tracking, alerts, and domain watcher questions.');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
+            $contactName = trim((string)($_POST['name'] ?? ''));
+            $contactEmail = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+            $contactSubject = trim((string)($_POST['subject'] ?? ''));
+            $contactMessage = trim((string)($_POST['message'] ?? ''));
+            $honeypot = trim((string)($_POST['website'] ?? ''));
+
+            if ($honeypot !== '') {
+                $contactSuccess = __('contact_success', 'Your message has been sent. We will get back to you soon.');
+            } elseif ($contactName === '' || !isValidEmail($contactEmail) || $contactMessage === '') {
+                $contactError = __('contact_error_required', 'Please enter your name, a valid email address, and your message.');
+            } else {
+                $recipientEmail = trim((string)($config['contact_recipient_email'] ?? 'hello@tldix.com'));
+                if (!isValidEmail($recipientEmail)) {
+                    $recipientEmail = 'hello@tldix.com';
+                }
+
+                $safeSubject = $contactSubject !== '' ? $contactSubject : __('contact_default_subject', 'New contact form message');
+                $safeSubject = preg_replace('/[\r\n]+/', ' ', $safeSubject);
+                $mailSubject = 'TLDix Contact Form: ' . $safeSubject;
+                $messageHtml = getEmailTemplateWrapper(
+                    '<h2>New Contact Message</h2>' .
+                    '<ul>' .
+                    '<li><strong>Name:</strong> ' . esc($contactName) . '</li>' .
+                    '<li><strong>Email:</strong> ' . esc($contactEmail) . '</li>' .
+                    '<li><strong>Subject:</strong> ' . esc($safeSubject) . '</li>' .
+                    '<li><strong>Date:</strong> ' . date('Y-m-d H:i:s') . '</li>' .
+                    '</ul>' .
+                    '<p><strong>Message:</strong></p>' .
+                    '<p>' . nl2br(esc($contactMessage)) . '</p>'
+                );
+
+                $sent = sendEmailNotification($recipientEmail, $mailSubject, $messageHtml, $contactEmail, $contactName);
+                if ($sent) {
+                    $contactSuccess = __('contact_success', 'Your message has been sent. We will get back to you soon.');
+                    $_POST = [];
+                } else {
+                    $contactError = __('contact_error_send', 'Your message could not be sent right now. Please email hello@tldix.com directly.');
+                }
+            }
+        }
         break;
         
     case 'admin':
@@ -1348,6 +1414,9 @@ switch ($route) {
         break;
     case 'docs':
         require_once __DIR__ . '/templates/docs.php';
+        break;
+    case 'contact':
+        require_once __DIR__ . '/templates/contact.php';
         break;
     case 'blog_list':
     case 'blog_category':

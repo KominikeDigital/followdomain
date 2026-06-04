@@ -72,6 +72,10 @@ $customHeadCode = trim((string)($config['custom_head_code'] ?? ''));
     <title><?php echo esc($pageMetaTitle); ?></title>
     <meta name="description" content="<?php echo esc($pageMetaDesc); ?>">
     <link rel="canonical" href="<?php echo esc($canonicalUrl); ?>">
+    <link rel="icon" type="image/png" href="<?php echo url('assets/images/logo.png'); ?>">
+    <link rel="shortcut icon" type="image/png" href="<?php echo url('assets/images/logo.png'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo url('assets/images/logo.png'); ?>">
+    <meta name="application-name" content="TLDix.com">
     <meta name="robots" content="<?php echo esc($robotsMeta); ?>">
     <?php if (!empty($config['seo_keywords'])): ?>
         <meta name="keywords" content="<?php echo esc($config['seo_keywords']); ?>">

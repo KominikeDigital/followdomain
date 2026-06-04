@@ -369,6 +369,125 @@ function esc($str) {
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function normalizeSocialLinkUrl($url) {
+    $url = trim((string)$url);
+    if ($url === '') {
+        return '';
+    }
+
+    if (!preg_match('/^https?:\/\//i', $url)) {
+        $url = 'https://' . $url;
+    }
+
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return '';
+    }
+
+    $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+    return in_array($scheme, ['http', 'https'], true) ? $url : '';
+}
+
+function normalizeSocialLinkName($name) {
+    $name = trim(strip_tags((string)$name));
+    $name = preg_replace('/\s+/', ' ', $name);
+    if (function_exists('mb_substr')) {
+        return mb_substr($name, 0, 60, 'UTF-8');
+    }
+    return substr($name, 0, 60);
+}
+
+function normalizeSocialLinks($rawLinks) {
+    $links = [];
+
+    if (isset($rawLinks['name'], $rawLinks['url']) && is_array($rawLinks['name']) && is_array($rawLinks['url'])) {
+        foreach ($rawLinks['name'] as $idx => $name) {
+            $links[] = [
+                'name' => $name,
+                'url' => $rawLinks['url'][$idx] ?? '',
+            ];
+        }
+    } elseif (is_array($rawLinks)) {
+        $links = $rawLinks;
+    }
+
+    $normalized = [];
+    $seen = [];
+    foreach ($links as $link) {
+        if (!is_array($link)) {
+            continue;
+        }
+
+        $name = normalizeSocialLinkName($link['name'] ?? '');
+        $url = normalizeSocialLinkUrl($link['url'] ?? '');
+        if ($name === '' || $url === '') {
+            continue;
+        }
+
+        $key = strtolower($name . '|' . $url);
+        if (isset($seen[$key])) {
+            continue;
+        }
+
+        $seen[$key] = true;
+        $normalized[] = ['name' => $name, 'url' => $url];
+        if (count($normalized) >= 12) {
+            break;
+        }
+    }
+
+    return $normalized;
+}
+
+function getConfiguredSocialLinks($cfg = null) {
+    if ($cfg === null) {
+        global $config;
+        $cfg = $config;
+    }
+
+    $decoded = [];
+    $json = trim((string)($cfg['social_links_json'] ?? ''));
+    if ($json !== '') {
+        $parsed = json_decode($json, true);
+        if (is_array($parsed)) {
+            $decoded = normalizeSocialLinks($parsed);
+        }
+    }
+
+    if (!empty($decoded)) {
+        return $decoded;
+    }
+
+    $legacyMap = [
+        'twitter' => 'Twitter',
+        'github' => 'Github',
+        'linkedin' => 'Linkedin',
+        'instagram' => 'Instagram',
+    ];
+    $legacyLinks = [];
+    foreach ($legacyMap as $key => $name) {
+        $url = trim((string)($cfg['social_' . $key . '_url'] ?? ''));
+        if ($url !== '' && $url !== '#') {
+            $legacyLinks[] = ['name' => $name, 'url' => $url];
+        }
+    }
+
+    return normalizeSocialLinks($legacyLinks);
+}
+
+function formatSocialDisplayName($name) {
+    $name = normalizeSocialLinkName($name);
+    if ($name === '') {
+        return '';
+    }
+
+    if (function_exists('mb_strtolower') && function_exists('mb_strtoupper') && function_exists('mb_substr')) {
+        $lower = mb_strtolower($name, 'UTF-8');
+        return mb_strtoupper(mb_substr($lower, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($lower, 1, 60, 'UTF-8');
+    }
+
+    return ucfirst(strtolower($name));
+}
+
 /**
  * Format date nicely
  */
@@ -854,12 +973,14 @@ function expectSmtpResponse($socket, $expectedCodes, $context) {
     return $response;
 }
 
-function sendEmailNotification($to, $subject, $messageHtml) {
+function sendEmailNotification($to, $subject, $messageHtml, $replyToEmail = '', $replyToName = '') {
     global $config;
     
     $to = trim((string)$to);
     $fromEmail = trim((string)($config['smtp_from_email'] ?? 'alerts@tldix.local'));
     $fromName = trim((string)($config['smtp_from_name'] ?? 'TLDix Alerts'));
+    $replyToEmail = trim((string)$replyToEmail);
+    $replyToName = preg_replace('/[\r\n]+/', ' ', trim((string)$replyToName));
 
     if (!isValidEmail($to)) {
         error_log("Email skipped: invalid recipient address ($to).");
@@ -870,12 +991,19 @@ function sendEmailNotification($to, $subject, $messageHtml) {
         error_log("Email skipped: invalid sender address ($fromEmail).");
         return false;
     }
+
+    if (!isValidEmail($replyToEmail)) {
+        $replyToEmail = $fromEmail;
+        $replyToName = '';
+    }
+
+    $replyToHeader = formatEmailAddress($replyToEmail, $replyToName);
     
     // Headers for HTML mail
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     $headers .= "From: " . formatEmailAddress($fromEmail, $fromName) . "\r\n";
-    $headers .= "Reply-To: " . $fromEmail . "\r\n";
+    $headers .= "Reply-To: " . $replyToHeader . "\r\n";
     $headers .= "Return-Path: " . $fromEmail . "\r\n";
     $headers .= "Date: " . date(DATE_RFC2822) . "\r\n";
     $headers .= "Message-ID: <" . bin2hex(random_bytes(12)) . "@" . preg_replace('/^.*@/', '', $fromEmail) . ">\r\n";
@@ -1008,7 +1136,7 @@ function sendEmailNotification($to, $subject, $messageHtml) {
             $body = "Subject: " . encodeEmailHeader($subject) . "\r\n";
             $body .= "To: <$to>\r\n";
             $body .= "From: " . formatEmailAddress($fromEmail, $fromName) . "\r\n";
-            $body .= "Reply-To: <$fromEmail>\r\n";
+            $body .= "Reply-To: " . $replyToHeader . "\r\n";
             $body .= "MIME-Version: 1.0\r\n";
             $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
             $body .= $messageHtml . "\r\n.\r\n";

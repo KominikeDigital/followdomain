@@ -14,6 +14,7 @@ return [
     'nav_track' => 'Track',
     'nav_trending' => 'Trending',
     'nav_api' => 'API',
+    'nav_contact' => 'Contact',
     'nav_logout' => 'Logout',
     'nav_login' => 'Login',
     'nav_register' => 'Register',
@@ -30,6 +31,7 @@ return [
     'footer_system' => 'System',
     'footer_admin' => 'Admin Login',
     'footer_panel' => 'User Panel',
+    'footer_social' => 'Social Media',
     'footer_all_rights' => 'All rights reserved. Fully compatible with cPanel infrastructure.',
     'status_online' => 'All Systems Online',
     
@@ -565,5 +567,18 @@ return [
     
     // New Services
     'nav_social_search' => 'Social Search',
-    'nav_domain_search' => 'Domain Search'
+    'nav_domain_search' => 'Domain Search',
+    'contact_kicker' => 'Contact',
+    'contact_title' => 'Contact',
+    'contact_intro' => 'Send us questions about domain expiration tracking, alerts, API access, or account support.',
+    'contact_meta_description' => 'Contact TLDix for domain expiration tracking, alerts, and domain watcher questions.',
+    'contact_name_label' => 'Name',
+    'contact_email_label' => 'Email',
+    'contact_subject_label' => 'Subject',
+    'contact_message_label' => 'Message',
+    'contact_submit' => 'Send Message',
+    'contact_success' => 'Your message has been sent. We will get back to you soon.',
+    'contact_error_required' => 'Please enter your name, a valid email address, and your message.',
+    'contact_error_send' => 'Your message could not be sent right now. Please email hello@tldix.com directly.',
+    'contact_default_subject' => 'New contact form message'
 ];

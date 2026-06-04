@@ -26,10 +26,12 @@ $config = [
     'seo_author' => 'TLDix',
     
     // Site Identity
-    'site_title' => 'TLDix',
-    'site_description' => 'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.',
+    'site_title' => 'TLDix.com',
+    'site_description' => 'Domain Expiration Tracker, Alerts & Domain Watchers',
     'site_url' => getenv('TLDIX_SITE_URL') ?: 'https://tldix.com',
     'seo_og_image' => getenv('TLDIX_OG_IMAGE') ?: 'https://tldix.com/assets/images/logo.png',
+    'contact_recipient_email' => 'hello@tldix.com',
+    'social_links_json' => '',
     'social_twitter_url' => '',
     'social_github_url' => '',
     'social_linkedin_url' => '',

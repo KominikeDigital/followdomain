@@ -30,6 +30,17 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsSaved = true;
     }
 
+    if ($action === 'save_social_links') {
+        $socialLinks = normalizeSocialLinks($_POST['social_links'] ?? []);
+        $socialJson = !empty($socialLinks) ? json_encode($socialLinks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '';
+        $pdo->prepare("DELETE FROM settings WHERE key_name = ?")->execute(['social_links_json']);
+        $pdo->prepare("INSERT INTO settings (key_name, val_value) VALUES (?, ?)")->execute(['social_links_json', $socialJson]);
+        $config['social_links_json'] = $socialJson;
+        $_SESSION['admin_flash_success'] = 'Sosyal medya hesapları güncellendi.';
+        header("Location: " . url("manage-secure-panel?tab=social"));
+        exit;
+    }
+
     // Confirm / reject payment
     if ($action === 'confirm_payment' && !empty($_POST['payment_id'])) {
         try {
@@ -264,8 +275,13 @@ if ($isAdmin) {
 
 // Active tab
 $activeTab = $_GET['tab'] ?? 'dashboard';
-$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','domains','members','payments','affiliate-stats','integrations','blog'];
+$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','social','domains','members','payments','affiliate-stats','integrations','blog'];
 if (!in_array($activeTab, $validTabs)) $activeTab = 'dashboard';
+
+$socialLinkRows = getConfiguredSocialLinks($config);
+while (count($socialLinkRows) < 3) {
+    $socialLinkRows[] = ['name' => '', 'url' => ''];
+}
 
 $flashSuccess = $_SESSION['admin_flash_success'] ?? null;
 $flashError = $_SESSION['admin_flash_error'] ?? null;
@@ -550,6 +566,9 @@ html[data-theme="light"] .admin-card textarea {
     .sidebar-nav { display: none; }
     .sidebar-nav.open { display: block; }
 }
+@media (max-width: 700px) {
+    .social-admin-row { grid-template-columns: 1fr !important; }
+}
 </style>
 
 <div class="admin-page">
@@ -618,6 +637,9 @@ html[data-theme="light"] .admin-card textarea {
                 </a>
                 <a href="?tab=email-templates" class="<?php echo $activeTab==='email-templates'?'active':''; ?>">
                     E-posta Şablonları
+                </a>
+                <a href="?tab=social" class="<?php echo $activeTab==='social'?'active':''; ?>">
+                    Sosyal Medya
                 </a>
                 <a href="?tab=ads" class="<?php echo $activeTab==='ads'?'active':''; ?>">
                     Reklam & Entegrasyon
@@ -709,7 +731,7 @@ html[data-theme="light"] .admin-card textarea {
                 <div class="admin-card">
                     <h3>⚡ Hızlı Erişim</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                        <?php foreach(['general'=>'⚙️ Genel Ayarlar','email'=>'📧 SMTP Ayarları','affiliate'=>'🔗 Affiliate URL','payments'=>'💳 Ödemeler','members'=>'👥 Üyeler','domains'=>'🌐 Domainler'] as $t=>$l): ?>
+                        <?php foreach(['general'=>'⚙️ Genel Ayarlar','email'=>'📧 SMTP Ayarları','social'=>'Sosyal Medya','affiliate'=>'🔗 Affiliate URL','payments'=>'💳 Ödemeler','members'=>'👥 Üyeler','domains'=>'🌐 Domainler'] as $t=>$l): ?>
                             <a href="?tab=<?php echo $t; ?>" class="btn btn-secondary btn-sm"><?php echo $l; ?></a>
                         <?php endforeach; ?>
                     </div>
@@ -811,6 +833,11 @@ html[data-theme="light"] .admin-card textarea {
                             <label>Admin Bildirim E-posta Adresi</label>
                             <input type="email" name="settings[admin_notification_email]" value="<?php echo esc($config['admin_notification_email'] ?? ''); ?>" placeholder="admin@tldix.com">
                             <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block; margin-top: 0.25rem;">Yeni üye kayıtları ve şifre sıfırlama taleplerinde bu adrese bildirim gönderilir.</span>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>İletişim Formu Alıcı E-posta Adresi</label>
+                            <input type="email" name="settings[contact_recipient_email]" value="<?php echo esc($config['contact_recipient_email'] ?? 'hello@tldix.com'); ?>" placeholder="hello@tldix.com">
+                            <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block; margin-top: 0.25rem;">/contact sayfasındaki form gönderimleri bu adrese, yukarıdaki SMTP/PHP mail ayarları kullanılarak iletilir.</span>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">💾 Kaydet</button>
@@ -1995,6 +2022,61 @@ html[data-theme="light"] .admin-card textarea {
                         </div>
                     <?php endif; ?>
                 </div>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════
+                 TAB: SOCIAL MEDIA
+            ════════════════════════════════════════════════════ -->
+            <div class="admin-tab-pane <?php echo $activeTab==='social'?'active':''; ?>">
+                <div class="admin-page-header">
+                    <h2>Sosyal Medya</h2>
+                    <p>Footer'da gösterilecek sosyal medya hesap adlarını ve bağlantılarını yönetin.</p>
+                </div>
+                <form action="?tab=social" method="POST">
+                    <input type="hidden" name="action" value="save_social_links">
+                    <div class="admin-card">
+                        <h3>Sosyal Medya Hesapları</h3>
+                        <div id="socialLinksEditor" style="display: grid; gap: 0.9rem;">
+                            <?php foreach ($socialLinkRows as $row): ?>
+                                <div class="social-admin-row" style="display: grid; grid-template-columns: minmax(140px, 0.7fr) minmax(220px, 1.3fr) auto; gap: 0.75rem; align-items: end;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Hesap Adı</label>
+                                        <input type="text" name="social_links[name][]" value="<?php echo esc($row['name'] ?? ''); ?>" placeholder="Instagram">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Link</label>
+                                        <input type="text" name="social_links[url][]" value="<?php echo esc($row['url'] ?? ''); ?>" placeholder="https://instagram.com/tldix">
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeSocialRow(this)">Sil</button>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addSocialRow()">Satır Ekle</button>
+                            <button type="submit" class="btn btn-primary btn-sm">Kaydet</button>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 1rem;">Footer'da ikon gösterilmez; hesap adları ilk harf büyük, kalan harfler küçük olacak şekilde yazılır.</p>
+                    </div>
+                </form>
+                <script>
+                function addSocialRow() {
+                    const editor = document.getElementById('socialLinksEditor');
+                    const row = document.createElement('div');
+                    row.className = 'social-admin-row';
+                    row.style.cssText = 'display:grid; grid-template-columns:minmax(140px, 0.7fr) minmax(220px, 1.3fr) auto; gap:0.75rem; align-items:end;';
+                    row.innerHTML = '<div class="form-group" style="margin-bottom:0;"><label>Hesap Adı</label><input type="text" name="social_links[name][]" placeholder="Instagram"></div><div class="form-group" style="margin-bottom:0;"><label>Link</label><input type="text" name="social_links[url][]" placeholder="https://instagram.com/tldix"></div><button type="button" class="btn btn-secondary btn-sm" onclick="removeSocialRow(this)">Sil</button>';
+                    editor.appendChild(row);
+                }
+                function removeSocialRow(button) {
+                    const row = button.closest('.social-admin-row');
+                    const editor = document.getElementById('socialLinksEditor');
+                    if (row && editor.children.length > 1) {
+                        row.remove();
+                    } else if (row) {
+                        row.querySelectorAll('input').forEach(input => input.value = '');
+                    }
+                }
+                </script>
             </div>
 
             <!-- ════════════════════════════════════════════════════

@@ -14,6 +14,7 @@ return [
     'nav_track' => 'Takip Et',
     'nav_trending' => 'Trendler',
     'nav_api' => 'API',
+    'nav_contact' => 'İletişim',
     'nav_logout' => 'Çıkış Yap',
     'nav_login' => 'Giriş Yap',
     'nav_register' => 'Kayıt Ol',
@@ -30,6 +31,7 @@ return [
     'footer_system' => 'Sistem',
     'footer_admin' => 'Yönetici Girişi',
     'footer_panel' => 'Kullanıcı Paneli',
+    'footer_social' => 'Sosyal Medya',
     'footer_all_rights' => 'Tüm hakları saklıdır. cPanel altyapısı ile tam uyumlu.',
     'status_online' => 'Tüm Sistemler Çevrimiçi',
     
@@ -565,5 +567,18 @@ return [
     
     // New Services
     'nav_social_search' => 'Sosyal Arama',
-    'nav_domain_search' => 'Alan Adı Arama'
+    'nav_domain_search' => 'Alan Adı Arama',
+    'contact_kicker' => 'İletişim',
+    'contact_title' => 'İletişim',
+    'contact_intro' => 'Alan adı süre takibi, uyarılar, API erişimi veya hesap desteği için bize yazın.',
+    'contact_meta_description' => 'Alan adı süre takibi, uyarılar ve domain watcher soruları için TLDix ile iletişime geçin.',
+    'contact_name_label' => 'Adınız',
+    'contact_email_label' => 'E-posta',
+    'contact_subject_label' => 'Konu',
+    'contact_message_label' => 'Mesaj',
+    'contact_submit' => 'Mesajı Gönder',
+    'contact_success' => 'Mesajınız gönderildi. En kısa sürede size dönüş yapacağız.',
+    'contact_error_required' => 'Lütfen adınızı, geçerli bir e-posta adresini ve mesajınızı girin.',
+    'contact_error_send' => 'Mesajınız şu anda gönderilemedi. Lütfen doğrudan hello@tldix.com adresine e-posta gönderin.',
+    'contact_default_subject' => 'Yeni iletişim formu mesajı'
 ];
