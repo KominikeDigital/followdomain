@@ -28,6 +28,12 @@ $config = [
     // Site Identity
     'site_title' => 'TLDix',
     'site_description' => 'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.',
+    'site_url' => getenv('TLDIX_SITE_URL') ?: 'https://tldix.com',
+    'seo_og_image' => getenv('TLDIX_OG_IMAGE') ?: 'https://tldix.com/assets/images/logo.png',
+    'social_twitter_url' => '',
+    'social_github_url' => '',
+    'social_linkedin_url' => '',
+    'social_instagram_url' => '',
     
     // Affiliate Links — Domain Registrars
     'affiliate_namecheap'     => 'https://www.namecheap.com/?aff=your_aff_id',

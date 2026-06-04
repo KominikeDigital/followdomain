@@ -189,6 +189,7 @@ $homeTrending = $stmt->fetchAll();
             uasort($allPosts, function($a, $b) {
                 return strcmp($b['date'] ?? '', $a['date'] ?? '');
             });
+            $allPosts = array_slice($allPosts, 0, 10, true);
             foreach ($allPosts as $post): 
             ?>
                 <div class="blog-slider-card">

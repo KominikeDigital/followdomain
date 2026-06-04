@@ -1,15 +1,34 @@
 RewriteEngine On
 RewriteBase /
 
+# Canonical production host
+RewriteCond %{HTTP_HOST} ^www\.tldix\.com$ [NC]
+RewriteRule ^ https://tldix.com%{REQUEST_URI} [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^tldix\.com$ [NC]
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteRule ^ https://tldix.com%{REQUEST_URI} [R=301,L]
+
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always set Content-Security-Policy "base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://whop.com https://*.whop.com"
+</IfModule>
+
 # ============================================================
 # SECURITY: Block direct access to sensitive files
 # ============================================================
 <FilesMatch "\.(sqlite|sqlite3|db|env|log|lock|bak|sql|sh)$">
+    Require all denied
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-<FilesMatch "^(composer)\.(json|lock)$">
+<FilesMatch "^(config|cookie)\.php$|^composer\.(json|lock)$|^database\.(sqlite|sqlite3|db)$|^\.env$">
+    Require all denied
     Order Allow,Deny
     Deny from all
 </FilesMatch>
@@ -18,7 +37,12 @@ RewriteBase /
 <IfModule mod_rewrite.c>
     RewriteRule ^includes/ - [F,L]
     RewriteRule ^languages/ - [F,L]
+    RewriteRule ^(database\.(sqlite|sqlite3|db)|\.env|config\.php|composer\.(json|lock))$ - [F,L]
 </IfModule>
+
+# Dynamic SEO endpoints
+RewriteRule ^robots\.txt$ index.php?route=robots [QSA,L]
+RewriteRule ^sitemap\.xml$ index.php?route=sitemap [QSA,L]
 
 # Ignore physical files and directories from rewriting
 RewriteCond %{REQUEST_FILENAME} -f [OR]

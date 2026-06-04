@@ -1,4 +1,54 @@
 <?php
+ini_set('expose_php', '0');
+ini_set('session.use_strict_mode', '1');
+header_remove('X-Powered-By');
+
+function tldixIsHttpsRequest() {
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return true;
+    }
+
+    $forwardedProto = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
+    if ($forwardedProto === 'https') {
+        return true;
+    }
+
+    $forwardedSsl = strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '');
+    return $forwardedSsl === 'on';
+}
+
+function tldixApplySecurityHeaders() {
+    header_remove('X-Powered-By');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+    header("Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://whop.com https://*.whop.com");
+
+    if (tldixIsHttpsRequest()) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+    }
+}
+
+$requestHost = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+if (in_array($requestHost, ['tldix.com', 'www.tldix.com'], true)) {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+    if ($requestHost !== 'tldix.com' || !tldixIsHttpsRequest()) {
+        header('Location: https://tldix.com' . $requestUri, true, 301);
+        exit;
+    }
+}
+
+tldixApplySecurityHeaders();
+session_cache_limiter('');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => '',
+    'secure' => tldixIsHttpsRequest(),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
 // Start session for admin/user auth
 session_start();
 
@@ -49,6 +99,14 @@ try {
     // Fail silently if table doesn't exist yet
 }
 
+if (empty($config['site_url']) || strpos($config['site_url'], 'followdomain1.kominikee.com') !== false) {
+    $config['site_url'] = 'https://tldix.com';
+}
+
+if (empty($config['seo_og_image']) || strpos($config['seo_og_image'], 'followdomain1.kominikee.com') !== false) {
+    $config['seo_og_image'] = rtrim($config['site_url'], '/') . '/assets/images/logo.png';
+}
+
 // Include WHOIS and helper functions
 require_once __DIR__ . '/includes/whois.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -81,7 +139,16 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
     if ($path === '' || $path === 'index.php') {
         $route = 'home';
     } else {
-        if ($path === 'login') {
+        if (preg_match('/(^|\/)(database\.(sqlite|sqlite3|db)|\.env|config\.php|composer\.(json|lock))$/i', $path)) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Not found';
+            exit;
+        } elseif ($path === 'robots.txt') {
+            $route = 'robots';
+        } elseif ($path === 'sitemap.xml') {
+            $route = 'sitemap';
+        } elseif ($path === 'login') {
             $route = 'login';
         } elseif ($path === 'register') {
             $route = 'register';
@@ -176,6 +243,81 @@ $pageDesc = $config['site_description'];
 
 // Handle specific page logic before loading template headers
 switch ($route) {
+    case 'robots':
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            header_remove('Set-Cookie');
+        }
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo "User-agent: *\n";
+        echo "Allow: /\n";
+        echo "Disallow: /manage-secure-panel\n";
+        echo "Disallow: /admin\n";
+        echo "Disallow: /panel\n";
+        echo "Disallow: /checkout\n";
+        echo "Disallow: /cron\n";
+        echo "Disallow: /go\n";
+        echo "Sitemap: " . absolute_url('sitemap.xml') . "\n";
+        exit;
+
+    case 'sitemap':
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            header_remove('Set-Cookie');
+        }
+        header('Content-Type: application/xml; charset=UTF-8');
+
+        $urls = [];
+        $addSitemapUrl = function ($path, $priority = '0.7', $changefreq = 'weekly', $lastmod = null) use (&$urls) {
+            $loc = absolute_url($path);
+            $urls[$loc] = [
+                'loc' => $loc,
+                'priority' => $priority,
+                'changefreq' => $changefreq,
+                'lastmod' => $lastmod ?: date('Y-m-d'),
+            ];
+        };
+
+        $addSitemapUrl('', '1.0', 'daily');
+        $addSitemapUrl('trending', '0.8', 'daily');
+        $addSitemapUrl('domains-for-sale', '0.7', 'weekly');
+        $addSitemapUrl('social-search', '0.7', 'weekly');
+        $addSitemapUrl('domain-search', '0.7', 'weekly');
+        $addSitemapUrl('docs', '0.7', 'monthly');
+        $addSitemapUrl('blog', '0.8', 'daily');
+        $addSitemapUrl('privacy-policy', '0.3', 'yearly');
+        $addSitemapUrl('terms-of-service', '0.3', 'yearly');
+
+        foreach (getBlogPosts('en') as $post) {
+            if (empty($post['slug'])) continue;
+            $addSitemapUrl('blog/' . $post['slug'], '0.7', 'monthly', !empty($post['date']) ? date('Y-m-d', strtotime($post['date'])) : null);
+        }
+
+        try {
+            $stmt = $pdo->query("SELECT domain_name, last_checked FROM domains WHERE domain_name <> '' ORDER BY follower_count DESC, last_checked DESC LIMIT 100");
+            foreach ($stmt->fetchAll() as $domainRow) {
+                $domainName = cleanDomainName($domainRow['domain_name'] ?? '');
+                if ($domainName === '') continue;
+                $lastmod = !empty($domainRow['last_checked']) ? date('Y-m-d', strtotime($domainRow['last_checked'])) : null;
+                $addSitemapUrl('domain/' . rawurlencode($domainName), '0.6', 'weekly', $lastmod);
+            }
+        } catch (Throwable $e) {
+            // Domain table may be empty or unavailable during first install.
+        }
+
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        echo "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+        foreach ($urls as $sitemapUrl) {
+            echo "  <url>\n";
+            echo "    <loc>" . htmlspecialchars($sitemapUrl['loc'], ENT_XML1, 'UTF-8') . "</loc>\n";
+            echo "    <lastmod>" . htmlspecialchars($sitemapUrl['lastmod'], ENT_XML1, 'UTF-8') . "</lastmod>\n";
+            echo "    <changefreq>" . htmlspecialchars($sitemapUrl['changefreq'], ENT_XML1, 'UTF-8') . "</changefreq>\n";
+            echo "    <priority>" . htmlspecialchars($sitemapUrl['priority'], ENT_XML1, 'UTF-8') . "</priority>\n";
+            echo "  </url>\n";
+        }
+        echo "</urlset>\n";
+        exit;
+
     case 'webhook_whop':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);

@@ -5,7 +5,7 @@ if (count(get_included_files()) === 1) {
     exit('Direct access not allowed.');
 }
 
-global $config, $pdo;
+global $config, $pdo, $lang, $route, $blogPost;
 
 $isUser = isLoggedIn();
 $username = $isUser ? $_SESSION['username'] : '';
@@ -21,14 +21,51 @@ if ($isUser) {
         $userPlan = 'free';
     }
 }
+
+$currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+if (defined('BASE_PATH') && BASE_PATH !== '' && strpos($currentPath, BASE_PATH) === 0) {
+    $currentPath = substr($currentPath, strlen(BASE_PATH));
+}
+$currentPath = trim($currentPath, '/');
+$canonicalUrl = absolute_url($currentPath);
+$pageMetaTitle = isset($pageTitle) ? $pageTitle : __('site_title') . ' - ' . __('nav_track');
+$pageMetaDesc = isset($pageDesc) ? $pageDesc : __('hero_subtitle');
+$ogImage = trim((string)($config['seo_og_image'] ?? ''));
+
+if (($route ?? '') === 'blog_detail' && !empty($blogPost['image'])) {
+    $blogImage = trim((string)$blogPost['image']);
+    $ogImage = preg_match('/^(https?:\/\/|\/\/)/i', $blogImage) ? $blogImage : absolute_url($blogImage);
+}
+
+if ($ogImage === '' || strpos($ogImage, 'followdomain1.kominikee.com') !== false) {
+    $ogImage = absolute_url('assets/images/logo.png');
+}
+
+$noIndexRoutes = [
+    'login',
+    'register',
+    'forgot_password',
+    'verify_email',
+    'panel',
+    'panel_domains',
+    'panel_hosting',
+    'panel_integrations',
+    'checkout',
+    'admin',
+    'go',
+    'cron',
+];
+$robotsMeta = in_array($route ?? '', $noIndexRoutes, true) ? 'noindex, nofollow' : 'index, follow';
 ?>
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<?php echo esc($lang ?? 'en'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? esc($pageTitle) : __('site_title') . ' — ' . __('nav_track'); ?></title>
-    <meta name="description" content="<?php echo isset($pageDesc) ? esc($pageDesc) : __('hero_subtitle'); ?>">
+    <title><?php echo esc($pageMetaTitle); ?></title>
+    <meta name="description" content="<?php echo esc($pageMetaDesc); ?>">
+    <link rel="canonical" href="<?php echo esc($canonicalUrl); ?>">
+    <meta name="robots" content="<?php echo esc($robotsMeta); ?>">
     <?php if (!empty($config['seo_keywords'])): ?>
         <meta name="keywords" content="<?php echo esc($config['seo_keywords']); ?>">
     <?php endif; ?>
@@ -50,9 +87,15 @@ if ($isUser) {
     </script>
     
     <!-- Open Graph Tags -->
-    <meta property="og:title" content="<?php echo isset($pageTitle) ? esc($pageTitle) : 'TLDix'; ?>">
-    <meta property="og:description" content="<?php echo isset($pageDesc) ? esc($pageDesc) : 'Alan adlarının süresini takip edin.'; ?>">
+    <meta property="og:title" content="<?php echo esc($pageMetaTitle); ?>">
+    <meta property="og:description" content="<?php echo esc($pageMetaDesc); ?>">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo esc($canonicalUrl); ?>">
+    <meta property="og:image" content="<?php echo esc($ogImage); ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo esc($pageMetaTitle); ?>">
+    <meta name="twitter:description" content="<?php echo esc($pageMetaDesc); ?>">
+    <meta name="twitter:image" content="<?php echo esc($ogImage); ?>">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -106,10 +149,6 @@ if ($isUser) {
         <?php echo $config['custom_head_code']; ?>
     <?php endif; ?>
 
-    <!-- OG Image -->
-    <?php if (!empty($config['seo_og_image'])): ?>
-        <meta property="og:image" content="<?php echo esc($config['seo_og_image']); ?>">
-    <?php endif; ?>
 </head>
 <body>
     <!-- Radial Background Gradient for glow effect -->

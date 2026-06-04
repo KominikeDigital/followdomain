@@ -14,16 +14,16 @@ $planHref = function ($plan) use ($isUser) {
 };
 
 $premiumPlans = [
-    'free' => ['class' => 'free-tier', 'badge' => __('plan_badge_free', 'Başlangıç'), 'feature_count' => 8, 'cta' => __('home_plan_cta_free'), 'highlight' => false],
-    'bronze' => ['class' => 'bronze-tier', 'badge' => __('plan_popular'), 'feature_count' => 8, 'cta' => __('home_plan_cta_paid'), 'highlight' => true],
-    'silver' => ['class' => 'silver-tier', 'badge' => __('plan_badge_silver', 'Profesyonel'), 'feature_count' => 9, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
-    'gold' => ['class' => 'gold-tier', 'badge' => __('plan_badge_gold_right', 'En Kapsamlı'), 'feature_count' => 10, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
+    'free' => ['class' => 'free-tier', 'badge' => __('plan_badge_free'), 'feature_count' => 8, 'cta' => __('home_plan_cta_free'), 'highlight' => false],
+    'bronze' => ['class' => 'bronze-tier', 'badge' => __('plan_badge_bronze'), 'feature_count' => 8, 'cta' => __('home_plan_cta_paid'), 'highlight' => true],
+    'silver' => ['class' => 'silver-tier', 'badge' => __('plan_badge_silver'), 'feature_count' => 9, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
+    'gold' => ['class' => 'gold-tier', 'badge' => __('plan_badge_gold'), 'feature_count' => 10, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
 ];
 ?>
 
 <section class="home-pricing-section" id="premium">
     <div class="section-header">
-        <span class="premium-section-kicker">Premium</span>
+        <span class="premium-section-kicker">PREMIUM</span>
         <h2 class="section-title"><?php echo __('home_pricing_title'); ?></h2>
         <p class="section-subtitle"><?php echo __('home_pricing_subtitle'); ?></p>
     </div>

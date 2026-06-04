@@ -23,7 +23,20 @@ function url($path = '') {
  */
 function absolute_url($path = '') {
     $path = ltrim($path, '/');
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+
+    global $config;
+    $configuredBase = trim((string)($config['site_url'] ?? ''));
+    if ($configuredBase !== '') {
+        return rtrim($configuredBase, '/') . '/' . $path;
+    }
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    $forwardedProto = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
+    if ($forwardedProto === 'https') {
+        $isHttps = true;
+    }
+
+    $protocol = $isHttps ? 'https://' : 'http://';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     
     $base = '';
