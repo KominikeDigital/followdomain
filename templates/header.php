@@ -56,6 +56,13 @@ $noIndexRoutes = [
     'cron',
 ];
 $robotsMeta = in_array($route ?? '', $noIndexRoutes, true) ? 'noindex, nofollow' : 'index, follow';
+$googleVerificationToken = normalizeGoogleSearchConsoleToken($config['google_search_console'] ?? '');
+$bingVerificationToken = normalizeBingVerificationToken($config['bing_verification'] ?? '');
+$googleAnalyticsId = normalizeGoogleAnalyticsId($config['google_analytics_id'] ?? '');
+$googleTagManagerId = normalizeGoogleTagManagerId($config['google_tag_manager'] ?? '');
+$googleAdsensePublisherId = normalizeGoogleAdsensePublisherId($config['google_adsense_id'] ?? '');
+$cloudflareAnalyticsToken = normalizeCloudflareAnalyticsToken($config['cf_analytics_token'] ?? '');
+$customHeadCode = trim((string)($config['custom_head_code'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo esc($lang ?? 'en'); ?>">
@@ -114,39 +121,44 @@ $robotsMeta = in_array($route ?? '', $noIndexRoutes, true) ? 'noindex, nofollow'
     </script>
 
     <!-- Google Search Console Verification -->
-    <?php if (!empty($config['google_search_console'])): ?>
-        <?php echo $config['google_search_console']; ?>
+    <?php if ($googleVerificationToken !== ''): ?>
+        <meta name="google-site-verification" content="<?php echo esc($googleVerificationToken); ?>">
     <?php endif; ?>
 
     <!-- Bing Webmaster Verification -->
-    <?php if (!empty($config['bing_verification'])): ?>
-        <meta name="msvalidate.01" content="<?php echo esc($config['bing_verification']); ?>">
+    <?php if ($bingVerificationToken !== ''): ?>
+        <meta name="msvalidate.01" content="<?php echo esc($bingVerificationToken); ?>">
     <?php endif; ?>
 
     <!-- Google Analytics 4 -->
-    <?php if (!empty($config['google_analytics_id'])): ?>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc($config['google_analytics_id']); ?>"></script>
+    <?php if ($googleAnalyticsId !== ''): ?>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc($googleAnalyticsId); ?>"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '<?php echo esc($config['google_analytics_id']); ?>');
+            gtag('config', '<?php echo esc($googleAnalyticsId); ?>');
         </script>
     <?php endif; ?>
 
     <!-- Google Tag Manager -->
-    <?php if (!empty($config['google_tag_manager'])): ?>
-        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','<?php echo esc($config['google_tag_manager']); ?>');</script>
+    <?php if ($googleTagManagerId !== ''): ?>
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','<?php echo esc($googleTagManagerId); ?>');</script>
+    <?php endif; ?>
+
+    <!-- Google AdSense -->
+    <?php if ($googleAdsensePublisherId !== ''): ?>
+        <script async crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-<?php echo esc($googleAdsensePublisherId); ?>"></script>
     <?php endif; ?>
 
     <!-- Cloudflare Web Analytics -->
-    <?php if (!empty($config['cf_analytics_token'])): ?>
-        <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "<?php echo esc($config['cf_analytics_token']); ?>"}'></script>
+    <?php if ($cloudflareAnalyticsToken !== ''): ?>
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"<?php echo esc($cloudflareAnalyticsToken); ?>"}'></script>
     <?php endif; ?>
 
     <!-- Custom Head Code -->
-    <?php if (!empty($config['custom_head_code'])): ?>
-        <?php echo $config['custom_head_code']; ?>
+    <?php if ($customHeadCode !== '' && shouldRenderCustomHeadCode($customHeadCode)): ?>
+        <?php echo $customHeadCode; ?>
     <?php endif; ?>
 
 </head>

@@ -60,6 +60,124 @@ function mediaUrl($path = '') {
     return url($path);
 }
 
+function extractHtmlAttributeValue($html, $tagName, $attributeName) {
+    $html = (string)$html;
+    $tagName = preg_quote($tagName, '/');
+    $attributeName = preg_quote($attributeName, '/');
+
+    if (!preg_match_all('/<' . $tagName . '\b[^>]*>/i', $html, $tags)) {
+        return '';
+    }
+
+    foreach ($tags[0] as $tag) {
+        if (preg_match('/\s' . $attributeName . '\s*=\s*(["\'])(.*?)\1/i', $tag, $matches)) {
+            return trim(html_entity_decode($matches[2], ENT_QUOTES, 'UTF-8'));
+        }
+    }
+
+    return '';
+}
+
+function normalizeGoogleSearchConsoleToken($value) {
+    $raw = trim((string)$value);
+    if ($raw === '') return '';
+
+    $token = '';
+    if (stripos($raw, 'google-site-verification') !== false && stripos($raw, '<meta') !== false) {
+        $token = extractHtmlAttributeValue($raw, 'meta', 'content');
+    }
+    if ($token === '' && preg_match('/google-site-verification\s*=\s*([A-Za-z0-9_-]+)/i', $raw, $matches)) {
+        $token = $matches[1];
+    }
+    if ($token === '') {
+        $token = trim(strip_tags($raw));
+        $token = preg_replace('/^google-site-verification\s*=\s*/i', '', $token);
+        $token = trim($token, " \t\n\r\0\x0B\"'");
+    }
+
+    return preg_match('/^[A-Za-z0-9_-]{10,200}$/', $token) ? $token : '';
+}
+
+function normalizeBingVerificationToken($value) {
+    $raw = trim((string)$value);
+    if ($raw === '') return '';
+
+    $token = '';
+    if (stripos($raw, '<meta') !== false) {
+        $token = extractHtmlAttributeValue($raw, 'meta', 'content');
+    }
+    if ($token === '' && preg_match('/(?:msvalidate\.01|bing-site-verification)\s*=\s*([A-Za-z0-9_-]+)/i', $raw, $matches)) {
+        $token = $matches[1];
+    }
+    if ($token === '') {
+        $token = trim(strip_tags($raw));
+        $token = preg_replace('/^(?:msvalidate\.01|bing-site-verification)\s*=\s*/i', '', $token);
+        $token = trim($token, " \t\n\r\0\x0B\"'");
+    }
+
+    return preg_match('/^[A-Za-z0-9_-]{8,200}$/', $token) ? $token : '';
+}
+
+function normalizeGoogleAnalyticsId($value) {
+    if (preg_match('/\bG-[A-Z0-9]+\b/i', (string)$value, $matches)) {
+        return strtoupper($matches[0]);
+    }
+    return '';
+}
+
+function normalizeGoogleTagManagerId($value) {
+    if (preg_match('/\bGTM-[A-Z0-9]+\b/i', (string)$value, $matches)) {
+        return strtoupper($matches[0]);
+    }
+    return '';
+}
+
+function normalizeGoogleAdsensePublisherId($value) {
+    if (preg_match('/\b(?:ca-)?(pub-\d{8,32})\b/i', (string)$value, $matches)) {
+        return strtolower($matches[1]);
+    }
+    return '';
+}
+
+function normalizeCloudflareAnalyticsToken($value) {
+    $raw = trim((string)$value);
+    if ($raw === '') return '';
+
+    $token = '';
+    if (preg_match('/["\']token["\']\s*:\s*["\']([^"\']+)["\']/i', $raw, $matches)) {
+        $token = trim($matches[1]);
+    }
+    if ($token === '') {
+        $token = trim(strip_tags($raw));
+        $token = trim($token, " \t\n\r\0\x0B\"'");
+    }
+
+    return preg_match('/^[A-Za-z0-9_-]{10,200}$/', $token) ? $token : '';
+}
+
+function normalizeIntegrationSetting($key, $value) {
+    switch ($key) {
+        case 'google_search_console':
+            return normalizeGoogleSearchConsoleToken($value);
+        case 'bing_verification':
+            return normalizeBingVerificationToken($value);
+        case 'google_analytics_id':
+            return normalizeGoogleAnalyticsId($value);
+        case 'google_tag_manager':
+            return normalizeGoogleTagManagerId($value);
+        case 'google_adsense_id':
+            return normalizeGoogleAdsensePublisherId($value);
+        case 'cf_analytics_token':
+            return normalizeCloudflareAnalyticsToken($value);
+        default:
+            return $value;
+    }
+}
+
+function shouldRenderCustomHeadCode($value) {
+    return preg_match('/<(meta|link|script|style|noscript)\b/i', (string)$value) === 1;
+}
+
 /**
  * Wraps dynamic email content in a premium HTML frame with site logo and footer
  */
