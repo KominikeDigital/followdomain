@@ -41,6 +41,8 @@ $homeTrending = $stmt->fetchAll();
     </div>
 </section>
 
+<?php include __DIR__ . '/premium-section.php'; ?>
+
 <!-- How It Works Section -->
 <section class="info-section">
     <div class="section-header">
@@ -108,6 +110,56 @@ $homeTrending = $stmt->fetchAll();
             <h3><?php echo __('home_feature_4_title'); ?></h3>
             <p><?php echo __('home_feature_4_desc'); ?></p>
         </div>
+    </div>
+</section>
+
+<!-- Premium Features -->
+<section class="premium-features-section">
+    <div class="section-header">
+        <span class="premium-section-kicker">Premium</span>
+        <h2 class="section-title"><?php echo __('premium_features_title'); ?></h2>
+        <p class="section-subtitle"><?php echo __('premium_features_subtitle'); ?></p>
+    </div>
+
+    <div class="premium-features-grid">
+        <div class="premium-feature-card">
+            <div class="premium-feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+            </div>
+            <h3><?php echo __('feature_1_title'); ?></h3>
+            <p><?php echo __('feature_1_desc'); ?></p>
+        </div>
+
+        <div class="premium-feature-card">
+            <div class="premium-feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </div>
+            <h3><?php echo __('feature_2_title'); ?></h3>
+            <p><?php echo __('feature_2_desc'); ?></p>
+        </div>
+
+        <div class="premium-feature-card">
+            <div class="premium-feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                    <path d="m15 5 3 3"></path>
+                </svg>
+            </div>
+            <h3><?php echo __('feature_3_title'); ?></h3>
+            <p><?php echo __('feature_3_desc'); ?></p>
+        </div>
+    </div>
+
+    <div class="section-actions premium-feature-actions">
+        <a href="<?php echo url('register'); ?>" class="btn btn-primary"><?php echo __('premium_features_cta'); ?></a>
     </div>
 </section>
 
