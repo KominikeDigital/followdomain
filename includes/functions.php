@@ -948,6 +948,21 @@ function formatEmailAddress($email, $name = '') {
     return encodeEmailHeader($name) . ' <' . $email . '>';
 }
 
+function encodeEmailHtmlBody($messageHtml) {
+    $messageHtml = str_replace(["\r\n", "\r"], "\n", (string)$messageHtml);
+    if (function_exists('quoted_printable_encode')) {
+        $encoded = quoted_printable_encode($messageHtml);
+    } else {
+        $encoded = preg_replace_callback('/([=\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF])/', function ($matches) {
+            return sprintf('=%02X', ord($matches[1]));
+        }, $messageHtml);
+        $encoded = wordwrap($encoded, 76, "=\r\n", true);
+    }
+    $encoded = str_replace(["\r\n", "\r"], "\n", $encoded);
+    $encoded = preg_replace('/^\\./m', '..', $encoded);
+    return rtrim(str_replace("\n", "\r\n", $encoded), "\r\n");
+}
+
 function readSmtpResponse($socket) {
     $data = "";
     while (true) {
@@ -998,10 +1013,12 @@ function sendEmailNotification($to, $subject, $messageHtml, $replyToEmail = '', 
     }
 
     $replyToHeader = formatEmailAddress($replyToEmail, $replyToName);
+    $encodedMessageHtml = encodeEmailHtmlBody($messageHtml);
     
     // Headers for HTML mail
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "Content-Transfer-Encoding: quoted-printable\r\n";
     $headers .= "From: " . formatEmailAddress($fromEmail, $fromName) . "\r\n";
     $headers .= "Reply-To: " . $replyToHeader . "\r\n";
     $headers .= "Return-Path: " . $fromEmail . "\r\n";
@@ -1138,8 +1155,9 @@ function sendEmailNotification($to, $subject, $messageHtml, $replyToEmail = '', 
             $body .= "From: " . formatEmailAddress($fromEmail, $fromName) . "\r\n";
             $body .= "Reply-To: " . $replyToHeader . "\r\n";
             $body .= "MIME-Version: 1.0\r\n";
-            $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-            $body .= $messageHtml . "\r\n.\r\n";
+            $body .= "Content-Type: text/html; charset=UTF-8\r\n";
+            $body .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n";
+            $body .= $encodedMessageHtml . "\r\n.\r\n";
 
             fwrite($socket, $body);
             if (!expectSmtpResponse($socket, [250], 'message body')) {
@@ -1162,8 +1180,8 @@ function sendEmailNotification($to, $subject, $messageHtml, $replyToEmail = '', 
         $encodedSubject = encodeEmailHeader($subject);
         $params = (stripos(PHP_OS, 'WIN') === 0) ? '' : '-f' . escapeshellarg($fromEmail);
         $sent = $params !== ''
-            ? mail($to, $encodedSubject, $messageHtml, $headers, $params)
-            : mail($to, $encodedSubject, $messageHtml, $headers);
+            ? mail($to, $encodedSubject, $encodedMessageHtml, $headers, $params)
+            : mail($to, $encodedSubject, $encodedMessageHtml, $headers);
         if (!$sent) {
             error_log("PHP mail() returned false for recipient $to.");
         }
