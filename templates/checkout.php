@@ -48,8 +48,17 @@ $whopLinks = [
     'silver' => $config['whop_link_silver'] ?? '',
     'gold'   => $config['whop_link_gold']   ?? '',
 ];
+$whopPlanIds = [
+    'bronze' => trim((string)($config['whop_plan_bronze'] ?? '')),
+    'silver' => trim((string)($config['whop_plan_silver'] ?? '')),
+    'gold'   => trim((string)($config['whop_plan_gold'] ?? '')),
+];
+if (empty($whopPlanIds[$plan]) && !empty($whopLinks[$plan])) {
+    $whopPlanIds[$plan] = extractWhopPlanId($whopLinks[$plan]);
+}
 $checkoutRefSecret = $config['whop_webhook_secret'] ?? ($config['admin_password'] ?? 'tldix');
 $checkoutRef = hash_hmac('sha256', $userId . '|' . $userEmail . '|' . $plan, $checkoutRefSecret);
+$whopReturnUrl = absolute_url('checkout?plan=' . urlencode($plan));
 $whopCheckoutUrl = !empty($whopLinks[$plan]) ? buildWhopCheckoutUrl($whopLinks[$plan], [
     'prefill_user' => $username,
     'prefill_email' => $userEmail,
@@ -115,12 +124,12 @@ $bankNotes   = $config['bank_notes']        ?? 'Havale açıklamasına kullanıc
 
                 <!-- Tab buttons -->
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
-                    <?php if (!empty($whopLinks[$plan])): ?>
+                    <?php if (!empty($whopLinks[$plan]) || !empty($whopPlanIds[$plan])): ?>
                         <button type="button" class="btn btn-secondary btn-sm checkout-tab-btn active" data-tab="whop" onclick="switchTab('whop')">
                             🔵 Whop.com
                         </button>
                     <?php endif; ?>
-                    <button type="button" class="btn btn-secondary btn-sm checkout-tab-btn <?php echo empty($whopLinks[$plan]) ? 'active' : ''; ?>" data-tab="wire" onclick="switchTab('wire')">
+                    <button type="button" class="btn btn-secondary btn-sm checkout-tab-btn <?php echo (empty($whopLinks[$plan]) && empty($whopPlanIds[$plan])) ? 'active' : ''; ?>" data-tab="wire" onclick="switchTab('wire')">
                         🏦 Havale / EFT
                     </button>
                     <button type="button" class="btn btn-secondary btn-sm checkout-tab-btn" data-tab="card" onclick="switchTab('card')">
@@ -132,24 +141,56 @@ $bankNotes   = $config['bank_notes']        ?? 'Havale açıklamasına kullanıc
                 </div>
 
                 <!-- WHOP tab -->
-                <?php if (!empty($whopLinks[$plan])): ?>
+                <?php if (!empty($whopLinks[$plan]) || !empty($whopPlanIds[$plan])): ?>
                 <div id="tab-whop" class="checkout-tab-content" style="">
-                    <div style="background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.25); border-radius: 12px; padding: 1.75rem; text-align: center;">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔵</div>
-                        <h4 style="color: var(--color-text-primary); margin-bottom: 0.5rem;">Whop.com ile Güvenli Ödeme</h4>
-                        <p style="color: var(--color-text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.6;">
-                            Kredi kartı, Apple Pay, Google Pay ve daha fazlasını destekleyen Whop.com altyapısı üzerinden ödeme yapın. Plan aktivasyonu otomatik gerçekleşir.
-                        </p>
-                        <a href="<?php echo esc($whopCheckoutUrl); ?>" target="_blank" class="btn btn-primary" style="padding: 0.85rem 2.5rem; font-size: 1rem;">
-                            🔐 Güvenli Ödeme Yap — <?php echo $pd['label']; ?>
-                        </a>
-                        <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 1rem;">Whop'ta ödeme tamamlandıktan sonra planınız otomatik aktif olacaktır.</p>
+                    <div class="whop-checkout-box">
+                        <div class="whop-checkout-head">
+                            <span class="whop-dot">W</span>
+                            <div>
+                                <h4>Whop.com ile Güvenli Ödeme</h4>
+                                <p>Kredi kartı, Apple Pay, Google Pay ve daha fazlasını destekleyen Whop altyapısıyla ödeme yapın. Plan aktivasyonu webhook ile otomatik gerçekleşir.</p>
+                            </div>
+                        </div>
+
+                        <?php if (!empty($whopPlanIds[$plan])): ?>
+                            <script>
+                                window.tldixWhopComplete = function(planId, receiptId) {
+                                    const notice = document.getElementById('whopCompleteNotice');
+                                    if (notice) {
+                                        notice.hidden = false;
+                                        notice.querySelector('strong').textContent = receiptId || planId || 'OK';
+                                    }
+                                };
+                            </script>
+                            <div id="whopCompleteNotice" class="alert alert-success" hidden>
+                                Ödeme Whop tarafından alındı. Aktivasyon webhook doğrulaması tamamlanınca paneliniz güncellenecek. Referans: <strong></strong>
+                            </div>
+                            <div
+                                id="whop-embedded-checkout"
+                                class="whop-embed-frame"
+                                data-whop-checkout-plan-id="<?php echo esc($whopPlanIds[$plan]); ?>"
+                                data-whop-checkout-return-url="<?php echo esc($whopReturnUrl); ?>"
+                                data-whop-checkout-theme="system"
+                                data-whop-checkout-theme-accent-color="violet"
+                                data-whop-checkout-skip-redirect="true"
+                                data-whop-checkout-on-complete="tldixWhopComplete"
+                                data-whop-checkout-prefill-email="<?php echo esc($userEmail); ?>"
+                                data-whop-checkout-prefill-name="<?php echo esc($username); ?>"
+                                data-whop-checkout-style-container-padding-x="0"
+                                data-whop-checkout-style-container-padding-y="0"
+                            ></div>
+                        <?php elseif (!empty($whopCheckoutUrl)): ?>
+                            <a href="<?php echo esc($whopCheckoutUrl); ?>" target="_blank" class="btn btn-primary" style="padding: 0.85rem 2.5rem; font-size: 1rem;">
+                                🔐 Güvenli Ödeme Yap — <?php echo $pd['label']; ?>
+                            </a>
+                            <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 1rem;">Sayfa içi ödeme için admin panelden bu paket için Whop Plan ID girin.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endif; ?>
 
                 <!-- WIRE tab -->
-                <div id="tab-wire" class="checkout-tab-content" style="<?php echo !empty($whopLinks[$plan]) ? 'display:none;' : ''; ?>">
+                <div id="tab-wire" class="checkout-tab-content" style="<?php echo (!empty($whopLinks[$plan]) || !empty($whopPlanIds[$plan])) ? 'display:none;' : ''; ?>">
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.75rem;">
                         <h4 style="color: var(--color-text-primary); margin-bottom: 1rem;">🏦 Havale / EFT Banka Bilgileri</h4>
                         <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">

@@ -1560,7 +1560,7 @@ html[data-theme="light"] .admin-card textarea {
 
                     <div class="admin-card">
                         <h3>🔵 Whop.com Entegrasyonu</h3>
-                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Whop.com üzerinden ödeme almak için API anahtarınızı ve ürün linklerinizi girin.</p>
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Whop.com üzerinden ödeme almak için API anahtarınızı, ürün linklerinizi ve embed için Plan ID değerlerini girin.</p>
                         <div class="admin-form-row">
                             <div class="form-group">
                                 <label>Whop API Key</label>
@@ -1576,15 +1576,27 @@ html[data-theme="light"] .admin-card textarea {
                             <input type="url" name="settings[whop_link_bronze]" value="<?php echo esc($config['whop_link_bronze'] ?? ''); ?>" placeholder="https://whop.com/checkout/...">
                         </div>
                         <div class="form-group">
+                            <label>Whop Bronze Plan ID (Embed için)</label>
+                            <input type="text" name="settings[whop_plan_bronze]" value="<?php echo esc($config['whop_plan_bronze'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
+                        </div>
+                        <div class="form-group">
                             <label>Whop Silver Plan Link</label>
                             <input type="url" name="settings[whop_link_silver]" value="<?php echo esc($config['whop_link_silver'] ?? ''); ?>" placeholder="https://whop.com/checkout/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Whop Silver Plan ID (Embed için)</label>
+                            <input type="text" name="settings[whop_plan_silver]" value="<?php echo esc($config['whop_plan_silver'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
                         </div>
                         <div class="form-group">
                             <label>Whop Gold Plan Link</label>
                             <input type="url" name="settings[whop_link_gold]" value="<?php echo esc($config['whop_link_gold'] ?? ''); ?>" placeholder="https://whop.com/checkout/...">
                         </div>
+                        <div class="form-group">
+                            <label>Whop Gold Plan ID (Embed için)</label>
+                            <input type="text" name="settings[whop_plan_gold]" value="<?php echo esc($config['whop_plan_gold'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
+                        </div>
                         <div style="padding: 0.75rem 1rem; border-radius: 8px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); font-size: 0.82rem; color: var(--color-text-secondary);">
-                            💡 <strong style="color: var(--color-text-primary);">Whop Kurulumu:</strong> whop.com'da hesap açın → Yeni ürün oluşturun → Her plan için ayrı fiyat girin → API Keys bölümünden key alın → Webhook URL: <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;"><?php echo url('webhook/whop'); ?></code>
+                            💡 <strong style="color: var(--color-text-primary);">Whop Kurulumu:</strong> whop.com'da ürün/fiyat oluşturun → Checkout Links bölümünde pricing option detayından <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">plan_...</code> ID'sini alın → Webhook URL: <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;"><?php echo url('webhook/whop'); ?></code>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">💾 Kaydet</button>

@@ -6,6 +6,10 @@ if (count(get_included_files()) === 1) {
 }
 
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($route) ? ($route === 'register' ? 'register' : ($route === 'forgot_password' ? 'forgot' : 'login')) : 'login');
+$selectedPlan = isset($_GET['plan']) ? strtolower(trim($_GET['plan'])) : 'free';
+if (!in_array($selectedPlan, ['free', 'bronze', 'silver', 'gold'], true)) {
+    $selectedPlan = 'free';
+}
 ?>
 
 <div class="login-signup-container">
@@ -90,10 +94,10 @@ $action = isset($_GET['action']) ? $_GET['action'] : (isset($route) ? ($route ==
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label for="regPlan"><?php echo __('signup_select_plan_label'); ?></label>
                     <select id="regPlan" name="plan">
-                        <option value="free"><?php echo __('signup_free_plan'); ?></option>
-                        <option value="bronze"><?php echo __('signup_bronze_plan'); ?></option>
-                        <option value="silver"><?php echo __('signup_silver_plan'); ?></option>
-                        <option value="gold"><?php echo __('signup_gold_plan'); ?></option>
+                        <option value="free" <?php echo $selectedPlan === 'free' ? 'selected' : ''; ?>><?php echo __('signup_free_plan'); ?></option>
+                        <option value="bronze" <?php echo $selectedPlan === 'bronze' ? 'selected' : ''; ?>><?php echo __('signup_bronze_plan'); ?></option>
+                        <option value="silver" <?php echo $selectedPlan === 'silver' ? 'selected' : ''; ?>><?php echo __('signup_silver_plan'); ?></option>
+                        <option value="gold" <?php echo $selectedPlan === 'gold' ? 'selected' : ''; ?>><?php echo __('signup_gold_plan'); ?></option>
                     </select>
                     <span class="input-helper" style="font-size: 0.75rem; color: var(--color-text-secondary); display: block; margin-top: 0.4rem;"><?php echo __('signup_select_plan_desc'); ?></span>
                 </div>

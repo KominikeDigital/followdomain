@@ -61,6 +61,9 @@ if ($isUser) {
     
     <!-- Style Sheet -->
     <link rel="stylesheet" href="<?php echo url('assets/css/style.css'); ?>?v=<?php echo filemtime(__DIR__ . '/../assets/css/style.css'); ?>">
+    <?php if (($route ?? '') === 'checkout'): ?>
+        <script async defer src="https://js.whop.com/static/checkout/loader.js"></script>
+    <?php endif; ?>
     
     <!-- Base Path for JavaScript -->
     <script>

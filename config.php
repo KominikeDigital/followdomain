@@ -129,6 +129,12 @@ $config = [
     'smtp_from_name' => 'TLDix Alerts',
     'whois_cache_ttl_seconds' => 172800,
     'whop_webhook_secret' => getenv('WHOP_WEBHOOK_SECRET') ?: '',
+    'whop_link_bronze' => '',
+    'whop_link_silver' => '',
+    'whop_link_gold' => '',
+    'whop_plan_bronze' => '',
+    'whop_plan_silver' => '',
+    'whop_plan_gold' => '',
 
     // Affiliate display controls
     'recommended_hosting_codes' => 'hostinger,bluehost,siteground',

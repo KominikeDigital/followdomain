@@ -1101,6 +1101,15 @@ function buildWhopCheckoutUrl($baseUrl, $params = []) {
     return $baseUrl . (strpos($baseUrl, '?') === false ? '?' : '&') . $query;
 }
 
+function extractWhopPlanId($value) {
+    $value = trim((string)$value);
+    if ($value === '') return '';
+    if (preg_match('/plan_[A-Za-z0-9_\\-]+/', $value, $matches)) {
+        return $matches[0];
+    }
+    return '';
+}
+
 /**
  * Read request headers with lowercase keys for webhook verification
  */
@@ -1206,12 +1215,21 @@ function findNestedEmail($payload) {
 }
 
 function detectWhopPlan($payload) {
+    global $config;
+
+    $payloadText = strtolower(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    foreach (['gold', 'silver', 'bronze'] as $candidate) {
+        $configuredPlanId = strtolower(trim((string)($config['whop_plan_' . $candidate] ?? '')));
+        if ($configuredPlanId !== '' && strpos($payloadText, $configuredPlanId) !== false) {
+            return $candidate;
+        }
+    }
+
     $plan = strtolower((string)(findNestedValueByKeys($payload, ['tldix_plan', 'plan', 'plan_key', 'tier']) ?? ''));
     if (in_array($plan, ['bronze', 'silver', 'gold'], true)) {
         return $plan;
     }
 
-    $payloadText = strtolower(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     foreach (['gold', 'silver', 'bronze'] as $candidate) {
         if (strpos($payloadText, $candidate) !== false) {
             return $candidate;

@@ -533,7 +533,7 @@
 }
 
 /* Steps Grid */
-.info-section, .features-section, .premium-features-section, .home-trending-section {
+.info-section, .features-section, .premium-features-section, .home-pricing-section, .home-trending-section {
     padding: 5rem 0;
 }
 
@@ -651,6 +651,62 @@ html[data-theme="light"] .flight-display-title {
     color: var(--color-text-secondary);
     font-size: 0.9rem;
     line-height: 1.6;
+}
+
+/* Home pricing plans */
+.home-pricing-section {
+    padding-top: 3.25rem;
+}
+
+.home-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.home-plan-card {
+    text-decoration: none;
+    min-height: 100%;
+}
+
+.home-plan-card.featured {
+    transform: translateY(-8px);
+}
+
+.home-plan-card:hover {
+    text-decoration: none;
+}
+
+.home-plan-cta {
+    margin-top: auto;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+.home-pricing-note {
+    max-width: 720px;
+    margin: 1.35rem auto 0;
+    color: var(--color-text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+@media (max-width: 1120px) {
+    .home-pricing-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .home-plan-card.featured {
+        transform: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .home-pricing-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Premium features on home */
@@ -4482,6 +4538,58 @@ html[data-theme="light"] .hero-title span {
     background: var(--color-primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+/* Embedded Whop checkout */
+.whop-checkout-box {
+    border: 1px solid rgba(59, 130, 246, 0.24);
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: rgba(59, 130, 246, 0.07);
+}
+
+.whop-checkout-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.whop-dot {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    font-weight: 800;
+}
+
+.whop-checkout-head h4 {
+    margin: 0 0 0.35rem;
+    color: var(--color-text-primary);
+}
+
+.whop-checkout-head p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+.whop-embed-frame {
+    min-height: 640px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+html[data-theme="light"] .whop-checkout-box {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(37, 99, 235, 0.18);
 }
 
 /* Specs / highlight */
