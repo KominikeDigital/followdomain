@@ -1184,22 +1184,22 @@ html[data-theme="light"] .admin-card textarea {
                         <h3>🔍 Google Servisleri</h3>
                         <div class="form-group">
                             <label>Google Search Console — HTML Doğrulama Tokenı</label>
-                            <input type="text" name="settings[google_search_console]" value="<?php echo esc($config['google_search_console'] ?? ''); ?>" placeholder="ABC123... veya google-site-verification=ABC123...">
+                            <textarea name="settings[google_search_console]" rows="2" placeholder="ABC123... veya google-site-verification=ABC123..."><?php echo esc($config['google_search_console'] ?? ''); ?></textarea>
                             <small style="color: var(--color-text-muted); font-size: 0.75rem;">DNS TXT ile doğruladıysanız bu alanı boş bırakabilirsiniz. Token, google-site-verification=... satırı veya tam meta tag girilirse sistem otomatik temizler.</small>
                         </div>
                         <div class="form-group">
                             <label>Google Analytics 4 — Ölçüm ID (G-XXXXXXXX)</label>
-                            <input type="text" name="settings[google_analytics_id]" value="<?php echo esc($config['google_analytics_id'] ?? ''); ?>" placeholder="G-XXXXXXXXXX">
+                            <textarea name="settings[google_analytics_id]" rows="4" class="code-editor" placeholder="G-XXXXXXXXXX veya tam gtag.js scripti"><?php echo esc($config['google_analytics_id'] ?? ''); ?></textarea>
                             <small style="color: var(--color-text-muted); font-size: 0.75rem;">Sadece G-... ID girmeniz yeterli. Tam gtag kodu yapıştırılırsa ID otomatik alınır.</small>
                         </div>
                         <div class="form-group">
                             <label>Google Tag Manager — Container ID (GTM-XXXXXXX)</label>
-                            <input type="text" name="settings[google_tag_manager]" value="<?php echo esc($config['google_tag_manager'] ?? ''); ?>" placeholder="GTM-XXXXXXX">
+                            <textarea name="settings[google_tag_manager]" rows="3" placeholder="GTM-XXXXXXX veya tam GTM scripti"><?php echo esc($config['google_tag_manager'] ?? ''); ?></textarea>
                             <small style="color: var(--color-text-muted); font-size: 0.75rem;">Sadece GTM-... ID girmeniz yeterli. Tam GTM kodu yapıştırılırsa ID otomatik alınır.</small>
                         </div>
                         <div class="form-group">
                             <label>Google AdSense — Publisher ID (pub-XXXXXXX)</label>
-                            <input type="text" name="settings[google_adsense_id]" value="<?php echo esc($config['google_adsense_id'] ?? ''); ?>" placeholder="pub-XXXXXXXXXXXXXXXX">
+                            <textarea name="settings[google_adsense_id]" rows="3" class="code-editor" placeholder="pub-XXXXXXXXXXXXXXXX veya tam AdSense scripti"><?php echo esc($config['google_adsense_id'] ?? ''); ?></textarea>
                             <small style="color: var(--color-text-muted); font-size: 0.75rem;">pub-... veya ca-pub-... formatı desteklenir. Tam AdSense scriptinden ID otomatik alınır.</small>
                         </div>
                     </div>
@@ -1208,12 +1208,12 @@ html[data-theme="light"] .admin-card textarea {
                         <h3>📊 Diğer Analitik</h3>
                         <div class="form-group">
                             <label>Bing Webmaster — Doğrulama Kodu</label>
-                            <input type="text" name="settings[bing_verification]" value="<?php echo esc($config['bing_verification'] ?? ''); ?>" placeholder="XXXXXXXXXXXXXXXXXXXX">
+                            <textarea name="settings[bing_verification]" rows="2" placeholder="XXXXXXXXXXXXXXXXXXXX veya tam msvalidate.01 meta tag"><?php echo esc($config['bing_verification'] ?? ''); ?></textarea>
                             <small style="color: var(--color-text-muted); font-size: 0.75rem;">Bing tokenı veya tam msvalidate.01 meta tag desteklenir.</small>
                         </div>
                         <div class="form-group">
                             <label>Cloudflare Web Analytics — Beacon Token</label>
-                            <input type="text" name="settings[cf_analytics_token]" value="<?php echo esc($config['cf_analytics_token'] ?? ''); ?>" placeholder="...">
+                            <textarea name="settings[cf_analytics_token]" rows="3" placeholder="Beacon token veya tam Cloudflare scripti"><?php echo esc($config['cf_analytics_token'] ?? ''); ?></textarea>
                             <small style="color: var(--color-text-muted); font-size: 0.75rem;">Sadece beacon token girmeniz yeterli. Tam Cloudflare scripti yapıştırılırsa token otomatik alınır.</small>
                         </div>
                         <div class="form-group">

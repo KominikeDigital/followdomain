@@ -24,6 +24,13 @@ $config = [
     'ad_status' => 'off', // 'on' or 'off'
     'seo_keywords' => 'domain, tracking, whois, expired domains',
     'seo_author' => 'TLDix',
+    'google_search_console' => '',
+    'google_analytics_id' => 'G-FRCMXY9TL3',
+    'google_tag_manager' => '',
+    'google_adsense_id' => 'pub-8595320911699983',
+    'bing_verification' => '',
+    'cf_analytics_token' => '',
+    'custom_head_code' => '',
     
     // Site Identity
     'site_title' => 'TLDix.com',

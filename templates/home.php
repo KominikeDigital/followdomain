@@ -41,8 +41,6 @@ $homeTrending = $stmt->fetchAll();
     </div>
 </section>
 
-<?php include __DIR__ . '/premium-section.php'; ?>
-
 <!-- How It Works Section -->
 <section class="info-section">
     <div class="section-header">
@@ -70,6 +68,8 @@ $homeTrending = $stmt->fetchAll();
         </div>
     </div>
 </section>
+
+<?php include __DIR__ . '/premium-section.php'; ?>
 
 <!-- Features Grid -->
 <section class="features-section">
