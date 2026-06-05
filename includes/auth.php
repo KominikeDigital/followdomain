@@ -145,6 +145,29 @@ function requireLogin() {
 }
 
 /**
+ * Check if the current session has a verified admin login.
+ */
+function isAdminLoggedIn() {
+    global $config;
+
+    $configuredAdminEmail = strtolower(trim((string)($config['admin_email'] ?? '')));
+    $sessionAdminEmail = strtolower(trim((string)($_SESSION['admin_email'] ?? '')));
+
+    return isset($_SESSION['admin_logged_in'])
+        && $_SESSION['admin_logged_in'] === true
+        && $configuredAdminEmail !== ''
+        && $sessionAdminEmail !== ''
+        && hash_equals($configuredAdminEmail, $sessionAdminEmail);
+}
+
+/**
+ * Clear only admin auth flags without logging the normal user account out.
+ */
+function clearAdminSession() {
+    unset($_SESSION['admin_logged_in'], $_SESSION['admin_email'], $_SESSION['admin_login_at']);
+}
+
+/**
  * Get current user array
  */
 function getCurrentUser($pdo) {

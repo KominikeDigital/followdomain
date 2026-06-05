@@ -426,37 +426,29 @@ switch ($route) {
                 $user = $stmt->fetch();
                 
                 if ($user) {
-                    $tempPassword = bin2hex(random_bytes(4)); // 8 characters
-                    $passwordHash = password_hash($tempPassword, PASSWORD_DEFAULT);
-                    
-                    $stmtUpdate = $pdo->prepare("UPDATE users SET password_hash = ?, is_verified = 1, verification_token = NULL WHERE id = ?");
-                    $stmtUpdate->execute([$passwordHash, $user['id']]);
-                    
-                    $subject = "TLDix Şifre Sıfırlama";
-                    $messageHtml = getFormattedEmail('mail_tpl_user_forgot', [
-                        'username' => esc($user['username']),
-                        'temp_password' => esc($tempPassword),
-                        'login_url' => absolute_url('login')
-                    ]);
-                    
-                    $sent = sendEmailNotification($email, $subject, $messageHtml);
-                    if ($sent) {
-                        // Admin notification email
-                        $adminEmail = $config['admin_notification_email'] ?? '';
-                        if (!empty($adminEmail)) {
-                            $adminSubject = "Şifre Sıfırlama Talebi: " . $user['username'];
-                            $adminMessage = getFormattedEmail('mail_tpl_admin_forgot', [
-                                'username' => esc($user['username']),
-                                'email' => esc($email),
-                                'date' => date('Y-m-d H:i:s'),
-                                'temp_password' => esc($tempPassword),
-                                'login_url' => absolute_url('login')
-                            ]);
-                            sendEmailNotification($adminEmail, $adminSubject, $adminMessage);
-                        }
-                        $authSuccess = "Geçici şifreniz e-posta adresinize gönderildi.";
+                    $recipientEmail = strtolower(trim((string)$user['email']));
+                    if (!isValidEmail($recipientEmail)) {
+                        $authError = "Kullanıcı hesabındaki e-posta adresi geçersiz. Lütfen site yöneticisiyle iletişime geçin.";
                     } else {
-                        $authError = "E-posta gönderimi sırasında bir sorun oluştu.";
+                        $tempPassword = bin2hex(random_bytes(4)); // 8 characters
+                        $passwordHash = password_hash($tempPassword, PASSWORD_DEFAULT);
+
+                        $stmtUpdate = $pdo->prepare("UPDATE users SET password_hash = ?, is_verified = 1, verification_token = NULL WHERE id = ?");
+                        $stmtUpdate->execute([$passwordHash, $user['id']]);
+
+                        $subject = "TLDix Şifre Sıfırlama";
+                        $messageHtml = getFormattedEmail('mail_tpl_user_forgot', [
+                            'username' => esc($user['username']),
+                            'temp_password' => esc($tempPassword),
+                            'login_url' => absolute_url('login')
+                        ]);
+
+                        $sent = sendEmailNotification($recipientEmail, $subject, $messageHtml);
+                        if ($sent) {
+                            $authSuccess = "Geçici şifreniz e-posta adresinize gönderildi.";
+                        } else {
+                            $authError = "E-posta gönderimi sırasında bir sorun oluştu.";
+                        }
                     }
                 } else {
                     $authError = "Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı.";
@@ -559,30 +551,25 @@ switch ($route) {
                 if ($mode === 'single') {
                     $domainName = cleanDomainName($_POST['domain_name']);
                     if (!empty($domainName)) {
-                        $domainData = getOrUpdateDomain($pdo, $domainName);
-                        if ($domainData) {
-                            try {
-                                $n60 = isset($alertSettings['60']) ? (int)$alertSettings['60'] : 0;
-                                $n30 = isset($alertSettings['30']) ? (int)$alertSettings['30'] : 0;
-                                $n14 = isset($alertSettings['14']) ? (int)$alertSettings['14'] : 0;
-                                $n7 = isset($alertSettings['7']) ? (int)$alertSettings['7'] : 0;
-                                $n3 = isset($alertSettings['3']) ? (int)$alertSettings['3'] : 0;
-                                $n1 = isset($alertSettings['1']) ? (int)$alertSettings['1'] : 0;
-                                
-                                $stmt = $pdo->prepare("INSERT INTO user_domains 
-                                    (user_id, domain_name, notify_60, notify_30, notify_14, notify_7, notify_3, notify_1, created_at) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                                $stmt->execute([$userId, $domainName, $n60, $n30, $n14, $n7, $n3, $n1, date('Y-m-d H:i:s')]);
-                                
-                                logActivity($pdo, $userId, "Alan adı takibe eklendi: $domainName");
-                            } catch (PDOException $e) {
-                                // Already exists
-                            }
+                        $addResult = addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings, 0);
+                        if (!empty($addResult['success']) && ($addResult['code'] ?? '') === 'inserted') {
+                            logActivity($pdo, $userId, "Alan adı takibe eklendi: $domainName");
+                            $_SESSION['domain_msg'] = "Alan adı takibe eklendi: $domainName";
+                        } elseif (($addResult['code'] ?? '') === 'already_exists') {
+                            $_SESSION['domain_msg'] = "Bu alan adı zaten takip listenizde.";
+                        } else {
+                            $_SESSION['domain_error'] = $addResult['message'] ?? "Alan adı eklenemedi.";
                         }
                     }
                 } elseif ($mode === 'bulk') {
                     $bulkText = isset($_POST['domains_bulk']) ? $_POST['domains_bulk'] : '';
-                    importBulkDomains($pdo, $userId, $bulkText, $alertSettings);
+                    $bulkResult = importBulkDomains($pdo, $userId, $bulkText, $alertSettings);
+                    if (!empty($bulkResult['imported_count'])) {
+                        $_SESSION['domain_msg'] = $bulkResult['imported_count'] . " alan adı takibe eklendi.";
+                    }
+                    if (empty($bulkResult['success']) || !empty($bulkResult['errors'])) {
+                        $_SESSION['domain_error'] = implode(' ', array_slice($bulkResult['errors'] ?? ["Toplu ekleme tamamlanamadı."], 0, 3));
+                    }
                 }
                 header("Location: " . url("panel/domains"));
                 exit;
@@ -659,12 +646,9 @@ switch ($route) {
     case 'panel_domains_export':
         requireLogin();
         $userId = $_SESSION['user_id'];
-        
-        $stmtUser = $pdo->prepare("SELECT api_plan FROM users WHERE id = ?");
-        $stmtUser->execute([$userId]);
-        $userPlan = $stmtUser->fetchColumn();
-        
-        if (!in_array($userPlan, ['bronze', 'silver', 'gold'])) {
+
+        $userPlan = getUserPlan($pdo, $userId);
+        if (!userPlanAllows($userPlan, 'csv_export')) {
             $_SESSION['export_error'] = "CSV indirme özelliği sadece Premium üyelerimize açıktır.";
             header("Location: " . url("panel/domains"));
             exit;
@@ -837,7 +821,7 @@ switch ($route) {
         $pageTitle = "Yönetici Paneli | " . $config['site_title'];
         
         // Handle admin authentication
-        $isAdminLoggedIn = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+        $isAdminLoggedIn = isAdminLoggedIn();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $email = trim($_POST['email'] ?? '');
@@ -852,6 +836,8 @@ switch ($route) {
 
             if ($email === $config['admin_email'] && $isPasswordCorrect) {
                 $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_email'] = $config['admin_email'];
+                $_SESSION['admin_login_at'] = time();
                 $isAdminLoggedIn = true;
             } else {
                 $loginError = "Hatalı e-posta adresi veya şifre!";
@@ -859,7 +845,7 @@ switch ($route) {
         }
         
         if (isset($_GET['logout'])) {
-            session_destroy();
+            clearAdminSession();
             header("Location: " . url("manage-secure-panel"));
             exit;
         }
@@ -1245,7 +1231,7 @@ switch ($route) {
         exit;
 
     case 'admin_test_smtp_live':
-        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+        if (!isAdminLoggedIn()) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'log' => 'Hata: Yönetici oturumu aktif değil. Lütfen sayfayı yenileyip tekrar giriş yapın.']);
             exit;

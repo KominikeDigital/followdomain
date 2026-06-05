@@ -61,8 +61,8 @@ if (!empty($apiKey)) {
         exit;
     }
     
-    $plan = $user['api_plan'] ?? 'free';
-    $limit = in_array($plan, ['bronze', 'silver', 'gold']) ? 10000 : 100;
+    $plan = normalizePlanKey($user['api_plan'] ?? 'free');
+    $limit = getPlanApiDailyLimit($plan);
 }
 
 // Check Rate Limits
@@ -75,7 +75,7 @@ if ($user) {
         $queriesToday = 0;
     }
     
-    if ($queriesToday >= $limit) {
+    if ($limit !== null && $queriesToday >= $limit) {
         http_response_code(429);
         echo json_encode([
             'success' => false,

@@ -7,7 +7,7 @@ if (count(get_included_files()) === 1) {
 
 global $config, $pdo;
 
-$isAdmin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+$isAdmin = isAdminLoggedIn();
 
 // ── Handle POST actions ──────────────────────────────────────────────────────
 $settingsSaved = false;

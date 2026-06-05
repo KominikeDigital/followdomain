@@ -369,6 +369,194 @@ function esc($str) {
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function normalizePlanKey($plan) {
+    $plan = strtolower(trim((string)$plan));
+    return in_array($plan, ['free', 'bronze', 'silver', 'gold'], true) ? $plan : 'free';
+}
+
+function getPlanCapabilities($plan = 'free') {
+    static $plans = [
+        'free' => [
+            'domain_limit' => 5,
+            'csv_export' => false,
+            'bulk_import' => false,
+            'webhook_limit' => 0,
+            'history_days' => 0,
+            'api_daily_limit' => 100,
+        ],
+        'bronze' => [
+            'domain_limit' => 50,
+            'csv_export' => true,
+            'bulk_import' => true,
+            'webhook_limit' => 5,
+            'history_days' => 30,
+            'api_daily_limit' => 10000,
+        ],
+        'silver' => [
+            'domain_limit' => 500,
+            'csv_export' => true,
+            'bulk_import' => true,
+            'webhook_limit' => 50,
+            'history_days' => 365,
+            'api_daily_limit' => 50000,
+        ],
+        'gold' => [
+            'domain_limit' => null,
+            'csv_export' => true,
+            'bulk_import' => true,
+            'webhook_limit' => null,
+            'history_days' => null,
+            'api_daily_limit' => null,
+        ],
+    ];
+
+    return $plans[normalizePlanKey($plan)];
+}
+
+function getPlanCapability($plan, $key) {
+    $capabilities = getPlanCapabilities($plan);
+    return $capabilities[$key] ?? null;
+}
+
+function getUserPlan($pdo, $userId) {
+    try {
+        $stmt = $pdo->prepare("SELECT api_plan FROM users WHERE id = ?");
+        $stmt->execute([(int)$userId]);
+        return normalizePlanKey($stmt->fetchColumn());
+    } catch (Throwable $e) {
+        return 'free';
+    }
+}
+
+function userPlanAllows($plan, $feature) {
+    $capabilities = getPlanCapabilities($plan);
+
+    switch ($feature) {
+        case 'csv_export':
+            return !empty($capabilities['csv_export']);
+        case 'bulk_import':
+            return !empty($capabilities['bulk_import']);
+        case 'webhook':
+        case 'webhooks':
+            return $capabilities['webhook_limit'] === null || (int)$capabilities['webhook_limit'] > 0;
+        case 'domain_history':
+        case 'history':
+            return $capabilities['history_days'] === null || (int)$capabilities['history_days'] > 0;
+        default:
+            return !empty($capabilities[$feature]);
+    }
+}
+
+function getPlanApiDailyLimit($plan) {
+    return getPlanCapability($plan, 'api_daily_limit');
+}
+
+function formatPlanLimit($limit) {
+    return $limit === null ? __('unlimited', 'Sınırsız') : (string)(int)$limit;
+}
+
+function getUserDomainCount($pdo, $userId) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM user_domains WHERE user_id = ?");
+    $stmt->execute([(int)$userId]);
+    return (int)$stmt->fetchColumn();
+}
+
+function getUserDomainLimitStatus($pdo, $userId, $requestedCount = 1) {
+    $requestedCount = max(0, (int)$requestedCount);
+    $plan = getUserPlan($pdo, $userId);
+    $limit = getPlanCapability($plan, 'domain_limit');
+    $count = getUserDomainCount($pdo, $userId);
+    $remaining = $limit === null ? null : max(0, (int)$limit - $count);
+    $allowed = $limit === null || $requestedCount <= $remaining;
+
+    $message = '';
+    if (!$allowed) {
+        $message = sprintf(
+            __('plan_limits_warning', 'Planınızın alan adı takip limitine ulaştınız (%d/%d). Daha fazla alan adı eklemek için lütfen planınızı yükseltin.'),
+            $count,
+            (int)$limit
+        );
+    }
+
+    return [
+        'allowed' => $allowed,
+        'plan' => $plan,
+        'limit' => $limit,
+        'count' => $count,
+        'remaining' => $remaining,
+        'message' => $message,
+    ];
+}
+
+function userTracksDomain($pdo, $userId, $domainName) {
+    $stmt = $pdo->prepare("SELECT id FROM user_domains WHERE user_id = ? AND domain_name = ?");
+    $stmt->execute([(int)$userId, $domainName]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function getDomainAlertFlagValues($alertSettings, $default = 1) {
+    return [
+        '60' => isset($alertSettings['60']) ? (int)$alertSettings['60'] : $default,
+        '30' => isset($alertSettings['30']) ? (int)$alertSettings['30'] : $default,
+        '14' => isset($alertSettings['14']) ? (int)$alertSettings['14'] : $default,
+        '7' => isset($alertSettings['7']) ? (int)$alertSettings['7'] : $default,
+        '3' => isset($alertSettings['3']) ? (int)$alertSettings['3'] : $default,
+        '1' => isset($alertSettings['1']) ? (int)$alertSettings['1'] : $default,
+    ];
+}
+
+function addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings = [], $defaultAlert = 1) {
+    $domainName = cleanDomainName($domainName);
+    if ($domainName === '' || strpos($domainName, '.') === false) {
+        return ['success' => false, 'code' => 'invalid_domain', 'message' => 'Geçerli bir alan adı girin.'];
+    }
+
+    if (userTracksDomain($pdo, $userId, $domainName)) {
+        return ['success' => true, 'code' => 'already_exists', 'domain' => $domainName];
+    }
+
+    $limitStatus = getUserDomainLimitStatus($pdo, $userId, 1);
+    if (!$limitStatus['allowed']) {
+        return [
+            'success' => false,
+            'code' => 'limit_exceeded',
+            'domain' => $domainName,
+            'message' => $limitStatus['message'],
+            'limit_status' => $limitStatus,
+        ];
+    }
+
+    $domainData = getOrUpdateDomain($pdo, $domainName);
+    if (!$domainData) {
+        return ['success' => false, 'code' => 'lookup_failed', 'domain' => $domainName, 'message' => "$domainName: Bilgiler alınamadı."];
+    }
+
+    $flags = getDomainAlertFlagValues($alertSettings, (int)$defaultAlert);
+    try {
+        $stmt = $pdo->prepare("INSERT INTO user_domains
+            (user_id, domain_name, notify_60, notify_30, notify_14, notify_7, notify_3, notify_1, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            (int)$userId,
+            $domainName,
+            $flags['60'],
+            $flags['30'],
+            $flags['14'],
+            $flags['7'],
+            $flags['3'],
+            $flags['1'],
+            date('Y-m-d H:i:s')
+        ]);
+
+        return ['success' => true, 'code' => 'inserted', 'domain' => $domainName];
+    } catch (PDOException $e) {
+        if ($e->getCode() === '23000') {
+            return ['success' => true, 'code' => 'already_exists', 'domain' => $domainName];
+        }
+        return ['success' => false, 'code' => 'database_error', 'domain' => $domainName, 'message' => "$domainName: Veri tabanı hatası: " . $e->getMessage()];
+    }
+}
+
 function normalizeSocialLinkUrl($url) {
     $url = trim((string)$url);
     if ($url === '') {
@@ -1238,44 +1426,45 @@ function sendAdminRegistrationNotification($email, $username, $mailSent, $token 
  * Bulk Import Domains for a user
  */
 function importBulkDomains($pdo, $userId, $domainsText, $alertSettings) {
+    $userPlan = getUserPlan($pdo, $userId);
+    if (!userPlanAllows($userPlan, 'bulk_import')) {
+        return [
+            'success' => false,
+            'imported_count' => 0,
+            'errors' => ['Toplu domain ekleme özelliği premium paketler için açıktır.']
+        ];
+    }
+
     $lines = preg_split('/[\r\n,;]+/', $domainsText);
     $count = 0;
     $errors = [];
     $now = date('Y-m-d H:i:s');
-    
-    // Set default alert flags
-    $n60 = isset($alertSettings['60']) ? (int)$alertSettings['60'] : 1;
-    $n30 = isset($alertSettings['30']) ? (int)$alertSettings['30'] : 1;
-    $n14 = isset($alertSettings['14']) ? (int)$alertSettings['14'] : 1;
-    $n7 = isset($alertSettings['7']) ? (int)$alertSettings['7'] : 1;
-    $n3 = isset($alertSettings['3']) ? (int)$alertSettings['3'] : 1;
-    $n1 = isset($alertSettings['1']) ? (int)$alertSettings['1'] : 1;
+    $seen = [];
     
     foreach ($lines as $line) {
         $domainName = cleanDomainName($line);
         if (empty($domainName) || strpos($domainName, '.') === false) {
             continue;
         }
-        
-        try {
-            // First check/update domain details in master domain table
-            $domainData = getOrUpdateDomain($pdo, $domainName);
-            if ($domainData) {
-                // Now link this domain to the user
-                $stmt = $pdo->prepare("INSERT INTO user_domains 
-                    (user_id, domain_name, notify_60, notify_30, notify_14, notify_7, notify_3, notify_1, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$userId, $domainName, $n60, $n30, $n14, $n7, $n3, $n1, $now]);
-                $count++;
-            } else {
-                $errors[] = "$domainName: Bilgiler alınamadı veya kaydedilmemiş.";
-            }
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                // User already tracks this domain
-                continue;
-            }
-            $errors[] = "$domainName: Veri tabanı hatası: " . $e->getMessage();
+
+        if (isset($seen[$domainName])) {
+            continue;
+        }
+        $seen[$domainName] = true;
+
+        $result = addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings, 1);
+        if (!empty($result['success']) && ($result['code'] ?? '') === 'inserted') {
+            $count++;
+            continue;
+        }
+
+        if (($result['code'] ?? '') === 'already_exists') {
+            continue;
+        }
+
+        $errors[] = $result['message'] ?? "$domainName: Eklenemedi.";
+        if (($result['code'] ?? '') === 'limit_exceeded') {
+            break;
         }
     }
     

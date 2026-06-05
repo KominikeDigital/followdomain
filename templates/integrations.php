@@ -16,6 +16,8 @@ $integrationError = null;
 $stmtUser = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmtUser->execute([$userId]);
 $userData = $stmtUser->fetch();
+$userPlan = normalizePlanKey($userData['api_plan'] ?? 'free');
+$canUseWebhooks = userPlanAllows($userPlan, 'webhook');
 
 // Handle Connection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -39,20 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 // Mock importing domains (insert some mock records for realistic feedback)
                 // For demonstration, let's auto-import 'mysite.com' and 'myproject.xyz' if they aren't tracked
                 $mockDomains = ['mysite.com', 'myproject.xyz'];
+                $importedCount = 0;
+                $importErrors = [];
                 foreach ($mockDomains as $md) {
-                    $domainData = getOrUpdateDomain($pdo, $md);
-                    if ($domainData) {
-                        try {
-                            $stmtLink = $pdo->prepare("INSERT INTO user_domains (user_id, domain_name, notify_30, notify_7, notify_1, created_at) VALUES (?, ?, 1, 1, 1, ?)");
-                            $stmtLink->execute([$userId, $md, $now]);
-                        } catch (PDOException $ex) {
-                            // User already tracks it
-                        }
+                    $result = addUserDomainToTracking($pdo, $userId, $md, ['30' => 1, '7' => 1, '1' => 1], 0);
+                    if (!empty($result['success']) && ($result['code'] ?? '') === 'inserted') {
+                        $importedCount++;
+                    } elseif (empty($result['success']) && ($result['code'] ?? '') === 'limit_exceeded') {
+                        $importErrors[] = $result['message'];
+                        break;
                     }
                 }
                 
                 logActivity($pdo, $userId, "Cloudflare integration connected ($email).");
-                $integrationMessage = __('cf_connect_success');
+                $integrationMessage = "Cloudflare entegrasyonu bağlandı. $importedCount alan adı içe aktarıldı.";
+                if (!empty($importErrors)) {
+                    $integrationError = implode(' ', $importErrors);
+                }
             } catch (PDOException $e) {
                 $integrationError = __('cf_connect_error') . $e->getMessage();
             }
@@ -64,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $webhookUrl = filter_input(INPUT_POST, 'webhook_url', FILTER_SANITIZE_URL);
         
         // Enforce plan verification
-        if (in_array($userData['api_plan'], ['bronze', 'silver', 'gold'])) {
+        if ($canUseWebhooks) {
             $stmtUpd = $pdo->prepare("UPDATE users SET webhook_url = ? WHERE id = ?");
             $stmtUpd->execute([$webhookUrl, $userId]);
             logActivity($pdo, $userId, "Webhook URL updated: " . $webhookUrl);
@@ -73,6 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // Refresh user data
             $stmtUser->execute([$userId]);
             $userData = $stmtUser->fetch();
+            $userPlan = normalizePlanKey($userData['api_plan'] ?? 'free');
+            $canUseWebhooks = userPlanAllows($userPlan, 'webhook');
         } else {
             $integrationError = __('webhook_plan_error');
         }
@@ -159,11 +166,14 @@ $cfIntegration = $stmt->fetch();
 
         <!-- Developer API Credentials Panel -->
         <?php
-        $apiLimit = in_array($userData['api_plan'], ['bronze', 'silver', 'gold']) ? 10000 : 100;
+        $apiLimit = getPlanApiDailyLimit($userPlan);
         $todayStr = date('Y-m-d');
         $todayQueries = ($userData['last_api_query_date'] === $todayStr) ? (int)$userData['api_queries_today'] : 0;
-        $pct = round(($todayQueries / $apiLimit) * 100, 1);
+        $pct = $apiLimit === null ? 0 : round(($todayQueries / $apiLimit) * 100, 1);
         if ($pct > 100) $pct = 100;
+        $apiUsageText = $apiLimit === null
+            ? 'Bugünkü API Kullanımı: <strong>' . (int)$todayQueries . ' / ' . esc(__('unlimited', 'Sınırsız')) . ' sorgu</strong>'
+            : sprintf(__('api_usage_today_full'), $todayQueries, $apiLimit);
         ?>
         <div class="glass-panel integration-provider-card" style="margin-top: 2rem;">
             <div class="provider-main-info">
@@ -177,7 +187,7 @@ $cfIntegration = $stmt->fetch();
                 
                 <div class="provider-status-actions">
                     <span class="status-badge-active" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: rgba(59, 130, 246, 0.2);">
-                        Plan: <?php echo strtoupper(esc($userData['api_plan'])); ?>
+                        Plan: <?php echo strtoupper(esc($userPlan)); ?>
                     </span>
                 </div>
             </div>
@@ -193,7 +203,7 @@ $cfIntegration = $stmt->fetch();
                 
                 <div style="margin-top: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--color-text-secondary);">
-                        <span><?php echo sprintf(__('api_usage_today_full'), $todayQueries, $apiLimit); ?></span>
+                        <span><?php echo $apiUsageText; ?></span>
                         <span>%<?php echo $pct; ?></span>
                     </div>
                     <div class="lifecycle-bar-container" style="height: 6px; background: rgba(255,255,255,0.03);">
@@ -206,10 +216,10 @@ $cfIntegration = $stmt->fetch();
                     <input type="hidden" name="action" value="update_webhook">
                     <div class="form-group">
                         <label for="webhookUrl"><?php echo __('webhook_url_label'); ?></label>
-                        <input type="url" id="webhookUrl" name="webhook_url" value="<?php echo esc($userData['webhook_url']); ?>" placeholder="https://api.yourdomain.com/webhooks/domain-alerts" <?php echo !in_array($userData['api_plan'], ['bronze', 'silver', 'gold']) ? 'disabled' : ''; ?> style="width: 100%; max-width: 100%;">
+                        <input type="url" id="webhookUrl" name="webhook_url" value="<?php echo esc($userData['webhook_url']); ?>" placeholder="https://api.yourdomain.com/webhooks/domain-alerts" <?php echo !$canUseWebhooks ? 'disabled' : ''; ?> style="width: 100%; max-width: 100%;">
                         <span class="input-helper"><?php echo __('webhook_url_helper'); ?></span>
                     </div>
-                    <?php if (in_array($userData['api_plan'], ['bronze', 'silver', 'gold'])): ?>
+                    <?php if ($canUseWebhooks): ?>
                         <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 0.5rem;"><?php echo __('webhook_update_btn'); ?></button>
                     <?php endif; ?>
                 </form>
@@ -223,7 +233,7 @@ $cfIntegration = $stmt->fetch();
             
             <div class="pricing-plans-grid" id="pricing">
                 <!-- Free Tier -->
-                <div class="pricing-card free-tier <?php echo ($userData['api_plan'] === 'free' || empty($userData['api_plan'])) ? 'active' : ''; ?>">
+                <div class="pricing-card free-tier <?php echo ($userPlan === 'free') ? 'active' : ''; ?>">
                     <div class="pricing-card-header">
                         <span class="pricing-badge"><?php echo __('plan_badge_free', 'Basic'); ?></span>
                         <h3 class="pricing-plan-name"><?php echo __('plan_free_name'); ?></h3>
@@ -241,7 +251,7 @@ $cfIntegration = $stmt->fetch();
                         <?php endfor; ?>
                     </ul>
                     <div class="pricing-action">
-                        <?php if ($userData['api_plan'] === 'free' || empty($userData['api_plan'])): ?>
+                        <?php if ($userPlan === 'free'): ?>
                             <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
                         <?php else: ?>
                             <form action="<?php echo url('panel/integrations/upgrade'); ?>" method="POST">
@@ -253,7 +263,7 @@ $cfIntegration = $stmt->fetch();
                 </div>
 
                 <!-- Bronze Tier -->
-                <div class="pricing-card bronze-tier <?php echo ($userData['api_plan'] === 'bronze') ? 'active' : ''; ?>">
+                <div class="pricing-card bronze-tier <?php echo ($userPlan === 'bronze') ? 'active' : ''; ?>">
                     <span class="pricing-popular-tag"><?php echo __('plan_popular'); ?></span>
                     <div class="pricing-card-header">
                         <span class="pricing-badge"><?php echo __('plan_badge_bronze', 'Starter'); ?></span>
@@ -271,7 +281,7 @@ $cfIntegration = $stmt->fetch();
                         <?php endfor; ?>
                     </ul>
                     <div class="pricing-action">
-                        <?php if ($userData['api_plan'] === 'bronze'): ?>
+                        <?php if ($userPlan === 'bronze'): ?>
                             <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
                         <?php else: ?>
                             <a href="<?php echo url('checkout?plan=bronze'); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">
@@ -282,7 +292,7 @@ $cfIntegration = $stmt->fetch();
                 </div>
 
                 <!-- Silver Tier -->
-                <div class="pricing-card silver-tier <?php echo ($userData['api_plan'] === 'silver') ? 'active' : ''; ?>">
+                <div class="pricing-card silver-tier <?php echo ($userPlan === 'silver') ? 'active' : ''; ?>">
                     <div class="pricing-card-header">
                         <span class="pricing-badge"><?php echo __('plan_badge_silver', 'Professional'); ?></span>
                         <h3 class="pricing-plan-name"><?php echo __('plan_silver_name'); ?></h3>
@@ -299,7 +309,7 @@ $cfIntegration = $stmt->fetch();
                         <?php endfor; ?>
                     </ul>
                     <div class="pricing-action">
-                        <?php if ($userData['api_plan'] === 'silver'): ?>
+                        <?php if ($userPlan === 'silver'): ?>
                             <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
                         <?php else: ?>
                             <a href="<?php echo url('checkout?plan=silver'); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">
@@ -310,7 +320,7 @@ $cfIntegration = $stmt->fetch();
                 </div>
 
                 <!-- Gold Tier -->
-                <div class="pricing-card gold-tier <?php echo ($userData['api_plan'] === 'gold') ? 'active' : ''; ?>">
+                <div class="pricing-card gold-tier <?php echo ($userPlan === 'gold') ? 'active' : ''; ?>">
                     <span class="pricing-popular-tag best-value"><?php echo __('plan_badge_gold_right', 'Best Value'); ?></span>
                     <div class="pricing-card-header">
                         <span class="pricing-badge"><?php echo __('plan_badge_gold', 'Enterprise'); ?></span>
@@ -328,7 +338,7 @@ $cfIntegration = $stmt->fetch();
                         <?php endfor; ?>
                     </ul>
                     <div class="pricing-action">
-                        <?php if ($userData['api_plan'] === 'gold'): ?>
+                        <?php if ($userPlan === 'gold'): ?>
                             <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
                         <?php else: ?>
                             <a href="<?php echo url('checkout?plan=gold'); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">

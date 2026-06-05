@@ -42,7 +42,12 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $myDomains = $stmt->fetchAll();
 
-$domainCount = count($myDomains);
+$totalDomainCount = getUserDomainCount($pdo, $userId);
+$domainCount = $totalDomainCount;
+$userPlan = getUserPlan($pdo, $userId);
+$domainLimitStatus = getUserDomainLimitStatus($pdo, $userId, 1);
+$canAddDomain = $domainLimitStatus['allowed'];
+$canExportCsv = userPlanAllows($userPlan, 'csv_export');
 ?>
 
 <div class="user-shell">
@@ -59,6 +64,30 @@ $domainCount = count($myDomains);
         </div>
     <?php endif; ?>
 
+    <?php if (isset($_SESSION['domain_msg'])): ?>
+        <div class="alert alert-success" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <?php
+            echo esc($_SESSION['domain_msg']);
+            unset($_SESSION['domain_msg']);
+            ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['domain_error'])): ?>
+        <div class="alert alert-error" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <?php
+            echo esc($_SESSION['domain_error']);
+            unset($_SESSION['domain_error']);
+            ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!$canAddDomain): ?>
+        <div class="alert alert-error" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <?php echo esc($domainLimitStatus['message']); ?>
+        </div>
+    <?php endif; ?>
+
     <!-- Header Block -->
     <div class="dashboard-greet-header">
         <div>
@@ -66,8 +95,12 @@ $domainCount = count($myDomains);
             <p class="greet-subtitle"><?php echo sprintf(__('my_domains_sub'), $domainCount); ?></p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="<?php echo url('panel/domains/export'); ?>" class="btn btn-secondary"><?php echo __('export_csv'); ?></a>
-            <button class="btn btn-primary" onclick="openAddDomainModal()"><?php echo __('add_domain_btn'); ?></button>
+            <?php if ($canExportCsv): ?>
+                <a href="<?php echo url('panel/domains/export'); ?>" class="btn btn-secondary"><?php echo __('export_csv'); ?></a>
+            <?php else: ?>
+                <a href="<?php echo url('panel/integrations'); ?>" class="btn btn-secondary" title="CSV dışa aktarma premium paketlerde açıktır."><?php echo __('export_csv'); ?></a>
+            <?php endif; ?>
+            <button class="btn btn-primary" <?php echo $canAddDomain ? 'onclick="openAddDomainModal()"' : 'disabled'; ?>><?php echo __('add_domain_btn'); ?></button>
         </div>
     </div>
 
@@ -117,7 +150,7 @@ $domainCount = count($myDomains);
         <div class="glass-panel text-center" style="padding: 4rem 2rem; margin-top: 2rem;">
             <h3><?php echo __('no_domains_found'); ?></h3>
             <p class="text-muted" style="margin-top: 0.5rem;"><?php echo __('no_domains_found_sub'); ?></p>
-            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="openAddDomainModal()"><?php echo __('add_first_domain'); ?></button>
+            <button class="btn btn-primary" style="margin-top: 1.5rem;" <?php echo $canAddDomain ? 'onclick="openAddDomainModal()"' : 'disabled'; ?>><?php echo __('add_first_domain'); ?></button>
         </div>
     <?php else: ?>
         <div class="domains-cards-grid" id="domainsCardsContainer">

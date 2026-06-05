@@ -14,6 +14,9 @@ $primaryDomainProvider = getPrimaryAffiliateProvider($pdo, $config, 'domain_sear
 $recommendedHostingProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_hosting_codes', 'hosting', ['hostinger', 'bluehost', 'siteground']);
 $recommendedSslProviders = getSelectedAffiliateProviders($pdo, $config, 'recommended_ssl_codes', 'ssl', ['namecheap_ssl', 'ssls', 'ssldragon']);
 $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
+$domainViewerPlan = isLoggedIn() ? getUserPlan($pdo, $_SESSION['user_id']) : 'free';
+$canViewDomainHistory = isLoggedIn() && userPlanAllows($domainViewerPlan, 'domain_history');
+$domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
 
 ?>
 
@@ -199,11 +202,25 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
 
                     <!-- Check History Log -->
                     <?php 
-                        $stmtHist = $pdo->prepare("SELECT * FROM domain_history WHERE domain_id = ? ORDER BY created_at DESC LIMIT 10");
-                        $stmtHist->execute([$domainData['id']]);
-                        $history = $stmtHist->fetchAll();
-                        if (!empty($history)):
+                        $history = [];
+                        if ($canViewDomainHistory) {
+                            $stmtHist = $pdo->prepare("SELECT * FROM domain_history WHERE domain_id = ? ORDER BY created_at DESC LIMIT 20");
+                            $stmtHist->execute([$domainData['id']]);
+                            $historyRows = $stmtHist->fetchAll();
+                            $historyCutoff = $domainHistoryDays === null ? null : strtotime('-' . (int)$domainHistoryDays . ' days');
+                            foreach ($historyRows as $historyRow) {
+                                $createdAt = strtotime($historyRow['created_at'] ?? '');
+                                if ($historyCutoff !== null && $createdAt && $createdAt < $historyCutoff) {
+                                    continue;
+                                }
+                                $history[] = $historyRow;
+                                if (count($history) >= 10) {
+                                    break;
+                                }
+                            }
+                        }
                     ?>
+                    <?php if ($canViewDomainHistory && !empty($history)): ?>
                         <div class="glass-panel specs-card">
                             <h3><?php echo __('whois_history'); ?></h3>
                             <ul class="history-timeline">
@@ -216,6 +233,11 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
+                        </div>
+                    <?php elseif (!$canViewDomainHistory): ?>
+                        <div class="glass-panel specs-card">
+                            <h3><?php echo __('whois_history'); ?></h3>
+                            <p class="text-muted">Geçmiş kayıtlar premium paketlerde açıktır.</p>
                         </div>
                     <?php endif; ?>
 

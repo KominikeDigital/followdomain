@@ -4,6 +4,14 @@ if (count(get_included_files()) === 1) {
     http_response_code(403);
     exit('Direct access not allowed.');
 }
+
+global $pdo;
+
+$modalUserId = $_SESSION['user_id'] ?? null;
+$modalUserPlan = isset($userPlan) ? normalizePlanKey($userPlan) : ($modalUserId ? getUserPlan($pdo, $modalUserId) : 'free');
+$modalCanBulkImport = userPlanAllows($modalUserPlan, 'bulk_import');
+$modalLimitStatus = $modalUserId ? getUserDomainLimitStatus($pdo, $modalUserId, 1) : ['allowed' => false, 'message' => ''];
+$modalCanAddDomain = !empty($modalLimitStatus['allowed']);
 ?>
 <!-- Modal dialog for adding domains (Single or Bulk) -->
 <dialog id="addDomainDialog" class="glass-modal">
@@ -17,11 +25,14 @@ if (count(get_included_files()) === 1) {
         
         <!-- Subtitle -->
         <p class="modal-subtitle"><?php echo __('modal_add_subtitle'); ?></p>
+        <?php if (!$modalCanAddDomain): ?>
+            <p class="modal-subtitle" style="color: var(--color-error);"><?php echo esc($modalLimitStatus['message']); ?></p>
+        <?php endif; ?>
         
         <!-- Modal Tabs -->
         <div class="modal-tab-selector">
             <button type="button" id="tabBtnSingle" class="modal-tab-btn active" onclick="switchModalTab('single')"><?php echo __('modal_tab_single'); ?></button>
-            <button type="button" id="tabBtnBulk" class="modal-tab-btn" onclick="switchModalTab('bulk')"><?php echo __('modal_tab_bulk'); ?></button>
+            <button type="button" id="tabBtnBulk" class="modal-tab-btn" <?php echo $modalCanBulkImport ? 'onclick="switchModalTab(\'bulk\')"' : 'disabled title="Toplu ekleme premium paketlerde açıktır."'; ?>><?php echo __('modal_tab_bulk'); ?></button>
         </div>
         
         <!-- Forms -->
@@ -33,7 +44,7 @@ if (count(get_included_files()) === 1) {
             <div id="modalSingleBlock" class="modal-form-block">
                 <div class="form-group">
                     <label for="modalDomainName"><?php echo __('modal_domain_label'); ?></label>
-                    <input type="text" id="modalDomainName" name="domain_name" placeholder="<?php echo esc(__('modal_domain_placeholder')); ?>" autocomplete="off">
+                    <input type="text" id="modalDomainName" name="domain_name" placeholder="<?php echo esc(__('modal_domain_placeholder')); ?>" autocomplete="off" <?php echo $modalCanAddDomain ? '' : 'disabled'; ?>>
                     <span class="input-helper"><?php echo __('modal_domain_helper'); ?></span>
                 </div>
             </div>
@@ -45,8 +56,8 @@ if (count(get_included_files()) === 1) {
                         <label for="modalDomainsBulk"><?php echo __('modal_bulk_label'); ?></label>
                         <span class="csv-upload-lbl"><?php echo __('csv_upload_lbl'); ?></span>
                     </div>
-                    <textarea id="modalDomainsBulk" name="domains_bulk" rows="6" placeholder="<?php echo esc(__('modal_bulk_placeholder')); ?>"></textarea>
-                    <span class="input-helper"><?php echo __('modal_bulk_helper'); ?></span>
+                    <textarea id="modalDomainsBulk" name="domains_bulk" rows="6" placeholder="<?php echo esc(__('modal_bulk_placeholder')); ?>" <?php echo ($modalCanAddDomain && $modalCanBulkImport) ? '' : 'disabled'; ?>></textarea>
+                    <span class="input-helper"><?php echo $modalCanBulkImport ? __('modal_bulk_helper') : 'Toplu domain ekleme premium paketlerde açıktır.'; ?></span>
                 </div>
             </div>
             
@@ -77,7 +88,7 @@ if (count(get_included_files()) === 1) {
                 <button type="button" class="btn btn-secondary" onclick="closeAddDomainModal()"><?php echo __('modal_btn_cancel'); ?></button>
                 <button type="submit" id="modalSubmitBtn" class="btn btn-primary"
                         data-text-single="<?php echo esc(__('modal_btn_save')); ?>"
-                        data-text-bulk="<?php echo esc(__('modal_btn_bulk_save')); ?>"><?php echo __('modal_btn_save'); ?></button>
+                        data-text-bulk="<?php echo esc(__('modal_btn_bulk_save')); ?>" <?php echo $modalCanAddDomain ? '' : 'disabled'; ?>><?php echo __('modal_btn_save'); ?></button>
             </div>
         </form>
         

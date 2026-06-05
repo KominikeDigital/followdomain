@@ -113,7 +113,7 @@ function runCronJobs($pdo) {
                 $logs[] = "Domain Email sent to $email for $domainName ($alertFlagField)";
                 
                 // Trigger Webhook if user is Premium
-                if (!empty($ud['webhook_url']) && in_array($ud['api_plan'], ['bronze', 'silver', 'gold'])) {
+                if (!empty($ud['webhook_url']) && userPlanAllows($ud['api_plan'], 'webhook')) {
                     $payload = [
                         'event' => 'domain_expiration_alert',
                         'domain' => $domainName,
@@ -194,7 +194,7 @@ function runCronJobs($pdo) {
                 $logs[] = "Hosting Email sent to $email for $domainName ($alertFlagField)";
                 
                 // Trigger Webhook if user is Premium
-                if (!empty($uh['webhook_url']) && in_array($uh['api_plan'], ['bronze', 'silver', 'gold'])) {
+                if (!empty($uh['webhook_url']) && userPlanAllows($uh['api_plan'], 'webhook')) {
                     $payload = [
                         'event' => 'hosting_expiration_alert',
                         'domain' => $domainName,

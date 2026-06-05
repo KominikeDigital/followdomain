@@ -250,9 +250,6 @@ $customHeadCode = trim((string)($config['custom_head_code'] ?? ''));
                             <a href="<?php echo url('panel'); ?>" class="dropdown-item"><?php echo __('control_panel'); ?></a>
                             <a href="<?php echo url('panel/domains'); ?>" class="dropdown-item"><?php echo __('my_domains'); ?></a>
                             <a href="<?php echo url('panel/hosting'); ?>" class="dropdown-item"><?php echo __('hosting_tracking'); ?></a>
-                             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
-                                 <a href="<?php echo url('manage-secure-panel'); ?>" class="dropdown-item"><?php echo __('admin_panel'); ?></a>
-                             <?php endif; ?>
                             <hr class="dropdown-divider">
                             <a href="<?php echo url('logout'); ?>" class="dropdown-item item-logout"><?php echo __('nav_logout'); ?></a>
                         </div>

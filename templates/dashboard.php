@@ -11,24 +11,14 @@ $userId = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 
 // Fetch plan details
-$stmtUser = $pdo->prepare("SELECT api_plan FROM users WHERE id = ?");
-$stmtUser->execute([$userId]);
-$userPlan = $stmtUser->fetchColumn();
-if (!$userPlan) $userPlan = 'free';
-
-$planLimits = [
-    'free' => 5,
-    'bronze' => 50,
-    'silver' => 500,
-    'gold' => PHP_INT_MAX
-];
-$currentLimit = $planLimits[$userPlan] ?? 5;
-$limitDisplay = ($currentLimit === PHP_INT_MAX) ? __('unlimited', 'Sınırsız') : $currentLimit;
+$userPlan = getUserPlan($pdo, $userId);
+$currentLimit = getPlanCapability($userPlan, 'domain_limit');
+$limitDisplay = formatPlanLimit($currentLimit);
 
 // Calculate Stats
 // 1. Total domains
-$totalTracked = $pdo->query("SELECT COUNT(*) FROM user_domains WHERE user_id = $userId")->fetchColumn();
-$overLimit = ($totalTracked >= $currentLimit);
+$totalTracked = getUserDomainCount($pdo, $userId);
+$overLimit = ($currentLimit !== null && $totalTracked >= $currentLimit);
 
 // Fetch all tracked domains
 $stmtAllDomains = $pdo->prepare("
