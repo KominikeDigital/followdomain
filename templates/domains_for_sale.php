@@ -41,7 +41,7 @@ $marketplaces = [
         'id'    => 'dan',
         'name'  => 'Dan.com',
         'badge' => __('sale_badge_godaddy_brand'),
-        'color' => 'linear-gradient(135deg, #4d1d95 0%, #7c3aed 100%)',
+        'color' => 'linear-gradient(135deg, #164e63 0%, #115e59 100%)',
         'desc'  => __('provider_dan_desc'),
         'url'   => url('go?to=dan'),
         'icon'  => '⚡'
@@ -50,7 +50,7 @@ $marketplaces = [
         'id'    => 'atom',
         'name'  => 'Atom',
         'badge' => __('sale_badge_escrow'),
-        'color' => 'linear-gradient(135deg, #be185d 0%, #db2777 100%)',
+        'color' => 'linear-gradient(135deg, #0f766e 0%, #0f4c75 100%)',
         'desc'  => __('provider_atom_desc'),
         'url'   => url('go?to=atom'),
         'icon'  => '💎'
@@ -131,7 +131,7 @@ $marketplaces = [
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; max-width: 1100px; margin: 0 auto;">
             <?php foreach ($recommendedSslProviders as $provider): ?>
                 <div class="glass-panel" style="border-radius: 16px; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; min-height: 220px;">
-                    <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); filter: blur(60px); opacity: 0.15; pointer-events: none; border-radius: 50%;"></div>
+                    <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: linear-gradient(135deg, #047857 0%, #065f46 100%); filter: blur(60px); opacity: 0.15; pointer-events: none; border-radius: 50%;"></div>
                     <div>
                         <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.5rem;"><?php echo esc($provider['name']); ?></h3>
                         <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; color: var(--color-text-secondary);">
@@ -147,7 +147,7 @@ $marketplaces = [
     </div>
 
     <!-- Extra Information Section -->
-    <div class="glass-panel info-banner" style="margin-top: 4rem; padding: 2.5rem; border-radius: 16px; border: 1px dashed rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.02); display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+    <div class="glass-panel info-banner" style="margin-top: 4rem; padding: 2.5rem; border-radius: 16px; border: 1px dashed rgba(15, 118, 110, 0.3); background: rgba(15, 118, 110, 0.02); display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
         <div style="font-size: 2.5rem;">💡</div>
         <div style="flex: 1; min-width: 280px;">
             <h4 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--color-text-primary); margin-bottom: 0.5rem;">Premium Domain Satış Kanalları</h4>

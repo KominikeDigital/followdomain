@@ -26,12 +26,12 @@ if (count(get_included_files()) === 1) {
 
         <div class="det-action-btns">
             <button class="btn btn-primary" id="searchBtn" onclick="startSearch()">🔍 Search Profiles</button>
-            <button class="btn btn-secondary" id="pdfBtn" onclick="exportPDF()" style="display: none; background: #10b981; color: #fff;">📄 Download PDF Report</button>
+            <button class="btn btn-secondary" id="pdfBtn" onclick="exportPDF()" style="display: none; background: #047857; color: #fff;">📄 Download PDF Report</button>
         </div>
 
         <div class="det-stats" id="statsBar">
             <div class="det-stat">📡 <span id="sTarandi">0</span> Scanned</div>
-            <div class="det-stat" style="color:#10b981">✅ <span id="sBulundu">0</span> Found</div>
+            <div class="det-stat" style="color:#047857">✅ <span id="sBulundu">0</span> Found</div>
             <div class="det-stat" style="color:#ef4444">❌ <span id="sYok">0</span> Available</div>
         </div>
 

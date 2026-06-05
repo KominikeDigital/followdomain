@@ -129,7 +129,7 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                                 📈 Dynadot
                             </a>
                             <a href="<?php echo url('go?to=porkbun&utm_source=renewal_cta'); ?>" target="_blank" rel="noopener"
-                               style="display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.55rem;border-radius:8px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.2s;">
+                               style="display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.55rem;border-radius:8px;background:rgba(15, 118, 110,0.1);border:1px solid rgba(15, 118, 110,0.3);color:#5a9c94;font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.2s;">
                                 🐷 Porkbun
                             </a>
                         </div>
@@ -406,7 +406,7 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
 
                 <!-- SSL Recommendation Card -->
                 <div class="glass-panel affiliate-card" style="margin-top: 1.5rem;">
-                    <span class="affiliate-badge" style="background: linear-gradient(135deg, #10b981, #059669);"><?php echo __('recommendation_badge'); ?></span>
+                    <span class="affiliate-badge" style="background: linear-gradient(135deg, #047857, #065f46);"><?php echo __('recommendation_badge'); ?></span>
                     <h3><?php echo __('ssl_recommendation_title'); ?></h3>
                     <p><?php echo __('ssl_recommendation_desc'); ?></p>
                     

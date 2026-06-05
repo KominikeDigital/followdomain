@@ -100,11 +100,11 @@ $myHostings = $stmtH->fetchAll();
                     ?>
                         <tr class="table-row-hover">
                             <td class="domain-cell">
-                                <span class="domain-icon-bullet" style="background-color: #10b981;"></span>
+                                <span class="domain-icon-bullet" style="background-color: #047857;"></span>
                                 <strong><?php echo esc($host['hosting_provider']); ?></strong>
                             </td>
                             <td>
-                                <a href="<?php echo url('domain/' . urlencode($host['domain_name'])); ?>" target="_blank" style="color: #a5b4fc; text-decoration: underline;">
+                                <a href="<?php echo url('domain/' . urlencode($host['domain_name'])); ?>" target="_blank" style="color: #5a9c94; text-decoration: underline;">
                                     <?php echo esc($host['domain_name']); ?>
                                 </a>
                             </td>

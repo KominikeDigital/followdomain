@@ -29,7 +29,7 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
 
         <div class="det-stats" id="statsBar">
             <div class="det-stat">📡 <span id="sTarandi">0</span> <?php echo __('domain_search_stat_scanned'); ?></div>
-            <div class="det-stat" style="color:#10b981">✅ <span id="sBulundu">0</span> <?php echo __('domain_search_stat_available'); ?></div>
+            <div class="det-stat" style="color:#047857">✅ <span id="sBulundu">0</span> <?php echo __('domain_search_stat_available'); ?></div>
             <div class="det-stat" style="color:#ef4444">❌ <span id="sYok">0</span> <?php echo __('domain_search_stat_taken'); ?></div>
         </div>
 

@@ -362,16 +362,16 @@ html[data-theme="light"] .admin-sidebar {
 }
 .sidebar-nav a:hover {
     color: var(--color-text-primary);
-    background: rgba(99,102,241,0.06);
+    background: rgba(15, 118, 110,0.06);
 }
 .sidebar-nav a.active {
     color: var(--color-primary);
-    background: rgba(99,102,241,0.1);
+    background: rgba(15, 118, 110,0.1);
     border-left-color: var(--color-primary);
     font-weight: 600;
 }
 html[data-theme="light"] .sidebar-nav a.active {
-    background: rgba(99,102,241,0.08);
+    background: rgba(15, 118, 110,0.08);
 }
 
 .sidebar-bottom {
@@ -936,7 +936,7 @@ html[data-theme="light"] .admin-card textarea {
                 </div>
                 
                 <?php if ($settingsSaved && $activeTab === 'email-templates'): ?>
-                    <div class="admin-alert success" style="margin-bottom:1.5rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#10b981; padding:0.75rem 1rem; border-radius:8px;">💾 Şablon başarıyla güncellendi!</div>
+                    <div class="admin-alert success" style="margin-bottom:1.5rem; background:rgba(4, 120, 87,0.15); border:1px solid rgba(4, 120, 87,0.3); color:#047857; padding:0.75rem 1rem; border-radius:8px;">💾 Şablon başarıyla güncellendi!</div>
                 <?php endif; ?>
                 
                 <div class="admin-card" style="margin-bottom: 2rem;">
@@ -1035,7 +1035,7 @@ html[data-theme="light"] .admin-card textarea {
                             <div class="form-group">
                                 <label>HTML İçerik (Body)</label>
                                 <textarea name="settings[mail_tpl_user_forgot]" rows="15" class="code-editor"><?php 
-                                    $default = '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #6366f1; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>';
+                                    $default = '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #0f766e; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>';
                                     echo esc($config['mail_tpl_user_forgot'] ?? $default); 
                                 ?></textarea>
                             </div>
@@ -1628,7 +1628,7 @@ html[data-theme="light"] .admin-card textarea {
                             <label>Whop Gold Plan ID (Embed için)</label>
                             <input type="text" name="settings[whop_plan_gold]" value="<?php echo esc($config['whop_plan_gold'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
                         </div>
-                        <div style="padding: 0.75rem 1rem; border-radius: 8px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); font-size: 0.82rem; color: var(--color-text-secondary);">
+                        <div style="padding: 0.75rem 1rem; border-radius: 8px; background: rgba(15, 118, 110,0.08); border: 1px solid rgba(15, 118, 110,0.2); font-size: 0.82rem; color: var(--color-text-secondary);">
                             💡 <strong style="color: var(--color-text-primary);">Whop Kurulumu:</strong> whop.com'da ürün/fiyat oluşturun → Checkout Links bölümünde pricing option detayından <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">plan_...</code> ID'sini alın → Webhook URL: <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;"><?php echo url('webhook/whop'); ?></code>
                         </div>
                     </div>
@@ -1674,7 +1674,7 @@ html[data-theme="light"] .admin-card textarea {
                                             <td style="color: var(--color-text-muted); font-size:0.75rem;"><?php echo esc($pay['reference'] ?? '—'); ?></td>
                                             <td>
                                                 <?php
-                                                $sc = ['pending'=>'#f59e0b','confirmed'=>'#10b981','rejected'=>'#ef4444'];
+                                                $sc = ['pending'=>'#f59e0b','confirmed'=>'#047857','rejected'=>'#ef4444'];
                                                 $sl = ['pending'=>'Bekliyor','confirmed'=>'Onaylandı','rejected'=>'Reddedildi'];
                                                 $st = $pay['status'] ?? 'pending';
                                                 ?>
@@ -1688,7 +1688,7 @@ html[data-theme="light"] .admin-card textarea {
                                                     <form method="POST" action="?tab=payments" style="display:inline;">
                                                         <input type="hidden" name="action" value="confirm_payment">
                                                         <input type="hidden" name="payment_id" value="<?php echo (int)$pay['id']; ?>">
-                                                        <button type="submit" class="btn btn-sm" style="background: rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding: 3px 8px; font-size:0.75rem;" onclick="return confirm('Ödemeyi onaylayıp planı aktif hale getireyim mi?')">✓ Onayla</button>
+                                                        <button type="submit" class="btn btn-sm" style="background: rgba(4, 120, 87,0.15); color:#047857; border:1px solid rgba(4, 120, 87,0.3); padding: 3px 8px; font-size:0.75rem;" onclick="return confirm('Ödemeyi onaylayıp planı aktif hale getireyim mi?')">✓ Onayla</button>
                                                     </form>
                                                     <form method="POST" action="?tab=payments" style="display:inline; margin-left:4px;">
                                                         <input type="hidden" name="action" value="reject_payment">
@@ -1731,7 +1731,7 @@ html[data-theme="light"] .admin-card textarea {
                                     <?php foreach($affiliateStats as $s): ?>
                                         <tr class="table-row-hover">
                                             <td><strong style="color: var(--color-text-primary); text-transform:uppercase; font-size:0.85rem;"><?php echo esc(str_replace('_',' ',$s['provider'])); ?></strong></td>
-                                            <td style="text-align:center;"><span style="background:rgba(99,102,241,0.15);color:var(--color-primary);padding:3px 12px;border-radius:20px;font-weight:700;"><?php echo (int)$s['click_count']; ?></span></td>
+                                            <td style="text-align:center;"><span style="background:rgba(15, 118, 110,0.15);color:var(--color-primary);padding:3px 12px;border-radius:20px;font-weight:700;"><?php echo (int)$s['click_count']; ?></span></td>
                                             <td style="color:var(--color-text-secondary); font-size:0.85rem;"><?php echo formatDate($s['last_clicked']); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -1749,10 +1749,10 @@ html[data-theme="light"] .admin-card textarea {
                                     <?php foreach($recentClicks as $cl): ?>
                                         <tr class="table-row-hover">
                                             <td style="color:var(--color-text-muted);"><?php echo (int)$cl['id']; ?></td>
-                                            <td><span style="background:rgba(99,102,241,0.12);color:var(--color-primary);padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;text-transform:uppercase;"><?php echo esc(str_replace('_',' ',$cl['provider'])); ?></span></td>
+                                            <td><span style="background:rgba(15, 118, 110,0.12);color:var(--color-primary);padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;text-transform:uppercase;"><?php echo esc(str_replace('_',' ',$cl['provider'])); ?></span></td>
                                             <td style="color:var(--color-text-secondary);"><?php echo !empty($cl['username']) ? '@'.esc($cl['username']) : '<em style="color:var(--color-text-muted)">Ziyaretçi</em>'; ?></td>
                                             <td style="font-family:monospace;font-size:0.75rem;color:var(--color-text-muted);"><?php echo esc($cl['ip_address'] ?? '—'); ?></td>
-                                            <td><?php if(!empty($cl['utm_source'])): ?><span style="background:rgba(16,185,129,0.12);color:#6ee7b7;padding:2px 7px;border-radius:4px;font-size:0.75rem;font-weight:600;"><?php echo esc($cl['utm_source']); ?></span><?php else: ?><span style="color:var(--color-text-muted);">—</span><?php endif; ?></td>
+                                            <td><?php if(!empty($cl['utm_source'])): ?><span style="background:rgba(4, 120, 87,0.12);color:#6ee7b7;padding:2px 7px;border-radius:4px;font-size:0.75rem;font-weight:600;"><?php echo esc($cl['utm_source']); ?></span><?php else: ?><span style="color:var(--color-text-muted);">—</span><?php endif; ?></td>
                                             <td style="color:var(--color-text-muted);font-size:0.75rem;" title="<?php echo esc($cl['referrer'] ?? ''); ?>">
                                                 <?php echo !empty($cl['referrer']) ? esc(parse_url($cl['referrer'], PHP_URL_HOST) ?: $cl['referrer']) : '—'; ?>
                                             </td>
@@ -1877,7 +1877,7 @@ html[data-theme="light"] .admin-card textarea {
                                             <td><code><?php echo esc($row['slug']); ?></code></td>
                                             <td><?php echo esc($row['category']); ?></td>
                                             <td>
-                                                <span style="background:<?php echo ($row['status'] ?? 'published') === 'published' ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)'; ?>; color:<?php echo ($row['status'] ?? 'published') === 'published' ? '#10b981' : '#f59e0b'; ?>; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:700;">
+                                                <span style="background:<?php echo ($row['status'] ?? 'published') === 'published' ? 'rgba(4, 120, 87,0.12)' : 'rgba(245,158,11,0.12)'; ?>; color:<?php echo ($row['status'] ?? 'published') === 'published' ? '#047857' : '#f59e0b'; ?>; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:700;">
                                                     <?php echo ($row['status'] ?? 'published') === 'published' ? 'Yayında' : 'Taslak'; ?>
                                                 </span>
                                             </td>
@@ -1958,7 +1958,7 @@ html[data-theme="light"] .admin-card textarea {
                                                             <option value="<?php echo $pl; ?>" <?php echo $m['api_plan']===$pl?'selected':''; ?>><?php echo strtoupper($pl); ?></option>
                                                         <?php endforeach; ?>
                                                     </select>
-                                                    <button type="submit" class="btn btn-sm" style="padding:3px 8px; font-size:0.75rem; background:rgba(99,102,241,0.15); color:var(--color-primary); border:1px solid rgba(99,102,241,0.3);">Set</button>
+                                                    <button type="submit" class="btn btn-sm" style="padding:3px 8px; font-size:0.75rem; background:rgba(15, 118, 110,0.15); color:var(--color-primary); border:1px solid rgba(15, 118, 110,0.3);">Set</button>
                                                 </form>
                                             </td>
                                             <td>

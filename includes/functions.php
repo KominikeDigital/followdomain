@@ -218,7 +218,7 @@ function getEmailTemplateWrapper($contentHtml) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
         }
         .header {
-            background: linear-gradient(135deg, #0b0f19 0%, #1e1b4b 100%);
+            background: linear-gradient(135deg, #0b0f19 0%, #123b3a 100%);
             padding: 30px 40px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             text-align: left;
@@ -250,21 +250,21 @@ function getEmailTemplateWrapper($contentHtml) {
             color: #64748b;
         }
         .footer a {
-            color: #6366f1;
+            color: #0f766e;
             text-decoration: none;
             font-weight: 500;
         }
         .btn {
             display: inline-block;
             padding: 12px 24px;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
             color: #ffffff !important;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
             margin-top: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.22);
         }
     </style>
 </head>
@@ -300,7 +300,7 @@ function getFormattedEmail($templateKey, $replacements = []) {
         
         'mail_tpl_user_verify' => '<h2>E-posta Adresinizi Doğrulayın</h2><p>Merhaba {username},</p><p>TLDix platformuna başarıyla üye oldunuz. Hesabınızı aktifleştirmek ve hizmetleri kullanmaya başlamak için lütfen aşağıdaki bağlantıya tıklayarak e-posta adresinizi doğrulayın:</p><p><a href="{verify_url}" class="btn">E-postamı Doğrula</a></p><p>Bağlantı çalışmıyorsa aşağıdaki URL\'yi kopyalayıp tarayıcınıza yapıştırabilirsiniz:</p><p>{verify_url}</p>',
         
-        'mail_tpl_user_forgot' => '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #6366f1; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>',
+        'mail_tpl_user_forgot' => '<h2>Şifre Sıfırlama Talebi</h2><p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Sizin için geçici bir şifre oluşturuldu:</p><div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; border: 1px dashed rgba(255,255,255,0.2); color: #0f766e; margin: 20px 0;">{temp_password}</div><p>Lütfen bu şifreyi kullanarak sisteme giriş yapın ve profil ayarlarınızdan şifrenizi hemen güncelleyin:</p><p><a href="{login_url}" class="btn">Giriş Yap</a></p><p>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>',
         
         'mail_tpl_admin_register' => '<h2>Yeni Üye Kaydı Bildirimi</h2><p>Sisteminizde yeni bir kullanıcı başarıyla kaydoldu:</p><ul><li><strong>Kullanıcı Adı:</strong> {username}</li><li><strong>E-posta:</strong> {email}</li><li><strong>Kayıt Tarihi:</strong> {date}</li><li><strong>Doğrulama Maili Durumu:</strong> {mail_status}</li></ul><p><strong>Kullanıcı Doğrulama Bağlantısı:</strong> <a href="{verify_url}">{verify_url}</a></p><p>Kullanıcı detaylarını incelemek için yönetici panelinizi ziyaret edebilirsiniz.</p>',
         
@@ -729,11 +729,11 @@ function getBuiltInAffiliateProviders($cfg = null) {
     ];
 
     $colors = [
-        'domain' => 'linear-gradient(135deg, #6366f1 0%, #2563eb 100%)',
-        'hosting' => 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)',
-        'ssl' => 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        'domain' => 'linear-gradient(135deg, #0f766e 0%, #164e63 100%)',
+        'hosting' => 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)',
+        'ssl' => 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
         'email' => 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        'marketplace' => 'linear-gradient(135deg, #8b5cf6 0%, #be185d 100%)',
+        'marketplace' => 'linear-gradient(135deg, #164e63 0%, #0f4c75 100%)',
     ];
 
     $providers = [];
@@ -792,11 +792,11 @@ function getAffiliateProviders($db = null, $cfg = null, $category = null, $inclu
                     'sort_order' => (int)($row['sort_order'] ?? 100),
                     'source' => 'custom',
                     'color' => [
-                        'domain' => 'linear-gradient(135deg, #6366f1 0%, #2563eb 100%)',
-                        'hosting' => 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)',
-                        'ssl' => 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        'domain' => 'linear-gradient(135deg, #0f766e 0%, #164e63 100%)',
+                        'hosting' => 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)',
+                        'ssl' => 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
                         'email' => 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        'marketplace' => 'linear-gradient(135deg, #8b5cf6 0%, #be185d 100%)',
+                        'marketplace' => 'linear-gradient(135deg, #164e63 0%, #0f4c75 100%)',
                     ][$cat],
                 ];
             }
@@ -1882,13 +1882,13 @@ function getRegistrarLogo($provider) {
         case 'Namecheap':
             return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#de3724"/><path d="M12 5l-5 5h3v5h4v-5h3l-5-5z" fill="#FFF"/></svg>';
         case 'Hostinger':
-            return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#673de6"/><path d="M8 7h2.5v3.5h3V7H16v10h-2.5v-4h-3v4H8V7z" fill="#FFF"/></svg>';
+            return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#0f766e"/><path d="M8 7h2.5v3.5h3V7H16v10h-2.5v-4h-3v4H8V7z" fill="#FFF"/></svg>';
         case 'NameSilo':
             return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#ff8c00"/><circle cx="12" cy="12" r="5" fill="#FFF"/><path d="M12 9v6M9 12h6" stroke="#ff8c00" stroke-width="1.5" stroke-linecap="round"/></svg>';
         case 'Porkbun':
-            return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#f472b6"/><ellipse cx="12" cy="12" rx="5" ry="3.5" fill="#FFF"/><circle cx="10" cy="12" r="1" fill="#f472b6"/><circle cx="14" cy="12" r="1" fill="#f472b6"/></svg>';
+            return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#b45309"/><ellipse cx="12" cy="12" rx="5" ry="3.5" fill="#FFF"/><circle cx="10" cy="12" r="1" fill="#b45309"/><circle cx="14" cy="12" r="1" fill="#b45309"/></svg>';
         case 'Spaceship':
-            return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#0f172a"/><path d="M12 6s2.5 3.5 2.5 6h-5c0-2.5 2.5-6 2.5-6z" fill="#38bdf8"/><path d="M9.5 12h5v2h-5v-2z" fill="#0284c7"/></svg>';
+            return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#0f172a"/><path d="M12 6s2.5 3.5 2.5 6h-5c0-2.5 2.5-6 2.5-6z" fill="#0f766e"/><path d="M9.5 12h5v2h-5v-2z" fill="#164e63"/></svg>';
         case 'Dynadot':
             return '<svg class="registrar-logo" viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px; flex-shrink: 0;"><rect width="24" height="24" rx="6" fill="#d32f2f"/><path d="M8 7h4a5 5 0 0 1 5 5 5 5 0 0 1-5 5H8V7zm2.5 2.5v5H12a2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5h-1.5z" fill="#FFF"/></svg>';
         case 'Domain Name API':

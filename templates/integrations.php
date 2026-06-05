@@ -207,7 +207,7 @@ $cfIntegration = $stmt->fetch();
                         <span>%<?php echo $pct; ?></span>
                     </div>
                     <div class="lifecycle-bar-container" style="height: 6px; background: rgba(255,255,255,0.03);">
-                        <div class="lifecycle-bar" style="width: <?php echo $pct; ?>%; background: linear-gradient(to right, #3b82f6, #10b981);"></div>
+                        <div class="lifecycle-bar" style="width: <?php echo $pct; ?>%; background: linear-gradient(to right, #3b82f6, #047857);"></div>
                     </div>
                 </div>
                 

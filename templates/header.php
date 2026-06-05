@@ -237,7 +237,7 @@ $customHeadCode = trim((string)($config['custom_head_code'] ?? ''));
                 </div>
 
                 <?php if ($isUser): ?>
-                    <span class="user-plan-badge badge-<?php echo esc($userPlan); ?>" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; margin-right: 0.5rem; border: 1px solid rgba(255,255,255,0.15); background: rgba(99, 102, 241, 0.1); color: var(--color-primary);"><?php echo esc($userPlan); ?></span>
+                    <span class="user-plan-badge badge-<?php echo esc($userPlan); ?>" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; margin-right: 0.5rem; border: 1px solid rgba(255,255,255,0.15); background: rgba(15, 118, 110, 0.1); color: var(--color-primary);"><?php echo esc($userPlan); ?></span>
                     
                     <!-- UserInitials Bubble with dropdown actions -->
                     <div class="user-bubble-dropdown">

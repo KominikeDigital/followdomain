@@ -104,7 +104,7 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
                     </div>
 
                     <!-- Bronze Plan -->
-                    <div style="border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 8px; padding: 1.25rem; background: rgba(99, 102, 241, 0.03); position: relative;">
+                    <div style="border: 1px solid rgba(15, 118, 110, 0.4); border-radius: 8px; padding: 1.25rem; background: rgba(15, 118, 110, 0.03); position: relative;">
                         <span class="status-tag" style="position: absolute; top: -10px; right: 10px; font-size: 0.65rem; background: var(--color-primary); color: #ffffff; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 600;"><?php echo __('plan_popular'); ?></span>
                         <div class="api-plan-card-head">
                             <strong><?php echo __('plan_bronze_name'); ?></strong>
