@@ -15,45 +15,45 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
 <div class="det-page-container">
     <div class="det-title-section">
         <h1><?php echo __('nav_domain_search'); ?></h1>
-        <p>Check domain name availability across 13 popular domain extensions (.com, .net, .org, .io...) in real-time.</p>
+        <p><?php echo __('domain_search_subtitle'); ?></p>
     </div>
 
     <div class="det-search-panel">
         <div class="det-input-group">
-            <input type="text" id="searchInput" class="det-input" placeholder="Enter keyword or brand name (e.g. mybrand)..." value="<?php echo esc($initQuery); ?>" onkeydown="if(event.key==='Enter') startSearch()">
+            <input type="text" id="searchInput" class="det-input" placeholder="<?php echo esc(__('domain_search_placeholder')); ?>" value="<?php echo esc($initQuery); ?>" onkeydown="if(event.key==='Enter') startSearch()">
         </div>
 
         <div class="det-action-btns">
-            <button class="btn btn-primary" id="searchBtn" onclick="startSearch()">🔍 Check Availability</button>
+            <button class="btn btn-primary" id="searchBtn" onclick="startSearch()">🔍 <?php echo __('domain_search_button'); ?></button>
         </div>
 
         <div class="det-stats" id="statsBar">
-            <div class="det-stat">📡 <span id="sTarandi">0</span> Scanned</div>
-            <div class="det-stat" style="color:#10b981">✅ <span id="sBulundu">0</span> Available</div>
-            <div class="det-stat" style="color:#ef4444">❌ <span id="sYok">0</span> Taken</div>
+            <div class="det-stat">📡 <span id="sTarandi">0</span> <?php echo __('domain_search_stat_scanned'); ?></div>
+            <div class="det-stat" style="color:#10b981">✅ <span id="sBulundu">0</span> <?php echo __('domain_search_stat_available'); ?></div>
+            <div class="det-stat" style="color:#ef4444">❌ <span id="sYok">0</span> <?php echo __('domain_search_stat_taken'); ?></div>
         </div>
 
         <div class="det-progress" id="pBar"><div class="det-progress-fill" id="pFill"></div></div>
 
         <div class="det-cta-banner" id="domainCta">
-            Domain, hosting, SSL, and email options are separated below so you can compare the right service without noise.
+            <?php echo __('domain_search_cta'); ?>
         </div>
     </div>
 
     <div class="comparison-tabs domain-search-comparison" id="searchComparisonShell" data-comparison-tabs style="display:none;">
         <div class="comparison-tab-list" role="tablist">
-            <button type="button" class="comparison-tab active" data-tab-target="domains">Domains</button>
-            <button type="button" class="comparison-tab" data-tab-target="hosting">Hosting</button>
-            <button type="button" class="comparison-tab" data-tab-target="ssl">SSL</button>
-            <button type="button" class="comparison-tab" data-tab-target="email">Email</button>
+            <button type="button" class="comparison-tab active" data-tab-target="domains"><?php echo __('comparison_tab_domains'); ?></button>
+            <button type="button" class="comparison-tab" data-tab-target="hosting"><?php echo __('comparison_tab_hosting'); ?></button>
+            <button type="button" class="comparison-tab" data-tab-target="ssl"><?php echo __('comparison_tab_ssl'); ?></button>
+            <button type="button" class="comparison-tab" data-tab-target="email"><?php echo __('comparison_tab_email'); ?></button>
         </div>
 
         <div class="comparison-panel active" data-tab-panel="domains">
             <div class="domain-search-results-list" id="resultsGrid"></div>
             <div class="suggested-domain-block" id="suggestedDomainBlock" style="display:none;">
                 <div class="suggested-domain-head">
-                    <h4>Suggested Domains</h4>
-                    <span>Available alternatives from your search</span>
+                    <h4><?php echo __('suggested_domains_title'); ?></h4>
+                    <span><?php echo __('suggested_domains_available_sub'); ?></span>
                 </div>
                 <div class="suggested-domain-list" id="suggestedDomainList"></div>
             </div>
@@ -69,14 +69,14 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
         <?php foreach ($tabGroups as $panelKey => $providers): ?>
             <div class="comparison-panel" data-tab-panel="<?php echo esc($panelKey); ?>">
                 <?php if (empty($providers)): ?>
-                    <div class="comparison-empty">No <?php echo esc(strtoupper($panelKey)); ?> provider is selected yet.</div>
+                    <div class="comparison-empty"><?php echo sprintf(__('comparison_empty_provider'), esc(__('comparison_tab_' . $panelKey, strtoupper($panelKey)))); ?></div>
                 <?php else: ?>
                     <div class="comparison-provider-list">
                         <?php foreach ($providers as $provider): ?>
                             <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=domain_search_' . urlencode($panelKey)); ?>" target="_blank" rel="noopener" class="comparison-provider-row">
                                 <span class="comparison-provider-name"><?php echo esc($provider['name']); ?></span>
                                 <span class="comparison-provider-desc"><?php echo esc($provider['description']); ?></span>
-                                <strong>Recommended</strong>
+                                <strong><?php echo __('comparison_recommended'); ?></strong>
                                 <span class="comparison-provider-action"><?php echo esc($provider['button_label']); ?></span>
                             </a>
                         <?php endforeach; ?>
@@ -89,7 +89,7 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
 
 <div class="det-overlay" id="scanOverlay">
     <canvas id="scanCanvas"></canvas>
-    <p>🔍 Querying Extensions...</p>
+    <p>🔍 <?php echo __('domain_search_querying'); ?></p>
 </div>
 
 <!-- Load Lottie via CDN -->
@@ -101,6 +101,12 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
     let isSearching = false;
     let lottiePlayer = null;
     const primaryDomainProviderCode = <?php echo json_encode($primaryDomainProvider['code'] ?? 'namecheap'); ?>;
+    const domainSearchText = <?php echo json_encode([
+        'available' => __('domain_search_status_available'),
+        'taken' => __('domain_search_status_taken'),
+        'registerNow' => __('domain_search_register_now'),
+        'details' => __('domain_search_details')
+    ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
 
     function initLottie() {
         try {
@@ -187,8 +193,8 @@ $emailProviders = getAffiliateProviders($pdo, $config, 'email', false);
                             card.className = 'domain-result-row taken';
                         }
 
-                        const statusLabel = isAvailable ? 'Available' : 'Taken';
-                        const ctaText = isAvailable ? 'Register Now' : 'Details';
+                        const statusLabel = isAvailable ? domainSearchText.available : domainSearchText.taken;
+                        const ctaText = isAvailable ? domainSearchText.registerNow : domainSearchText.details;
 
                         card.innerHTML = `
                             <span class="domain-result-status-dot"></span>

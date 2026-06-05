@@ -59,7 +59,7 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                     <div class="glass-panel countdown-card">
                         <h3 class="card-subtitle"><?php echo __('countdown_title'); ?></h3>
 
-                        <div class="countdown-timer" id="countdownTimer" data-time="<?php echo esc($domainData['expiration_date']); ?>">
+                        <div class="countdown-timer" id="countdownTimer" data-time="<?php echo esc($domainData['expiration_date']); ?>" data-expired-text="<?php echo esc(__('countdown_expired_title')); ?>">
                             <div class="timer-box">
                                 <span class="timer-number" id="cd-days"><?php echo sprintf('%02d', $cd['days']); ?></span>
                                 <span class="timer-label"><?php echo __('label_days'); ?></span>
@@ -103,15 +103,15 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                             <div>
                                 <h4 style="font-family: var(--font-display); font-size: 1rem; color: <?php echo $urgencyColor; ?>; margin-bottom: 0.3rem;">
                                     <?php if ($isExpiredState): ?>
-                                        Bu Domain Süresi Dolmuş — Kurtarabilirsiniz!
+                                        <?php echo __('renewal_expired_title'); ?>
                                     <?php elseif ($daysLeft <= 7): ?>
-                                        Sadece <strong><?php echo $daysLeft; ?> gün</strong> kaldı — Hemen yenileyin!
+                                        <?php echo sprintf(__('renewal_urgent_title'), (int)$daysLeft); ?>
                                     <?php else: ?>
-                                        <strong><?php echo $daysLeft; ?> gün</strong> içinde süresi dolacak
+                                        <?php echo sprintf(__('renewal_expiring_title'), (int)$daysLeft); ?>
                                     <?php endif; ?>
                                 </h4>
                                 <p style="font-size: 0.82rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
-                                    En düşük fiyatlarla yenileyin. Güvenilir domain sağlayıcıları üzerinden kayıt veya yenileme yapabilirsiniz.
+                                    <?php echo __('renewal_desc'); ?>
                                 </p>
                             </div>
                         </div>
@@ -237,7 +237,7 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                     <?php elseif (!$canViewDomainHistory): ?>
                         <div class="glass-panel specs-card">
                             <h3><?php echo __('whois_history'); ?></h3>
-                            <p class="text-muted">Geçmiş kayıtlar premium paketlerde açıktır.</p>
+                            <p class="text-muted"><?php echo __('history_premium_notice'); ?></p>
                         </div>
                     <?php endif; ?>
 
@@ -248,8 +248,8 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                         <div class="available-domain-hero">
                             <div class="available-icon">✓</div>
                             <div>
-                                <span class="comparison-kicker">Great News!</span>
-                                <h2><?php echo esc($domainName); ?> is available</h2>
+                                <span class="comparison-kicker"><?php echo __('domain_available_kicker'); ?></span>
+                                <h2><?php echo sprintf(__('domain_available_heading'), esc($domainName)); ?></h2>
                                 <p class="available-desc"><?php echo sprintf(__('domain_available_desc'), esc($domainName)); ?></p>
                             </div>
                         </div>
@@ -257,11 +257,11 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                         <?php if ($primaryDomainProvider): ?>
                             <div class="registration-cta-box available-primary-provider">
                                 <div>
-                                    <strong>Register with <?php echo esc($primaryDomainProvider['name']); ?></strong>
+                                    <strong><?php echo sprintf(__('register_with_provider'), esc($primaryDomainProvider['name'])); ?></strong>
                                     <p class="cta-note"><?php echo __('register_note'); ?></p>
                                 </div>
                                 <a href="<?php echo url('go?to=' . urlencode($primaryDomainProvider['code']) . '&utm_source=available_domain&query=' . urlencode($domainName)); ?>" target="_blank" rel="noopener" class="btn btn-primary btn-large">
-                                    Register Now
+                                    <?php echo __('domain_search_register_now'); ?>
                                 </a>
                             </div>
                         <?php endif; ?>
@@ -288,10 +288,10 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                             </div>
 
                             <div class="comparison-tab-list" role="tablist">
-                                <button type="button" class="comparison-tab active" data-tab-target="domains">Domains</button>
-                                <button type="button" class="comparison-tab" data-tab-target="hosting">Hosting</button>
-                                <button type="button" class="comparison-tab" data-tab-target="ssl">SSL</button>
-                                <button type="button" class="comparison-tab" data-tab-target="email">Email</button>
+                                <button type="button" class="comparison-tab active" data-tab-target="domains"><?php echo __('comparison_tab_domains'); ?></button>
+                                <button type="button" class="comparison-tab" data-tab-target="hosting"><?php echo __('comparison_tab_hosting'); ?></button>
+                                <button type="button" class="comparison-tab" data-tab-target="ssl"><?php echo __('comparison_tab_ssl'); ?></button>
+                                <button type="button" class="comparison-tab" data-tab-target="email"><?php echo __('comparison_tab_email'); ?></button>
                             </div>
 
                             <div class="comparison-panel active" data-tab-panel="domains">
@@ -312,8 +312,8 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                                 <?php if (!empty($suggestedDomains)): ?>
                                     <div class="suggested-domain-block">
                                         <div class="suggested-domain-head">
-                                            <h4>Suggested Domains</h4>
-                                            <span>Alternative extensions for the same name</span>
+                                            <h4><?php echo __('suggested_domains_title'); ?></h4>
+                                            <span><?php echo __('suggested_domains_alternative_sub'); ?></span>
                                         </div>
                                         <div class="suggested-domain-list">
                                             <?php foreach ($suggestedDomains as $candidate): ?>
@@ -334,14 +334,14 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
                             <?php foreach ($tabGroups as $panelKey => $providers): ?>
                                 <div class="comparison-panel" data-tab-panel="<?php echo esc($panelKey); ?>">
                                     <?php if (empty($providers)): ?>
-                                        <div class="comparison-empty">No <?php echo esc(strtoupper($panelKey)); ?> provider is selected yet.</div>
+                                        <div class="comparison-empty"><?php echo sprintf(__('comparison_empty_provider'), esc(__('comparison_tab_' . $panelKey, strtoupper($panelKey)))); ?></div>
                                     <?php else: ?>
                                         <div class="comparison-provider-list">
                                             <?php foreach ($providers as $provider): ?>
                                                 <a href="<?php echo url('go?to=' . urlencode($provider['code']) . '&utm_source=price_comparison&query=' . urlencode($domainName)); ?>" target="_blank" rel="noopener" class="comparison-provider-row">
                                                     <span class="comparison-provider-name"><?php echo esc($provider['name']); ?></span>
                                                     <span class="comparison-provider-desc"><?php echo esc($provider['description']); ?></span>
-                                                    <strong>Recommended</strong>
+                                                    <strong><?php echo __('comparison_recommended'); ?></strong>
                                                     <span class="comparison-provider-action"><?php echo esc($provider['button_label']); ?></span>
                                                 </a>
                                             <?php endforeach; ?>
@@ -375,11 +375,13 @@ $domainHistoryDays = getPlanCapability($domainViewerPlan, 'history_days');
 
                         <div id="ajaxFollowAlert" class="alert" style="display:none;"></div>
 
-                        <form action="" method="POST" class="follow-form" id="followForm">
+                        <form action="" method="POST" class="follow-form" id="followForm"
+                              data-loading-text="<?php echo esc(__('follow_loading')); ?>"
+                              data-error-text="<?php echo esc(__('follow_request_error')); ?>">
                             <input type="hidden" name="action" value="follow">
                             <div class="form-group">
                                 <label for="followEmail"><?php echo __('label_email'); ?></label>
-                                <input type="email" id="followEmail" name="email" placeholder="ornek@domain.com" required autocomplete="email">
+                                <input type="email" id="followEmail" name="email" placeholder="<?php echo esc(__('email_placeholder')); ?>" required autocomplete="email">
                             </div>
                             <button type="submit" class="btn btn-primary w-full"><?php echo __('btn_follow'); ?></button>
                         </form>

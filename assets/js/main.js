@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (parentCard) {
                         parentCard.classList.add('expired');
                         const subtitle = parentCard.querySelector('.card-subtitle');
-                        if (subtitle) subtitle.textContent = 'ALAN ADININ SÜRESİ DOLDU';
+                        if (subtitle) subtitle.textContent = timerElement.dataset.expiredText || 'Expired';
                     }
                     return;
                 }
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalBtnText = submitBtn.textContent;
             
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Ekleniyor...';
+            submitBtn.textContent = followForm.dataset.loadingText || 'Adding...';
             
             ajaxAlert.style.display = 'none';
             ajaxAlert.className = 'alert';
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
-                ajaxAlert.textContent = 'Sorgu sırasında bir sorun oluştu.';
+                ajaxAlert.textContent = followForm.dataset.errorText || 'An error occurred during the request.';
                 ajaxAlert.style.display = 'block';
                 ajaxAlert.classList.add('alert-error');
             });

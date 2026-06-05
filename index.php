@@ -719,36 +719,36 @@ switch ($route) {
                         // Return JSON if AJAX request
                         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                             header('Content-Type: application/json');
-                            echo json_encode(['success' => true, 'message' => 'Takip listesine eklendi!']);
+                            echo json_encode(['success' => true, 'message' => __('follow_ajax_added')]);
                             exit;
                         }
-                        $followMessage = "E-posta adresiniz takip listesine eklendi!";
+                        $followMessage = __('follow_page_added');
                     } catch (PDOException $e) {
                         // Email already exists for this domain
                         if ($e->getCode() == 23000) {
                             if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                                 header('Content-Type: application/json');
-                                echo json_encode(['success' => true, 'message' => 'Bu alan adını zaten takip ediyorsunuz.']);
+                                echo json_encode(['success' => true, 'message' => __('follow_already_watching')]);
                                 exit;
                             }
-                            $followMessage = "Bu alan adını zaten takip ediyorsunuz.";
+                            $followMessage = __('follow_already_watching');
                         } else {
                             if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                                 header('Content-Type: application/json');
-                                echo json_encode(['success' => false, 'message' => 'Takip işlemi gerçekleştirilemedi.']);
+                                echo json_encode(['success' => false, 'message' => __('follow_failed')]);
                                 exit;
                             }
-                            $followError = "Takip işlemi gerçekleştirilemedi.";
+                            $followError = __('follow_failed');
                         }
                     }
                 }
             } else {
                 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                     header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Geçersiz e-posta adresi.']);
+                    echo json_encode(['success' => false, 'message' => __('follow_invalid_email')]);
                     exit;
                 }
-                $followError = "Geçersiz e-posta adresi.";
+                $followError = __('follow_invalid_email');
             }
         }
         
@@ -1143,7 +1143,7 @@ switch ($route) {
 
     case 'domain_search':
         $pageTitle = __('nav_domain_search') . " | " . $config['site_title'];
-        $pageDesc = "Search domains across multiple TLDs in real-time.";
+        $pageDesc = __('domain_search_meta_desc');
         break;
 
     case 'domain_search_ajax':
