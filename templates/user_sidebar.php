@@ -22,6 +22,9 @@ global $route;
         <a href="<?php echo url('panel/hosting'); ?>" class="<?php echo $route==='panel_hosting'?'active':''; ?>">
             <?php echo __('nav_hosting'); ?>
         </a>
+        <a href="<?php echo url('panel/licenses'); ?>" class="<?php echo $route==='panel_licenses'?'active':''; ?>">
+            <?php echo __('nav_licenses'); ?>
+        </a>
 
         <div class="sidebar-section-label">Keşfet</div>
         <a href="<?php echo url('expiring'); ?>" class="<?php echo $route==='expiring'?'active':''; ?>">

@@ -53,11 +53,34 @@ if ($dbType === 'sqlite') {
     ")->fetchColumn();
 }
 
+$expiring30 = (int)$expiring30;
+$stmtAssetExpiring = $pdo->prepare("
+    SELECT expiration_date FROM user_hostings WHERE user_id = ?
+    UNION ALL
+    SELECT expiration_date FROM user_licenses WHERE user_id = ?
+");
+$stmtAssetExpiring->execute([$userId, $userId]);
+foreach ($stmtAssetExpiring->fetchAll() as $row) {
+    $expTimestamp = strtotime($row['expiration_date'] ?? '');
+    if (!$expTimestamp) {
+        continue;
+    }
+    $daysLeft = floor(($expTimestamp - time()) / 86400);
+    if ($daysLeft >= 0 && $daysLeft <= 30) {
+        $expiring30++;
+    }
+}
+
 // 3. Favorites
 $totalFavorites = $pdo->query("SELECT COUNT(*) FROM user_domains WHERE user_id = $userId AND is_favorite = 1")->fetchColumn();
 
 // 4. Integrations count
 $totalIntegrations = $pdo->query("SELECT COUNT(*) FROM integrations WHERE user_id = $userId")->fetchColumn();
+
+// 5. Custom licenses count
+$stmtLicenseCount = $pdo->prepare("SELECT COUNT(*) FROM user_licenses WHERE user_id = ?");
+$stmtLicenseCount->execute([$userId]);
+$totalLicenses = $stmtLicenseCount->fetchColumn();
 
 // Expiring soon domains list
 if ($dbType === 'sqlite') {
@@ -84,7 +107,48 @@ if ($dbType === 'sqlite') {
     ");
 }
 $stmtExp->execute([$userId]);
-$expiringSoon = $stmtExp->fetchAll();
+$domainExpiringSoon = $stmtExp->fetchAll();
+$expiringSoon = [];
+
+foreach ($domainExpiringSoon as $row) {
+    $expiringSoon[] = [
+        'name' => $row['domain_name'],
+        'type_label' => __('nav_domains'),
+        'expiration_date' => $row['expiration_date'],
+        'url' => url('domain/' . urlencode($row['domain_name'])),
+    ];
+}
+
+$stmtAssetSoon = $pdo->prepare("
+    SELECT 'hosting' AS asset_type, domain_name AS name, hosting_provider AS subtitle, expiration_date
+    FROM user_hostings
+    WHERE user_id = ? AND expiration_date IS NOT NULL
+    UNION ALL
+    SELECT 'license' AS asset_type, license_name AS name, provider AS subtitle, expiration_date
+    FROM user_licenses
+    WHERE user_id = ? AND expiration_date IS NOT NULL
+");
+$stmtAssetSoon->execute([$userId, $userId]);
+
+foreach ($stmtAssetSoon->fetchAll() as $row) {
+    $expTimestamp = strtotime($row['expiration_date'] ?? '');
+    if (!$expTimestamp || $expTimestamp <= time()) {
+        continue;
+    }
+
+    $assetType = $row['asset_type'] ?? '';
+    $expiringSoon[] = [
+        'name' => $row['name'],
+        'type_label' => $assetType === 'license' ? __('nav_licenses') : __('nav_hosting'),
+        'expiration_date' => $row['expiration_date'],
+        'url' => $assetType === 'license' ? url('panel/licenses') : url('panel/hosting'),
+    ];
+}
+
+usort($expiringSoon, function ($a, $b) {
+    return strtotime($a['expiration_date']) <=> strtotime($b['expiration_date']);
+});
+$expiringSoon = array_slice($expiringSoon, 0, 5);
 
 // Favorites list
 $stmtFavs = $pdo->prepare("
@@ -193,6 +257,10 @@ $recentActivities = $stmtAct->fetchAll();
             <span class="stat-label"><?php echo __('stat_favorites'); ?></span>
         </div>
         <div class="panel-stat-card glass-panel">
+            <span class="stat-num"><?php echo (int)$totalLicenses; ?></span>
+            <span class="stat-label"><?php echo __('stat_licenses'); ?></span>
+        </div>
+        <div class="panel-stat-card glass-panel">
             <span class="stat-num"><?php echo (int)$totalIntegrations; ?></span>
             <span class="stat-label"><?php echo __('stat_integrations'); ?></span>
         </div>
@@ -217,8 +285,9 @@ $recentActivities = $stmtAct->fetchAll();
                             <?php foreach ($expiringSoon as $item): 
                                 $cd = getCountdownDetails($item['expiration_date']);
                             ?>
-                                <a href="<?php echo url('domain/' . urlencode($item['domain_name'])); ?>" class="expiring-list-item">
-                                    <span class="item-name"><?php echo esc($item['domain_name']); ?></span>
+                                <a href="<?php echo esc($item['url']); ?>" class="expiring-list-item">
+                                    <span class="item-name"><?php echo esc($item['name']); ?></span>
+                                    <span class="text-muted" style="font-size: 0.75rem;"><?php echo esc($item['type_label']); ?></span>
                                     <span class="item-countdown <?php echo $cd['expired'] ? 'expired' : ''; ?>">
                                         <?php echo esc($cd['text']); ?>
                                     </span>

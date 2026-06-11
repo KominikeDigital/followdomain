@@ -211,6 +211,85 @@ function runCronJobs($pdo) {
             }
         }
     }
+
+    // 4. Check and Dispatch User License Notifications
+    $stmtUL = $pdo->query("
+        SELECT ul.*, u.email, u.username, u.api_plan, u.webhook_url
+        FROM user_licenses ul
+        JOIN users u ON ul.user_id = u.id
+    ");
+    $userLicenses = $stmtUL->fetchAll();
+
+    foreach ($userLicenses as $ul) {
+        $licenseId = $ul['id'];
+        $licenseName = $ul['license_name'];
+        $provider = trim((string)$ul['provider']);
+        $category = trim((string)$ul['category']);
+        $referenceCode = trim((string)$ul['reference_code']);
+        $email = $ul['email'];
+        $expTime = strtotime($ul['expiration_date']);
+        $daysToExpiry = ($expTime - $nowTime) / 86400;
+
+        $sendAlert = false;
+        $alertFlagField = '';
+        $subject = '';
+
+        if ($daysToExpiry <= 0 && !$ul['notified_0_sent']) {
+            $sendAlert = true;
+            $alertFlagField = 'notified_0_sent';
+            $subject = "ALARM: {$licenseName} Lisans Süresi Doldu!";
+        } elseif ($daysToExpiry <= 1 && $daysToExpiry > 0 && $ul['notify_1'] && !$ul['notified_1_sent']) {
+            $sendAlert = true;
+            $alertFlagField = 'notified_1_sent';
+            $subject = "DİKKAT: {$licenseName} Lisans Süresi Yarın Doluyor!";
+        } elseif ($daysToExpiry <= 7 && $daysToExpiry > 1 && $ul['notify_7'] && !$ul['notified_7_sent']) {
+            $sendAlert = true;
+            $alertFlagField = 'notified_7_sent';
+            $subject = "UYARI: {$licenseName} Lisans Süresi 7 Gün İçinde Doluyor!";
+        } elseif ($daysToExpiry <= 30 && $daysToExpiry > 7 && $ul['notify_30'] && !$ul['notified_30_sent']) {
+            $sendAlert = true;
+            $alertFlagField = 'notified_30_sent';
+            $subject = "Hatırlatma: {$licenseName} Lisans Süresi 30 Gün İçinde Doluyor!";
+        }
+
+        if ($sendAlert) {
+            $licenseUrl = absolute_url("panel/licenses");
+
+            $emailBody = getFormattedEmail('mail_tpl_license_expiry', [
+                'license_name' => esc($licenseName),
+                'provider' => esc($provider !== '' ? $provider : '-'),
+                'category' => esc($category !== '' ? $category : '-'),
+                'reference_code' => esc($referenceCode !== '' ? $referenceCode : '-'),
+                'expiry_date' => formatDate($ul['expiration_date'], 'd M Y'),
+                'days_left' => max(0, round($daysToExpiry)),
+                'panel_url' => $licenseUrl
+            ]);
+
+            $sent = sendEmailNotification($email, $subject, $emailBody);
+            if ($sent) {
+                $stmtUpdate = $pdo->prepare("UPDATE user_licenses SET {$alertFlagField} = 1 WHERE id = ?");
+                $stmtUpdate->execute([$licenseId]);
+                $logs[] = "License Email sent to $email for $licenseName ($alertFlagField)";
+
+                if (!empty($ul['webhook_url']) && userPlanAllows($ul['api_plan'], 'webhook')) {
+                    $payload = [
+                        'event' => 'license_expiration_alert',
+                        'license_name' => $licenseName,
+                        'provider' => $provider,
+                        'category' => $category,
+                        'reference_code' => $referenceCode,
+                        'expiration_date' => $ul['expiration_date'],
+                        'alert_threshold' => str_replace('notified_', '', str_replace('_sent', '', $alertFlagField)),
+                        'message' => $subject,
+                        'timestamp' => date('Y-m-d H:i:s')
+                    ];
+                    triggerWebhookNotification($ul['webhook_url'], $payload);
+                }
+            } else {
+                $logs[] = "Failed to send license email to $email for $licenseName ($alertFlagField)";
+            }
+        }
+    }
     
     $logs[] = "[" . date('Y-m-d H:i:s') . "] Cron job run finished.";
     return implode("\n", $logs);

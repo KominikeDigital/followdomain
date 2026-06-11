@@ -308,7 +308,9 @@ function getFormattedEmail($templateKey, $replacements = []) {
         
         'mail_tpl_domain_expiry' => '<h2>Domain Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adınızın süresi yakında doluyor.</p><ul><li><strong>Alan Adı:</strong> {domain_name}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Alan adınızı kaybetmemek ve kesintisiz hizmet almaya devam etmek için hemen yenileme işlemlerini yapmanızı öneririz.</p><p><a href="{panel_url}" class="btn">Domain Listeme Git</a></p>',
         
-        'mail_tpl_hosting_expiry' => '<h2>Hosting Hizmet Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adına ait hosting (barındırma) paketinizin süresi yakında doluyor.</p><ul><li><strong>Hizmet Sunucusu:</strong> {hosting_provider}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Web sitenizin yayınının kesilmesini önlemek için hosting paketinizi yenilemeyi unutmayın.</p><p><a href="{panel_url}" class="btn">Hosting Listeme Git</a></p>'
+        'mail_tpl_hosting_expiry' => '<h2>Hosting Hizmet Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adına ait hosting (barındırma) paketinizin süresi yakında doluyor.</p><ul><li><strong>Hizmet Sunucusu:</strong> {hosting_provider}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Web sitenizin yayınının kesilmesini önlemek için hosting paketinizi yenilemeyi unutmayın.</p><p><a href="{panel_url}" class="btn">Hosting Listeme Git</a></p>',
+
+        'mail_tpl_license_expiry' => '<h2>Lisans Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{license_name}</strong> lisansının süresi yakında doluyor.</p><ul><li><strong>Lisans:</strong> {license_name}</li><li><strong>Sağlayıcı:</strong> {provider}</li><li><strong>Kategori:</strong> {category}</li><li><strong>Referans:</strong> {reference_code}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Kesinti veya erişim kaybı yaşamamak için lisans yenileme işlemini kontrol etmenizi öneririz.</p><p><a href="{panel_url}" class="btn">Lisans Listeme Git</a></p>'
     ];
     
     $templateContent = $config[$templateKey] ?? ($defaults[$templateKey] ?? '');
@@ -1511,6 +1513,52 @@ function addUserHosting($pdo, $userId, $provider, $domainName, $expDate, $alertS
         return ['success' => true, 'message' => __('msg_hosting_created')];
     } catch (PDOException $e) {
         return ['success' => false, 'message' => __('msg_hosting_error') . ': ' . $e->getMessage()];
+    }
+}
+
+/**
+ * Add a customizable license or external service renewal reminder.
+ */
+function addUserLicense($pdo, $userId, $licenseName, $provider, $category, $referenceCode, $expDate, $notes, $alertSettings) {
+    $licenseName = trim((string)$licenseName);
+    $provider = trim((string)$provider);
+    $category = trim((string)$category);
+    $referenceCode = trim((string)$referenceCode);
+    $notes = trim((string)$notes);
+
+    if ($licenseName === '' || empty($expDate)) {
+        return ['success' => false, 'message' => __('fill_all_fields')];
+    }
+
+    $expTimestamp = strtotime((string)$expDate);
+    if (!$expTimestamp) {
+        return ['success' => false, 'message' => __('invalid_expiration_date', 'Please choose a valid expiration date.')];
+    }
+
+    $licenseName = mb_substr($licenseName, 0, 255);
+    $provider = mb_substr($provider, 0, 255);
+    $category = mb_substr($category, 0, 100);
+    $referenceCode = mb_substr($referenceCode, 0, 255);
+    $notes = mb_substr($notes, 0, 1000);
+
+    $now = date('Y-m-d H:i:s');
+    $expFormatted = date('Y-m-d H:i:s', $expTimestamp);
+    $n30 = isset($alertSettings['30']) ? (int)$alertSettings['30'] : 1;
+    $n7 = isset($alertSettings['7']) ? (int)$alertSettings['7'] : 1;
+    $n1 = isset($alertSettings['1']) ? (int)$alertSettings['1'] : 1;
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO user_licenses
+            (user_id, license_name, provider, category, reference_code, expiration_date, notes, notify_30, notify_7, notify_1, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $licenseName, $provider, $category, $referenceCode, $expFormatted, $notes, $n30, $n7, $n1, $now]);
+
+        $stmtLog = $pdo->prepare("INSERT INTO activity_logs (user_id, action, created_at) VALUES (?, ?, ?)");
+        $stmtLog->execute([$userId, "Lisans takibi eklendi: $licenseName", $now]);
+
+        return ['success' => true, 'message' => __('msg_license_created')];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => __('msg_license_error') . ': ' . $e->getMessage()];
     }
 }
 

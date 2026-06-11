@@ -110,6 +110,10 @@ function tldixExtensionBuildCounts(PDO $pdo, int $userId): array
     $hostingCountStmt->execute([$userId]);
     $hostingCount = (int)$hostingCountStmt->fetchColumn();
 
+    $licenseCountStmt = $pdo->prepare('SELECT COUNT(*) FROM user_licenses WHERE user_id = ?');
+    $licenseCountStmt->execute([$userId]);
+    $licenseCount = (int)$licenseCountStmt->fetchColumn();
+
     $favoriteCountStmt = $pdo->prepare('SELECT COUNT(*) FROM user_domains WHERE user_id = ? AND is_favorite = 1');
     $favoriteCountStmt->execute([$userId]);
     $favoriteCount = (int)$favoriteCountStmt->fetchColumn();
@@ -130,10 +134,40 @@ function tldixExtensionBuildCounts(PDO $pdo, int $userId): array
         }
     }
 
+    $hostingExpiringStmt = $pdo->prepare("
+        SELECT expiration_date
+        FROM user_hostings
+        WHERE user_id = ?
+    ");
+    $hostingExpiringStmt->execute([$userId]);
+
+    foreach ($hostingExpiringStmt->fetchAll() as $row) {
+        $daysLeft = tldixExtensionDaysUntil($row['expiration_date'] ?? null);
+        if ($daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 30) {
+            $expiringSoon++;
+        }
+    }
+
+    $licenseExpiringStmt = $pdo->prepare("
+        SELECT expiration_date
+        FROM user_licenses
+        WHERE user_id = ?
+    ");
+    $licenseExpiringStmt->execute([$userId]);
+
+    foreach ($licenseExpiringStmt->fetchAll() as $row) {
+        $daysLeft = tldixExtensionDaysUntil($row['expiration_date'] ?? null);
+        if ($daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 30) {
+            $expiringSoon++;
+        }
+    }
+
     return [
         'domains' => $domainCount,
         'hosting' => $hostingCount,
         'ssl' => $domainCount,
+        'licenses' => $licenseCount,
+        'custom' => $licenseCount,
         'favorites' => $favoriteCount,
         'expiring_soon' => $expiringSoon,
     ];
@@ -209,6 +243,48 @@ function tldixExtensionFetchHostings(PDO $pdo, int $userId): array
             'statusText' => $status['label'],
             'expired' => $status['expired'],
             'detailUrl' => tldixExtensionDomainDetailUrl((string)$row['domain_name']),
+        ];
+    }
+
+    return $items;
+}
+
+function tldixExtensionFetchLicenses(PDO $pdo, int $userId): array
+{
+    $stmt = $pdo->prepare("
+        SELECT id, license_name, provider, category, reference_code, expiration_date, notes, created_at
+        FROM user_licenses
+        WHERE user_id = ?
+        ORDER BY (expiration_date IS NULL) ASC, expiration_date ASC, license_name ASC
+    ");
+    $stmt->execute([$userId]);
+
+    $items = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $daysLeft = tldixExtensionDaysUntil($row['expiration_date'] ?? null);
+        $status = tldixExtensionItemStatus($daysLeft);
+        $provider = trim((string)($row['provider'] ?? ''));
+        $category = trim((string)($row['category'] ?? ''));
+        $subtitleParts = array_filter([$category, $provider], static fn($value) => $value !== '');
+
+        $items[] = [
+            'id' => (int)$row['id'],
+            'type' => 'license',
+            'name' => (string)$row['license_name'],
+            'license_name' => (string)$row['license_name'],
+            'subtitle' => !empty($subtitleParts) ? implode(' / ', $subtitleParts) : 'Özel lisans takibi',
+            'provider' => $provider,
+            'category' => $category,
+            'reference_code' => (string)($row['reference_code'] ?? ''),
+            'notes' => (string)($row['notes'] ?? ''),
+            'date' => $row['expiration_date'] ? formatDate($row['expiration_date'], 'd M Y') : 'N/A',
+            'expiration_date' => $row['expiration_date'],
+            'daysLeft' => $daysLeft,
+            'days_left' => $daysLeft,
+            'status' => $status['status'],
+            'statusText' => $status['label'],
+            'expired' => $status['expired'],
+            'detailUrl' => 'https://tldix.com/panel/licenses',
         ];
     }
 
@@ -375,12 +451,13 @@ if (!isLoggedIn()) {
 
 $userId = (int)$_SESSION['user_id'];
 $type = strtolower(trim((string)($_GET['type'] ?? 'domains')));
-$allowedTypes = ['summary', 'domains', 'hosting', 'ssl'];
+$allowedTypes = ['summary', 'domains', 'hosting', 'ssl', 'licenses', 'custom'];
 
 if (!in_array($type, $allowedTypes, true)) {
     tldixExtensionError('Geçersiz veri tipi.', 400, 'invalid_type');
 }
 
+$type = $type === 'custom' ? 'licenses' : $type;
 $currentUser = getCurrentUser($pdo);
 $counts = tldixExtensionBuildCounts($pdo, $userId);
 $data = [];
@@ -391,6 +468,8 @@ if ($type === 'domains') {
     $data = tldixExtensionFetchHostings($pdo, $userId);
 } elseif ($type === 'ssl') {
     $data = tldixExtensionFetchSsl($pdo, $userId);
+} elseif ($type === 'licenses') {
+    $data = tldixExtensionFetchLicenses($pdo, $userId);
 }
 
 tldixExtensionJson([

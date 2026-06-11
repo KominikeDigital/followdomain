@@ -101,6 +101,25 @@ function initializeDatabase($pdo, $dbType) {
             created_at TEXT
         )";
 
+        $queries[] = "CREATE TABLE IF NOT EXISTS user_licenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            license_name TEXT NOT NULL,
+            provider TEXT DEFAULT '',
+            category TEXT DEFAULT '',
+            reference_code TEXT DEFAULT '',
+            expiration_date TEXT,
+            notes TEXT,
+            notify_30 INTEGER DEFAULT 1,
+            notify_7 INTEGER DEFAULT 1,
+            notify_1 INTEGER DEFAULT 1,
+            notified_30_sent INTEGER DEFAULT 0,
+            notified_7_sent INTEGER DEFAULT 0,
+            notified_1_sent INTEGER DEFAULT 0,
+            notified_0_sent INTEGER DEFAULT 0,
+            created_at TEXT
+        )";
+
         $queries[] = "CREATE TABLE IF NOT EXISTS activity_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -282,6 +301,25 @@ function initializeDatabase($pdo, $dbType) {
             hosting_provider VARCHAR(255) NOT NULL,
             domain_name VARCHAR(255) NOT NULL,
             expiration_date DATETIME NULL,
+            notify_30 TINYINT DEFAULT 1,
+            notify_7 TINYINT DEFAULT 1,
+            notify_1 TINYINT DEFAULT 1,
+            notified_30_sent TINYINT DEFAULT 0,
+            notified_7_sent TINYINT DEFAULT 0,
+            notified_1_sent TINYINT DEFAULT 0,
+            notified_0_sent TINYINT DEFAULT 0,
+            created_at DATETIME
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+        $queries[] = "CREATE TABLE IF NOT EXISTS user_licenses (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            license_name VARCHAR(255) NOT NULL,
+            provider VARCHAR(255) DEFAULT '',
+            category VARCHAR(100) DEFAULT '',
+            reference_code VARCHAR(255) DEFAULT '',
+            expiration_date DATETIME NULL,
+            notes TEXT NULL,
             notify_30 TINYINT DEFAULT 1,
             notify_7 TINYINT DEFAULT 1,
             notify_1 TINYINT DEFAULT 1,
@@ -522,6 +560,8 @@ function initializeDatabase($pdo, $dbType) {
         "CREATE INDEX IF NOT EXISTS idx_user_domains_user ON user_domains (user_id)",
         "CREATE INDEX IF NOT EXISTS idx_user_domains_name ON user_domains (domain_name)",
         "CREATE INDEX IF NOT EXISTS idx_user_hostings_user ON user_hostings (user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_user_licenses_user ON user_licenses (user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_user_licenses_expiration ON user_licenses (expiration_date)",
         "CREATE INDEX IF NOT EXISTS idx_followers_domain ON followers (domain_id)",
         "CREATE INDEX IF NOT EXISTS idx_domain_lookup_cache_checked ON domain_lookup_cache (last_checked)",
         "CREATE INDEX IF NOT EXISTS idx_payments_whop_order ON payments (whop_order_id)"
@@ -532,6 +572,8 @@ function initializeDatabase($pdo, $dbType) {
             "CREATE INDEX idx_user_domains_user ON user_domains (user_id)",
             "CREATE INDEX idx_user_domains_name ON user_domains (domain_name)",
             "CREATE INDEX idx_user_hostings_user ON user_hostings (user_id)",
+            "CREATE INDEX idx_user_licenses_user ON user_licenses (user_id)",
+            "CREATE INDEX idx_user_licenses_expiration ON user_licenses (expiration_date)",
             "CREATE INDEX idx_followers_domain ON followers (domain_id)",
             "CREATE INDEX idx_domain_lookup_cache_checked ON domain_lookup_cache (last_checked)",
             "CREATE INDEX idx_payments_whop_order ON payments (whop_order_id)"

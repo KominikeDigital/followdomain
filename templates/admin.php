@@ -78,6 +78,7 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $uid = (int)$_POST['user_id'];
         $pdo->prepare("DELETE FROM user_domains WHERE user_id = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM user_hostings WHERE user_id = ?")->execute([$uid]);
+        $pdo->prepare("DELETE FROM user_licenses WHERE user_id = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM payments WHERE user_id = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
         $settingsSaved = true;
@@ -86,7 +87,7 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'send_template_test_email') {
         $targetEmail = trim($_POST['template_test_email'] ?? '');
         $templateKey = trim($_POST['template_key'] ?? 'mail_tpl_user_verify');
-        $allowedTemplates = ['mail_tpl_user_register','mail_tpl_user_verify','mail_tpl_user_forgot','mail_tpl_admin_register','mail_tpl_admin_forgot','mail_tpl_domain_expiry','mail_tpl_hosting_expiry'];
+        $allowedTemplates = ['mail_tpl_user_register','mail_tpl_user_verify','mail_tpl_user_forgot','mail_tpl_admin_register','mail_tpl_admin_forgot','mail_tpl_domain_expiry','mail_tpl_hosting_expiry','mail_tpl_license_expiry'];
         if (!isValidEmail($targetEmail) || !in_array($templateKey, $allowedTemplates, true)) {
             $adminError = 'Test maili için geçerli bir e-posta adresi ve şablon seçin.';
         } else {
@@ -103,6 +104,10 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'days_left' => '14',
                 'panel_url' => absolute_url('panel/domains'),
                 'hosting_provider' => 'Demo Hosting',
+                'license_name' => 'Demo License',
+                'provider' => 'Demo Provider',
+                'category' => 'SaaS',
+                'reference_code' => 'ORDER-2026',
             ];
             $draftContent = trim($_POST['template_test_content'] ?? '');
             if ($draftContent !== '') {
@@ -116,6 +121,7 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'mail_tpl_admin_forgot' => 'TLDix Test: Şifre Sıfırlama Bildirimi',
                 'mail_tpl_domain_expiry' => 'TLDix Test: Domain Hatırlatma',
                 'mail_tpl_hosting_expiry' => 'TLDix Test: Hosting Hatırlatma',
+                'mail_tpl_license_expiry' => 'TLDix Test: Lisans Hatırlatma',
             ];
             $sent = sendEmailNotification($targetEmail, $subjectMap[$templateKey], getFormattedEmail($templateKey, $sampleReplacements));
             if ($sent) {
@@ -951,6 +957,7 @@ html[data-theme="light"] .admin-card textarea {
                             <option value="mail_tpl_admin_forgot">Şifre Sıfırlama Bildirimi (Yönetici)</option>
                             <option value="mail_tpl_domain_expiry">Domain Süresi Sona Eriyor Hatırlatması</option>
                             <option value="mail_tpl_hosting_expiry">Hosting Süresi Sona Eriyor Hatırlatması</option>
+                            <option value="mail_tpl_license_expiry">Lisans Süresi Sona Eriyor Hatırlatması</option>
                         </select>
                     </div>
                 </div>
@@ -973,6 +980,7 @@ html[data-theme="light"] .admin-card textarea {
                                 <option value="mail_tpl_admin_forgot">Şifre Sıfırlama Bildirimi</option>
                                 <option value="mail_tpl_domain_expiry">Domain Hatırlatma</option>
                                 <option value="mail_tpl_hosting_expiry">Hosting Hatırlatma</option>
+                                <option value="mail_tpl_license_expiry">Lisans Hatırlatma</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
@@ -1113,6 +1121,25 @@ html[data-theme="light"] .admin-card textarea {
                                 <textarea name="settings[mail_tpl_hosting_expiry]" rows="15" class="code-editor"><?php 
                                     $default = '<h2>Hosting Hizmet Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{domain_name}</strong> alan adına ait hosting (barındırma) paketinizin süresi yakında doluyor.</p><ul><li><strong>Hizmet Sunucusu:</strong> {hosting_provider}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Web sitenizin yayınının kesilmesini önlemek için hosting paketinizi yenilemeyi unutmayın.</p><p><a href="{panel_url}" class="btn">Hosting Listeme Git</a></p>';
                                     echo esc($config['mail_tpl_hosting_expiry'] ?? $default); 
+                                ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>
+                        </div>
+                    </div>
+
+                    <!-- License Expiry Alert Email Template -->
+                    <div class="tpl-editor-pane" id="pane_mail_tpl_license_expiry" style="display:none;">
+                        <div class="admin-card">
+                            <h3>Lisans Süresi Sona Eriyor Hatırlatması</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                                Kullanıcının eklediği özel lisans veya abonelik süresi sona yaklaştığında gönderilir.<br>
+                                <strong>Kullanılabilir Değişkenler:</strong> <code>{license_name}</code> (Lisans Adı), <code>{provider}</code> (Sağlayıcı), <code>{category}</code> (Kategori), <code>{reference_code}</code> (Referans), <code>{expiry_date}</code> (Bitiş Tarihi), <code>{days_left}</code> (Kalan Gün), <code>{panel_url}</code> (Panel Lisans Sayfası Bağlantısı)
+                            </p>
+                            <div class="form-group">
+                                <label>HTML İçerik (Body)</label>
+                                <textarea name="settings[mail_tpl_license_expiry]" rows="15" class="code-editor"><?php
+                                    $default = '<h2>Lisans Süresi Sona Eriyor!</h2><p>Takip listenizdeki <strong>{license_name}</strong> lisansının süresi yakında doluyor.</p><ul><li><strong>Lisans:</strong> {license_name}</li><li><strong>Sağlayıcı:</strong> {provider}</li><li><strong>Kategori:</strong> {category}</li><li><strong>Referans:</strong> {reference_code}</li><li><strong>Bitiş Tarihi:</strong> {expiry_date}</li><li><strong>Kalan Gün:</strong> {days_left}</li></ul><p>Kesinti veya erişim kaybı yaşamamak için lisans yenileme işlemini kontrol etmenizi öneririz.</p><p><a href="{panel_url}" class="btn">Lisans Listeme Git</a></p>';
+                                    echo esc($config['mail_tpl_license_expiry'] ?? $default);
                                 ?></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">💾 Şablonu Kaydet</button>

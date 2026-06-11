@@ -173,6 +173,8 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
             $route = 'panel_domains_export';
         } elseif ($path === 'panel/hosting') {
             $route = 'panel_hosting';
+        } elseif ($path === 'panel/licenses') {
+            $route = 'panel_licenses';
         } elseif ($path === 'panel/integrations') {
             $route = 'panel_integrations';
         } elseif ($path === 'panel/integrations/upgrade') {
@@ -636,6 +638,11 @@ switch ($route) {
     case 'panel_hosting':
         requireLogin();
         $pageTitle = "Hosting Takibim | " . $config['site_title'];
+        break;
+
+    case 'panel_licenses':
+        requireLogin();
+        $pageTitle = __('licenses_title', 'License Tracking') . " | " . $config['site_title'];
         break;
         
     case 'panel_integrations':
@@ -1385,6 +1392,9 @@ switch ($route) {
         break;
     case 'panel_hosting':
         require_once __DIR__ . '/templates/hosting.php';
+        break;
+    case 'panel_licenses':
+        require_once __DIR__ . '/templates/licenses.php';
         break;
     case 'panel_integrations':
         require_once __DIR__ . '/templates/integrations.php';
