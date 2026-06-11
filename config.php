@@ -38,6 +38,7 @@ $config = [
     'site_url' => getenv('TLDIX_SITE_URL') ?: 'https://tldix.com',
     'seo_og_image' => getenv('TLDIX_OG_IMAGE') ?: 'https://tldix.com/assets/images/logo.png',
     'contact_recipient_email' => 'hello@tldix.com',
+    'chrome_extension_url' => getenv('TLDIX_CHROME_EXTENSION_URL') ?: '',
     'social_links_json' => '',
     'social_twitter_url' => '',
     'social_github_url' => '',

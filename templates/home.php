@@ -71,6 +71,97 @@ $homeTrending = $stmt->fetchAll();
 
 <?php include __DIR__ . '/premium-section.php'; ?>
 
+<?php
+$chromeExtensionUrl = trim((string)($config['chrome_extension_url'] ?? ''));
+$chromeExtensionHasUrl = $chromeExtensionUrl !== '';
+?>
+<!-- Chrome Extension Section -->
+<section class="chrome-extension-section" id="chrome-extension">
+    <div class="chrome-extension-shell">
+        <div class="chrome-extension-copy">
+            <span class="chrome-extension-kicker"><?php echo __('chrome_extension_kicker'); ?></span>
+            <h2 class="section-title"><?php echo __('chrome_extension_title'); ?></h2>
+            <p class="section-subtitle"><?php echo __('chrome_extension_subtitle'); ?></p>
+
+            <div class="chrome-extension-benefits">
+                <div class="chrome-extension-benefit">
+                    <span class="chrome-extension-benefit-icon">✓</span>
+                    <div>
+                        <strong><?php echo __('chrome_extension_benefit_1_title'); ?></strong>
+                        <p><?php echo __('chrome_extension_benefit_1_desc'); ?></p>
+                    </div>
+                </div>
+                <div class="chrome-extension-benefit">
+                    <span class="chrome-extension-benefit-icon">✓</span>
+                    <div>
+                        <strong><?php echo __('chrome_extension_benefit_2_title'); ?></strong>
+                        <p><?php echo __('chrome_extension_benefit_2_desc'); ?></p>
+                    </div>
+                </div>
+                <div class="chrome-extension-benefit">
+                    <span class="chrome-extension-benefit-icon">✓</span>
+                    <div>
+                        <strong><?php echo __('chrome_extension_benefit_3_title'); ?></strong>
+                        <p><?php echo __('chrome_extension_benefit_3_desc'); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chrome-extension-actions">
+                <a href="<?php echo $chromeExtensionHasUrl ? esc($chromeExtensionUrl) : '#chrome-extension'; ?>"
+                   class="btn btn-primary chrome-extension-cta <?php echo $chromeExtensionHasUrl ? '' : 'is-disabled'; ?>"
+                   <?php echo $chromeExtensionHasUrl ? 'target="_blank" rel="noopener"' : 'aria-disabled="true" onclick="return false;"'; ?>>
+                    <?php echo __('chrome_extension_cta'); ?>
+                </a>
+                <span class="chrome-extension-note">
+                    <?php echo $chromeExtensionHasUrl ? __('chrome_extension_note_live') : __('chrome_extension_note_pending'); ?>
+                </span>
+            </div>
+        </div>
+
+        <div class="chrome-extension-preview" aria-hidden="true">
+            <div class="extension-window-bar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="extension-popup-preview">
+                <div class="extension-popup-head">
+                    <div class="extension-popup-logo">T</div>
+                    <div>
+                        <strong>TLDix Panel</strong>
+                        <small>Chrome Extension</small>
+                    </div>
+                </div>
+                <div class="extension-popup-stats">
+                    <div><strong>12</strong><span>Domains</span></div>
+                    <div><strong>3</strong><span>Hosting</span></div>
+                    <div><strong>2</strong><span>30 Days</span></div>
+                </div>
+                <div class="extension-popup-tabs">
+                    <span>Domain</span>
+                    <span>Hosting</span>
+                    <span>SSL</span>
+                </div>
+                <div class="extension-popup-row">
+                    <div>
+                        <strong>example.com</strong>
+                        <span>Namecheap</span>
+                    </div>
+                    <em>44 days</em>
+                </div>
+                <div class="extension-popup-row warning">
+                    <div>
+                        <strong>renew-soon.com</strong>
+                        <span>SSL certificate</span>
+                    </div>
+                    <em>6 days</em>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Features Grid -->
 <section class="features-section">
     <div class="section-header">
