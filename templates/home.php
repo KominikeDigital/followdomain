@@ -8,12 +8,42 @@ if (count(get_included_files()) === 1) {
 // Fetch top 6 trending domains for preview
 $stmt = $pdo->query("SELECT * FROM domains ORDER BY follower_count DESC, last_checked DESC LIMIT 6");
 $homeTrending = $stmt->fetchAll();
+
+if (!function_exists('renderHeroTitle')) {
+    function renderHeroTitle($lang)
+    {
+        $words = ['domain', 'hosting', 'ssl'];
+        $wordItems = implode('', array_map(static function ($word) {
+            return '<span class="hero-rotator-word">' . esc($word) . '</span>';
+        }, $words));
+        $rotator = '<span class="hero-rotator" aria-label="' . esc(implode(', ', $words)) . '"><span class="hero-rotator-track" aria-hidden="true">' . $wordItems . '</span></span>';
+
+        switch ($lang) {
+            case 'tr':
+                return 'Bir daha hiçbir ' . $rotator . ' <span class="hero-accent">kaybetmeyin.</span>';
+            case 'es':
+                return 'No vuelvas a perder un ' . $rotator . ' <span class="hero-accent">nunca más.</span>';
+            case 'de':
+                return 'Verlieren Sie <span class="hero-accent">nie wieder</span> eine ' . $rotator . '.';
+            default:
+                return 'Never lose a ' . $rotator . ' <span class="hero-accent">again.</span>';
+        }
+    }
+}
+
+if (!function_exists('getTrendBadgeLabel')) {
+    function getTrendBadgeLabel($index)
+    {
+        $labels = ['Hot', 'Watched', 'Trending'];
+        return $labels[$index % count($labels)];
+    }
+}
 ?>
 
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-content">
-        <h1 class="hero-title"><?php echo __('hero_title'); ?></h1>
+        <h1 class="hero-title"><?php echo renderHeroTitle($lang ?? 'en'); ?></h1>
         <p class="hero-subtitle"><?php echo __('hero_subtitle'); ?></p>
 
         <div class="hero-free-strip">
@@ -213,16 +243,13 @@ $chromeExtensionHasUrl = $chromeExtensionUrl !== '';
     </div>
     
     <div class="trending-grid-list">
-        <?php foreach ($homeTrending as $tDom): 
+        <?php foreach ($homeTrending as $trendIndex => $tDom): 
             $cd = getCountdownDetails($tDom['expiration_date']);
         ?>
             <a href="<?php echo url('domain/' . urlencode($tDom['domain_name'])); ?>" class="trending-item-card">
                 <div class="trending-meta">
                     <span class="trending-name"><?php echo esc($tDom['domain_name']); ?></span>
-                    <span class="trending-followers">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                        <?php echo (int)$tDom['follower_count'] . ' ' . __('trending_followers'); ?>
-                    </span>
+                    <span class="trend-label-badge"><?php echo esc(getTrendBadgeLabel($trendIndex)); ?></span>
                 </div>
                 <div class="trending-countdown <?php echo $cd['expired'] ? 'expired' : ''; ?>">
                     <?php echo esc($cd['text']); ?>

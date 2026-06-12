@@ -490,6 +490,7 @@ return [
     'no_trending_domains_sub' => '¡Puede volver a la página de inicio y buscar su primer dominio para comenzar a seguirlo!',
     'btn_track_domain' => 'Seguir Dominio',
     'col_followers' => 'Seguidores',
+    'col_trend_status' => 'Tendencia',
     'btn_details' => 'Detalles',
     
     'api_usage_header' => 'Uso de la API REST',

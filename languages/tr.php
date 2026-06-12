@@ -490,6 +490,7 @@ return [
     'no_trending_domains_sub' => 'Ana sayfaya dönüp ilk alan adını aratarak takibe alabilirsiniz!',
     'btn_track_domain' => 'Alan Adı Takip Et',
     'col_followers' => 'Takipçiler',
+    'col_trend_status' => 'Trend',
     'btn_details' => 'Detaylar',
     
     'api_usage_header' => 'REST API Kullanımı',

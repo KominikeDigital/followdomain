@@ -409,10 +409,62 @@
     margin-bottom: 1.5rem;
 }
 
-.hero-title span {
+.hero-title .hero-accent,
+.hero-title .hero-rotator-word {
     background: var(--color-primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.hero-rotator {
+    display: inline-flex;
+    justify-content: center;
+    height: 1.1em;
+    min-width: 3.9em;
+    overflow: hidden;
+    vertical-align: -0.1em;
+}
+
+.hero-rotator-track {
+    display: flex;
+    flex-direction: column;
+    animation: heroRotatorSlide 5.5s ease-in-out infinite;
+    will-change: transform;
+}
+
+.hero-rotator-word {
+    display: block;
+    line-height: 1.1;
+    min-height: 1.1em;
+    white-space: nowrap;
+}
+
+@keyframes heroRotatorSlide {
+    0%, 18% {
+        transform: translateY(0);
+    }
+
+    28%, 44% {
+        transform: translateY(-1.1em);
+    }
+
+    54%, 70% {
+        transform: translateY(-2.2em);
+    }
+
+    82%, 94% {
+        transform: translateY(-1.1em);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-rotator-track {
+        animation: none;
+    }
 }
 
 .hero-subtitle {
@@ -2019,6 +2071,24 @@ html[data-theme="light"] .available-primary-provider {
     color: #ffffff;
 }
 
+.trend-label-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-width: 76px;
+    padding: 0.26rem 0.62rem;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 118, 110, 0.22);
+    background: rgba(15, 118, 110, 0.1);
+    color: #7dd3c7;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
 .hide-mobile {
     display: table-cell;
 }
@@ -2346,6 +2416,10 @@ html[data-theme="light"] .available-primary-provider {
     align-items: center;
     gap: 0.25rem;
     margin-top: 0.25rem;
+}
+
+.trending-meta .trend-label-badge {
+    margin-top: 0.45rem;
 }
 
 .trending-countdown {
@@ -5050,7 +5124,8 @@ html[data-theme="light"] h2 { color: #0f172a; }
 html[data-theme="light"] h3 { color: #1e293b; }
 
 /* Preserve gradient on hero title span */
-html[data-theme="light"] .hero-title span {
+html[data-theme="light"] .hero-title .hero-accent,
+html[data-theme="light"] .hero-title .hero-rotator-word {
     background: var(--color-primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

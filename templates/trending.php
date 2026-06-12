@@ -4,6 +4,14 @@ if (count(get_included_files()) === 1) {
     http_response_code(403);
     exit('Direct access not allowed.');
 }
+
+if (!function_exists('getTrendBadgeLabel')) {
+    function getTrendBadgeLabel($index)
+    {
+        $labels = ['Hot', 'Watched', 'Trending'];
+        return $labels[$index % count($labels)];
+    }
+}
 ?>
 
 <div class="trending-page">
@@ -32,12 +40,12 @@ if (count(get_included_files()) === 1) {
                         <th><?php echo __('col_time_until'); ?></th>
                         <th class="hide-mobile"><?php echo __('col_expiry_date'); ?></th>
                         <th class="hide-mobile"><?php echo __('col_registrar'); ?></th>
-                        <th class="text-center"><?php echo __('col_followers'); ?></th>
+                        <th class="text-center"><?php echo __('col_trend_status', 'Status'); ?></th>
                         <th class="text-right"><?php echo __('col_actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($trendingDomains as $dom): 
+                    <?php foreach ($trendingDomains as $trendIndex => $dom): 
                         $cd = getCountdownDetails($dom['expiration_date']);
                     ?>
                         <tr class="table-row-hover">
@@ -57,10 +65,7 @@ if (count(get_included_files()) === 1) {
                                 <?php echo esc($dom['registrar']); ?>
                             </td>
                             <td class="text-center">
-                                <div class="follower-bubble">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                                    <span><?php echo (int)$dom['follower_count']; ?></span>
-                                </div>
+                                <span class="trend-label-badge"><?php echo esc(getTrendBadgeLabel($trendIndex)); ?></span>
                             </td>
                             <td class="text-right">
                                 <a href="/domain/<?php echo urlencode($dom['domain_name']); ?>" class="btn btn-secondary btn-sm"><?php echo __('btn_details'); ?></a>

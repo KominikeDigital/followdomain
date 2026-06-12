@@ -490,6 +490,7 @@ return [
     'no_trending_domains_sub' => 'You can go back to the homepage and search for your first domain to start tracking!',
     'btn_track_domain' => 'Track Domain',
     'col_followers' => 'Followers',
+    'col_trend_status' => 'Trend',
     'btn_details' => 'Details',
     
     'api_usage_header' => 'REST API Usage',
