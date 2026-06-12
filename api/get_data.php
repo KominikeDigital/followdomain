@@ -39,7 +39,75 @@ function tldixExtensionApplyCorsHeaders(): void
     }
 
     header('Access-Control-Allow-Methods: GET, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, X-TLDIX-Extension-Session');
+    header('Access-Control-Allow-Headers: Accept, Content-Type, X-Requested-With, X-TLDIX-Extension-Session');
+    header('Access-Control-Max-Age: 600');
+}
+
+function tldixExtensionCookieOptions(int $expires = 0): array
+{
+    return [
+        'expires' => $expires,
+        'path' => '/',
+        'secure' => tldixExtensionIsHttpsRequest(),
+        'httponly' => true,
+        'samesite' => tldixExtensionIsHttpsRequest() ? 'None' : 'Lax',
+    ];
+}
+
+function tldixExtensionIsValidSessionId(string $sessionId): bool
+{
+    return (bool)preg_match('/^[a-zA-Z0-9,-]{16,256}$/', $sessionId);
+}
+
+function tldixExtensionSessionCandidates(): array
+{
+    $candidates = [];
+
+    $bridgeCookie = trim((string)($_COOKIE['TLDIX_EXT_SESSION'] ?? ''));
+    if ($bridgeCookie !== '') {
+        $candidates[] = $bridgeCookie;
+    }
+
+    $sessionFromExtension = trim((string)($_SERVER['HTTP_X_TLDIX_EXTENSION_SESSION'] ?? ''));
+    if ($sessionFromExtension !== '') {
+        $candidates[] = $sessionFromExtension;
+    }
+
+    $phpSessionCookie = trim((string)($_COOKIE[session_name()] ?? ''));
+    if ($phpSessionCookie !== '') {
+        $candidates[] = $phpSessionCookie;
+    }
+
+    $valid = [];
+    foreach ($candidates as $candidate) {
+        if (tldixExtensionIsValidSessionId($candidate) && !in_array($candidate, $valid, true)) {
+            $valid[] = $candidate;
+        }
+    }
+
+    return $valid;
+}
+
+function tldixExtensionStartSession(?string $sessionId = null): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    if ($sessionId !== null && tldixExtensionIsValidSessionId($sessionId)) {
+        session_id($sessionId);
+    }
+
+    session_start();
+}
+
+function tldixExtensionRefreshBridgeCookie(): void
+{
+    if (headers_sent() || session_status() !== PHP_SESSION_ACTIVE || session_id() === '') {
+        return;
+    }
+
+    setcookie('TLDIX_EXT_SESSION', session_id(), tldixExtensionCookieOptions());
 }
 
 function tldixExtensionJson(array $payload, int $status = 200): void
@@ -412,14 +480,8 @@ session_set_cookie_params([
     'samesite' => tldixExtensionIsHttpsRequest() ? 'None' : 'Lax',
 ]);
 
-$sessionFromExtension = trim((string)($_SERVER['HTTP_X_TLDIX_EXTENSION_SESSION'] ?? ''));
-if ($sessionFromExtension !== '' && preg_match('/^[a-zA-Z0-9,-]{16,128}$/', $sessionFromExtension)) {
-    session_id($sessionFromExtension);
-}
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+$sessionCandidates = tldixExtensionSessionCandidates();
+tldixExtensionStartSession($sessionCandidates[0] ?? null);
 
 $lang = $_SESSION['lang'] ?? 'en';
 if (!in_array($lang, ['en', 'tr', 'es', 'de'], true)) {
@@ -445,9 +507,20 @@ require_once $root . '/includes/whois.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
 
+if (!isLoggedIn() && count($sessionCandidates) > 1) {
+    foreach (array_slice($sessionCandidates, 1) as $sessionCandidate) {
+        tldixExtensionStartSession($sessionCandidate);
+        if (isLoggedIn()) {
+            break;
+        }
+    }
+}
+
 if (!isLoggedIn()) {
     tldixExtensionError('Oturum bulunamadı. Lütfen önce TLDix.com üzerinde giriş yapın.', 401, 'not_authenticated');
 }
+
+tldixExtensionRefreshBridgeCookie();
 
 $userId = (int)$_SESSION['user_id'];
 $type = strtolower(trim((string)($_GET['type'] ?? 'domains')));

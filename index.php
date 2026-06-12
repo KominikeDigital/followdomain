@@ -29,6 +29,34 @@ function tldixApplySecurityHeaders() {
     }
 }
 
+function tldixExtensionSessionCookieOptions(int $expires = 0): array {
+    $options = [
+        'expires' => $expires,
+        'path' => '/',
+        'secure' => tldixIsHttpsRequest(),
+        'httponly' => true,
+        'samesite' => tldixIsHttpsRequest() ? 'None' : 'Lax',
+    ];
+
+    return $options;
+}
+
+function tldixSetExtensionSessionCookie(): void {
+    if (headers_sent() || session_status() !== PHP_SESSION_ACTIVE || session_id() === '') {
+        return;
+    }
+
+    setcookie('TLDIX_EXT_SESSION', session_id(), tldixExtensionSessionCookieOptions());
+}
+
+function tldixClearExtensionSessionCookie(): void {
+    if (headers_sent()) {
+        return;
+    }
+
+    setcookie('TLDIX_EXT_SESSION', '', tldixExtensionSessionCookieOptions(time() - 3600));
+}
+
 $requestHost = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
 if (in_array($requestHost, ['tldix.com', 'www.tldix.com'], true)) {
     $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -52,6 +80,9 @@ session_set_cookie_params([
 // Start session for admin/user auth
 session_start();
 
+if (!empty($_SESSION['user_id'])) {
+    tldixSetExtensionSessionCookie();
+}
 
 // Handle Language Selection Change
 if (isset($_GET['lang'])) {
@@ -366,6 +397,7 @@ switch ($route) {
         if (isset($_POST['submit_login'])) {
             $res = loginUser($pdo, $_POST['username_or_email'], $_POST['password']);
             if ($res['success']) {
+                tldixSetExtensionSessionCookie();
                 header("Location: " . url("panel"));
                 exit;
             } else {
@@ -528,6 +560,7 @@ switch ($route) {
         if (isLoggedIn()) {
             logActivity($pdo, $_SESSION['user_id'], "Sistemden çıkış yapıldı.");
         }
+        tldixClearExtensionSessionCookie();
         session_destroy();
         header("Location: " . url(""));
         exit;
