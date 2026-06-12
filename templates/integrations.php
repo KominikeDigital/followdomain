@@ -231,121 +231,53 @@ $cfIntegration = $stmt->fetch();
             <h2 class="pricing-section-title"><?php echo __('upgrade_plan_title'); ?></h2>
             <p class="pricing-section-subtitle text-muted"><?php echo __('upgrade_plan_sub'); ?></p>
             
+            <?php
+            $upgradePlans = [
+                'free' => ['class' => 'free-tier', 'badge' => __('plan_badge_free', 'Basic'), 'feature_count' => 9],
+                'bronze' => ['class' => 'bronze-tier', 'badge' => __('plan_badge_bronze', 'Starter'), 'feature_count' => 10, 'popular' => __('plan_popular')],
+                'silver' => ['class' => 'silver-tier', 'badge' => __('plan_badge_silver', 'Professional'), 'feature_count' => 12],
+                'gold' => ['class' => 'gold-tier', 'badge' => __('plan_badge_gold', 'Business'), 'feature_count' => 11, 'popular' => __('plan_badge_gold_right', 'Best Value')],
+                'agency' => ['class' => 'agency-tier', 'badge' => __('plan_badge_agency', 'Agency'), 'feature_count' => 18],
+            ];
+            ?>
             <div class="pricing-plans-grid" id="pricing">
-                <!-- Free Tier -->
-                <div class="pricing-card free-tier <?php echo ($userPlan === 'free') ? 'active' : ''; ?>">
-                    <div class="pricing-card-header">
-                        <span class="pricing-badge"><?php echo __('plan_badge_free', 'Basic'); ?></span>
-                        <h3 class="pricing-plan-name"><?php echo __('plan_free_name'); ?></h3>
-                        <div class="pricing-price"><?php echo __('plan_free_price'); ?> <span class="pricing-period"><?php echo __('plan_free_period'); ?></span></div>
-                    </div>
-                    <ul class="pricing-features">
-                        <?php for($i=1; $i<=8; $i++): 
-                            $feat = __('plan_free_feature_' . $i);
-                            $isEx = (strpos($feat, '✗') !== false);
-                        ?>
-                            <li class="<?php echo $isEx ? 'feature-excluded' : 'feature-included'; ?>">
-                                <span class="<?php echo $isEx ? 'feature-icon-cross' : 'feature-icon-check'; ?>"><?php echo $isEx ? '✗' : '✓'; ?></span> 
-                                <span><?php echo str_replace(['✓ ', '✗ '], '', $feat); ?></span>
-                            </li>
-                        <?php endfor; ?>
-                    </ul>
-                    <div class="pricing-action">
-                        <?php if ($userPlan === 'free'): ?>
-                            <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
-                        <?php else: ?>
-                            <form action="<?php echo url('panel/integrations/upgrade'); ?>" method="POST">
-                                <input type="hidden" name="plan" value="free">
-                                <button type="submit" class="btn btn-secondary w-full" onclick="return confirm('Emin misiniz? Limitleriniz düşürülecektir.')"><?php echo __('plan_switch'); ?></button>
-                            </form>
+                <?php foreach ($upgradePlans as $planKey => $planMeta): ?>
+                    <div class="pricing-card <?php echo esc($planMeta['class']); ?> <?php echo ($userPlan === $planKey) ? 'active' : ''; ?>">
+                        <?php if (!empty($planMeta['popular'])): ?>
+                            <span class="pricing-popular-tag <?php echo $planKey === 'gold' ? 'best-value' : ''; ?>"><?php echo esc($planMeta['popular']); ?></span>
                         <?php endif; ?>
+                        <div class="pricing-card-header">
+                            <span class="pricing-badge"><?php echo esc($planMeta['badge']); ?></span>
+                            <h3 class="pricing-plan-name"><?php echo __('plan_' . $planKey . '_name'); ?></h3>
+                            <div class="pricing-price"><?php echo __('plan_' . $planKey . '_price'); ?> <span class="pricing-period"><?php echo __('plan_' . $planKey . '_period'); ?></span></div>
+                        </div>
+                        <ul class="pricing-features">
+                            <?php for ($i = 1; $i <= $planMeta['feature_count']; $i++):
+                                $feat = __('plan_' . $planKey . '_feature_' . $i);
+                                $isEx = (strpos($feat, '✗') !== false);
+                            ?>
+                                <li class="<?php echo $isEx ? 'feature-excluded' : 'feature-included'; ?>">
+                                    <span class="<?php echo $isEx ? 'feature-icon-cross' : 'feature-icon-check'; ?>"><?php echo $isEx ? '✗' : '✓'; ?></span>
+                                    <span><?php echo esc(str_replace(['✓ ', '✗ '], '', $feat)); ?></span>
+                                </li>
+                            <?php endfor; ?>
+                        </ul>
+                        <div class="pricing-action">
+                            <?php if ($userPlan === $planKey): ?>
+                                <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
+                            <?php elseif ($planKey === 'free'): ?>
+                                <form action="<?php echo url('panel/integrations/upgrade'); ?>" method="POST">
+                                    <input type="hidden" name="plan" value="free">
+                                    <button type="submit" class="btn btn-secondary w-full" onclick="return confirm('Emin misiniz? Limitleriniz düşürülecektir.')"><?php echo __('plan_switch'); ?></button>
+                                </form>
+                            <?php else: ?>
+                                <a href="<?php echo url('checkout?plan=' . urlencode($planKey)); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">
+                                    <?php echo sprintf(__('plan_upgrade'), __('plan_' . $planKey . '_price')); ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Bronze Tier -->
-                <div class="pricing-card bronze-tier <?php echo ($userPlan === 'bronze') ? 'active' : ''; ?>">
-                    <span class="pricing-popular-tag"><?php echo __('plan_popular'); ?></span>
-                    <div class="pricing-card-header">
-                        <span class="pricing-badge"><?php echo __('plan_badge_bronze', 'Starter'); ?></span>
-                        <h3 class="pricing-plan-name"><?php echo __('plan_bronze_name'); ?></h3>
-                        <div class="pricing-price"><?php echo __('plan_bronze_price'); ?> <span class="pricing-period"><?php echo __('plan_bronze_period'); ?></span></div>
-                    </div>
-                    <ul class="pricing-features">
-                        <?php for($i=1; $i<=8; $i++): 
-                            $feat = __('plan_bronze_feature_' . $i);
-                        ?>
-                            <li class="feature-included">
-                                <span class="feature-icon-check">✓</span> 
-                                <span><?php echo str_replace(['✓ ', '✗ '], '', $feat); ?></span>
-                            </li>
-                        <?php endfor; ?>
-                    </ul>
-                    <div class="pricing-action">
-                        <?php if ($userPlan === 'bronze'): ?>
-                            <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
-                        <?php else: ?>
-                            <a href="<?php echo url('checkout?plan=bronze'); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">
-                                <?php echo sprintf(__('plan_upgrade'), __('plan_bronze_price')); ?>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Silver Tier -->
-                <div class="pricing-card silver-tier <?php echo ($userPlan === 'silver') ? 'active' : ''; ?>">
-                    <div class="pricing-card-header">
-                        <span class="pricing-badge"><?php echo __('plan_badge_silver', 'Professional'); ?></span>
-                        <h3 class="pricing-plan-name"><?php echo __('plan_silver_name'); ?></h3>
-                        <div class="pricing-price"><?php echo __('plan_silver_price'); ?> <span class="pricing-period"><?php echo __('plan_silver_period'); ?></span></div>
-                    </div>
-                    <ul class="pricing-features">
-                        <?php for($i=1; $i<=9; $i++): 
-                            $feat = __('plan_silver_feature_' . $i);
-                        ?>
-                            <li class="feature-included">
-                                <span class="feature-icon-check">✓</span> 
-                                <span><?php echo str_replace(['✓ ', '✗ '], '', $feat); ?></span>
-                            </li>
-                        <?php endfor; ?>
-                    </ul>
-                    <div class="pricing-action">
-                        <?php if ($userPlan === 'silver'): ?>
-                            <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
-                        <?php else: ?>
-                            <a href="<?php echo url('checkout?plan=silver'); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">
-                                <?php echo sprintf(__('plan_upgrade'), __('plan_silver_price')); ?>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Gold Tier -->
-                <div class="pricing-card gold-tier <?php echo ($userPlan === 'gold') ? 'active' : ''; ?>">
-                    <span class="pricing-popular-tag best-value"><?php echo __('plan_badge_gold_right', 'Best Value'); ?></span>
-                    <div class="pricing-card-header">
-                        <span class="pricing-badge"><?php echo __('plan_badge_gold', 'Enterprise'); ?></span>
-                        <h3 class="pricing-plan-name"><?php echo __('plan_gold_name'); ?></h3>
-                        <div class="pricing-price"><?php echo __('plan_gold_price'); ?> <span class="pricing-period"><?php echo __('plan_gold_period'); ?></span></div>
-                    </div>
-                    <ul class="pricing-features">
-                        <?php for($i=1; $i<=10; $i++): 
-                            $feat = __('plan_gold_feature_' . $i);
-                        ?>
-                            <li class="feature-included">
-                                <span class="feature-icon-check">✓</span> 
-                                <span><?php echo str_replace(['✓ ', '✗ '], '', $feat); ?></span>
-                            </li>
-                        <?php endfor; ?>
-                    </ul>
-                    <div class="pricing-action">
-                        <?php if ($userPlan === 'gold'): ?>
-                            <button class="btn btn-secondary w-full active-plan-btn" disabled><?php echo __('plan_active'); ?></button>
-                        <?php else: ?>
-                            <a href="<?php echo url('checkout?plan=gold'); ?>" class="btn btn-primary w-full text-center" style="display: block; line-height: 1.5; font-weight: 600; text-decoration: none;">
-                                <?php echo sprintf(__('plan_upgrade'), __('plan_gold_price')); ?>
-                            </a>
-                        <?php endif; ?>
-                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
 

@@ -139,10 +139,13 @@ if ($currentSiteTitle === '' || $currentSiteTitle === 'TLDix') {
     $config['site_title'] = 'TLDix.com';
 }
 
-$legacySiteDescription = 'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.';
+$legacySiteDescriptions = [
+    'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.',
+    'Domain Expiration Tracker, Alerts & Domain Watchers',
+];
 $currentSiteDescription = trim((string)($config['site_description'] ?? ''));
-if ($currentSiteDescription === '' || $currentSiteDescription === $legacySiteDescription) {
-    $config['site_description'] = 'Domain Expiration Tracker, Alerts & Domain Watchers';
+if ($currentSiteDescription === '' || in_array($currentSiteDescription, $legacySiteDescriptions, true)) {
+    $config['site_description'] = 'Renewal tracking for domains, hosting, SSL, licenses, and custom assets';
 }
 
 if (empty($config['seo_og_image']) || strpos($config['seo_og_image'], 'followdomain1.kominikee.com') !== false) {
@@ -537,7 +540,7 @@ switch ($route) {
                 }
                 
                 // Redirect logic: If a paid plan was selected, redirect to checkout, else redirect to panel
-                if (in_array($requestedPlan, ['bronze', 'silver', 'gold'], true)) {
+                if (in_array($requestedPlan, ['bronze', 'silver', 'gold', 'agency'], true)) {
                     header("Location: " . url("checkout?plan=" . urlencode($requestedPlan)));
                 } else {
                     header("Location: " . url("panel"));
@@ -1006,7 +1009,7 @@ switch ($route) {
         requireLogin();
         $userId = $_SESSION['user_id'];
         $plan = isset($_GET['plan']) ? trim($_GET['plan']) : 'bronze';
-        if (!in_array($plan, ['bronze', 'silver', 'gold'])) {
+        if (!in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true)) {
             $plan = 'bronze';
         }
         

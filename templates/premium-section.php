@@ -14,10 +14,11 @@ $planHref = function ($plan) use ($isUser) {
 };
 
 $premiumPlans = [
-    'free' => ['class' => 'free-tier', 'badge' => __('plan_badge_free'), 'feature_count' => 8, 'cta' => __('home_plan_cta_free'), 'highlight' => false],
-    'bronze' => ['class' => 'bronze-tier', 'badge' => __('plan_badge_bronze'), 'feature_count' => 8, 'cta' => __('home_plan_cta_paid'), 'highlight' => true],
-    'silver' => ['class' => 'silver-tier', 'badge' => __('plan_badge_silver'), 'feature_count' => 9, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
-    'gold' => ['class' => 'gold-tier', 'badge' => __('plan_badge_gold'), 'feature_count' => 10, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
+    'free' => ['class' => 'free-tier', 'badge' => __('plan_badge_free'), 'feature_count' => 9, 'cta' => __('home_plan_cta_free'), 'highlight' => false],
+    'bronze' => ['class' => 'bronze-tier', 'badge' => __('plan_badge_bronze'), 'feature_count' => 10, 'cta' => __('home_plan_cta_paid'), 'highlight' => true],
+    'silver' => ['class' => 'silver-tier', 'badge' => __('plan_badge_silver'), 'feature_count' => 12, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
+    'gold' => ['class' => 'gold-tier', 'badge' => __('plan_badge_gold'), 'feature_count' => 11, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
+    'agency' => ['class' => 'agency-tier', 'badge' => __('plan_badge_agency'), 'feature_count' => 18, 'cta' => __('home_plan_cta_paid'), 'highlight' => false],
 ];
 ?>
 

@@ -7,7 +7,7 @@ if (count(get_included_files()) === 1) {
 
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($route) ? ($route === 'register' ? 'register' : ($route === 'forgot_password' ? 'forgot' : 'login')) : 'login');
 $selectedPlan = isset($_GET['plan']) ? strtolower(trim($_GET['plan'])) : 'free';
-if (!in_array($selectedPlan, ['free', 'bronze', 'silver', 'gold'], true)) {
+if (!in_array($selectedPlan, ['free', 'bronze', 'silver', 'gold', 'agency'], true)) {
     $selectedPlan = 'free';
 }
 ?>
@@ -98,6 +98,7 @@ if (!in_array($selectedPlan, ['free', 'bronze', 'silver', 'gold'], true)) {
                         <option value="bronze" <?php echo $selectedPlan === 'bronze' ? 'selected' : ''; ?>><?php echo __('signup_bronze_plan'); ?></option>
                         <option value="silver" <?php echo $selectedPlan === 'silver' ? 'selected' : ''; ?>><?php echo __('signup_silver_plan'); ?></option>
                         <option value="gold" <?php echo $selectedPlan === 'gold' ? 'selected' : ''; ?>><?php echo __('signup_gold_plan'); ?></option>
+                        <option value="agency" <?php echo $selectedPlan === 'agency' ? 'selected' : ''; ?>><?php echo __('signup_agency_plan'); ?></option>
                     </select>
                     <span class="input-helper" style="font-size: 0.75rem; color: var(--color-text-secondary); display: block; margin-top: 0.4rem;"><?php echo __('signup_select_plan_desc'); ?></span>
                 </div>

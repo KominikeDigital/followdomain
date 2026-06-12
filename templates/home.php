@@ -103,6 +103,35 @@ if (!function_exists('getTrendBadgeLabel')) {
 <?php include __DIR__ . '/premium-section.php'; ?>
 
 <?php
+$apiTokenUrl = isLoggedIn() ? url('panel/integrations') : url('register?plan=free');
+?>
+<!-- API Section -->
+<section class="home-api-section" id="api">
+    <div class="home-api-shell">
+        <div class="home-api-copy">
+            <span class="home-api-kicker"><?php echo __('home_api_kicker'); ?></span>
+            <h2 class="section-title"><?php echo __('home_api_title'); ?></h2>
+            <p class="section-subtitle"><?php echo __('home_api_subtitle'); ?></p>
+            <p class="home-api-description"><?php echo __('home_api_card_text'); ?></p>
+            <div class="home-api-actions">
+                <a href="<?php echo url('docs'); ?>" class="btn btn-primary"><?php echo __('home_api_cta_docs'); ?></a>
+                <a href="<?php echo esc($apiTokenUrl); ?>" class="btn btn-secondary"><?php echo __('home_api_cta_token'); ?></a>
+            </div>
+        </div>
+
+        <div class="home-api-panel">
+            <ul class="home-api-features">
+                <?php for ($i = 1; $i <= 6; $i++): ?>
+                    <li><?php echo __('home_api_feature_' . $i); ?></li>
+                <?php endfor; ?>
+            </ul>
+            <pre class="home-api-code" tabindex="0"><code>curl https://tldix.com/api/domain/example.com \
+  -H "Authorization: Bearer YOUR_API_TOKEN"</code></pre>
+        </div>
+    </div>
+</section>
+
+<?php
 $chromeExtensionUrl = trim((string)($config['chrome_extension_url'] ?? ''));
 $chromeExtensionHasUrl = $chromeExtensionUrl !== '';
 ?>

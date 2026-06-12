@@ -24,7 +24,7 @@ function getPasswordStrengthScore($password) {
 function registerUser($pdo, $username, $email, $password, $plan = 'free') {
     $username = trim($username);
     $email = trim(strtolower($email));
-    $plan = in_array($plan, ['free', 'bronze', 'silver', 'gold']) ? $plan : 'free';
+    $plan = in_array($plan, ['free', 'bronze', 'silver', 'gold', 'agency'], true) ? $plan : 'free';
     
     if (empty($username) || empty($email) || empty($password)) {
         return ['success' => false, 'message' => 'Lütfen tüm alanları doldurun.'];
@@ -62,7 +62,7 @@ function registerUser($pdo, $username, $email, $password, $plan = 'free') {
     $verificationToken = bin2hex(random_bytes(16));
     
     try {
-        $pendingPlan = in_array($plan, ['bronze', 'silver', 'gold'], true) ? $plan : null;
+        $pendingPlan = in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true) ? $plan : null;
         $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, api_plan, pending_plan, created_at, is_verified, verification_token) VALUES (?, ?, ?, ?, 'free', ?, ?, 0, ?)");
         $stmt->execute([$username, $email, $passwordHash, $apiKey, $pendingPlan, $now, $verificationToken]);
         $userId = $pdo->lastInsertId();

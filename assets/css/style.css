@@ -625,7 +625,7 @@
 }
 
 /* Steps Grid */
-.info-section, .features-section, .premium-features-section, .home-pricing-section, .home-trending-section, .chrome-extension-section {
+.info-section, .features-section, .premium-features-section, .home-pricing-section, .home-api-section, .home-trending-section, .chrome-extension-section {
     padding: 5rem 0;
 }
 
@@ -752,7 +752,7 @@ html[data-theme="light"] .flight-display-title {
 
 .home-pricing-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1rem;
     align-items: stretch;
 }
@@ -784,6 +784,116 @@ html[data-theme="light"] .flight-display-title {
     font-size: 0.88rem;
     line-height: 1.6;
     text-align: center;
+}
+
+/* Home API section */
+.home-api-section {
+    padding-top: 3rem;
+}
+
+.home-api-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+    gap: 3rem;
+    align-items: center;
+    padding: 3rem;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 18px;
+    background:
+        linear-gradient(135deg, rgba(20, 184, 166, 0.07), rgba(15, 23, 42, 0.12)),
+        rgba(255, 255, 255, 0.02);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+}
+
+.home-api-copy .section-title,
+.home-api-copy .section-subtitle {
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.home-api-copy .section-subtitle {
+    max-width: 760px;
+}
+
+.home-api-kicker {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.38rem 0.7rem;
+    border: 1px solid rgba(20, 184, 166, 0.28);
+    border-radius: 999px;
+    color: var(--color-primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(20, 184, 166, 0.08);
+}
+
+.home-api-description {
+    max-width: 760px;
+    margin: 1.25rem 0 0;
+    color: var(--color-text-secondary);
+    font-size: 0.96rem;
+    line-height: 1.7;
+}
+
+.home-api-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.75rem;
+}
+
+.home-api-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.home-api-features {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+}
+
+.home-api-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.home-api-features li::before {
+    content: '✓';
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    color: var(--color-success);
+    background: rgba(16, 185, 129, 0.1);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.home-api-code {
+    margin: 0;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(2, 6, 23, 0.72);
+    color: #d1fae5;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.7;
 }
 
 /* Chrome extension promo */
@@ -1085,6 +1195,7 @@ html[data-theme="light"] .flight-display-title {
 }
 
 @media (max-width: 960px) {
+    .home-api-shell,
     .chrome-extension-shell {
         grid-template-columns: 1fr;
         padding: 2rem;
@@ -1168,6 +1279,41 @@ html[data-theme="light"] .flight-display-title {
     .home-pricing-note {
         margin-top: 0.8rem;
         padding: 0 0.25rem;
+    }
+
+    .home-api-section {
+        padding-top: 3rem;
+        padding-bottom: 3.5rem;
+    }
+
+    .home-api-shell {
+        margin: 0 -0.25rem;
+        padding: 1.35rem;
+        border-radius: 14px;
+        gap: 1.75rem;
+    }
+
+    .home-api-copy .section-title {
+        font-size: 1.75rem;
+    }
+
+    .home-api-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .home-api-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .home-api-features {
+        grid-template-columns: 1fr;
+    }
+
+    .home-api-code {
+        font-size: 0.78rem;
+        white-space: pre;
     }
 
     .chrome-extension-section {
@@ -4835,6 +4981,18 @@ html[data-theme="light"] .blog-slider-btn:hover {
     border-color: rgba(234, 179, 8, 0.40);
 }
 
+.pricing-card.agency-tier::before {
+    background: linear-gradient(90deg, #14b8a6, #0ea5e9);
+}
+.pricing-card.agency-tier.active {
+    border-color: #14b8a6;
+    background: rgba(20, 184, 166, 0.05);
+    box-shadow: 0 0 25px rgba(20, 184, 166, 0.12);
+}
+.pricing-card.agency-tier:hover {
+    border-color: rgba(20, 184, 166, 0.4);
+}
+
 /* Card Active States */
 .pricing-card.active {
     border-width: 2px;
@@ -4875,6 +5033,11 @@ html[data-theme="light"] .blog-slider-btn:hover {
 .gold-tier .pricing-badge {
     color: #eab308;
     background: rgba(234, 179, 8, 0.1);
+}
+
+.agency-tier .pricing-badge {
+    color: #14b8a6;
+    background: rgba(20, 184, 166, 0.1);
 }
 
 .pricing-plan-name {
@@ -4997,6 +5160,10 @@ html[data-theme="light"] .pricing-card.gold-tier.active {
     border-color: #eab308;
     background: rgba(234, 179, 8, 0.02);
 }
+html[data-theme="light"] .pricing-card.agency-tier.active {
+    border-color: #14b8a6;
+    background: rgba(20, 184, 166, 0.03);
+}
 
 /* --------------------------------------------------
    Subheader / Second Row Navigation for Panel Users
@@ -5087,6 +5254,23 @@ html[data-theme="light"] .feature-card p  { color: #475569; }
 html[data-theme="light"] .feature-card {
     background: rgba(255, 255, 255, 0.6);
     border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Home API */
+html[data-theme="light"] .home-api-shell {
+    background:
+        linear-gradient(135deg, rgba(20, 184, 166, 0.06), rgba(241, 245, 249, 0.72)),
+        rgba(255, 255, 255, 0.76);
+    border-color: rgba(20, 184, 166, 0.16);
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.08);
+}
+html[data-theme="light"] .home-api-description,
+html[data-theme="light"] .home-api-features li {
+    color: #475569;
+}
+html[data-theme="light"] .home-api-code {
+    background: #0f172a;
+    border-color: rgba(15, 23, 42, 0.16);
 }
 
 /* Chrome extension promo */

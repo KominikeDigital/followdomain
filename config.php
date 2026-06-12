@@ -34,7 +34,7 @@ $config = [
     
     // Site Identity
     'site_title' => 'TLDix.com',
-    'site_description' => 'Domain Expiration Tracker, Alerts & Domain Watchers',
+    'site_description' => 'Renewal tracking for domains, hosting, SSL, licenses, and custom assets',
     'site_url' => getenv('TLDIX_SITE_URL') ?: 'https://tldix.com',
     'seo_og_image' => getenv('TLDIX_OG_IMAGE') ?: 'https://tldix.com/assets/images/logo.png',
     'contact_recipient_email' => 'hello@tldix.com',
@@ -148,9 +148,11 @@ $config = [
     'whop_link_bronze' => '',
     'whop_link_silver' => '',
     'whop_link_gold' => '',
+    'whop_link_agency' => '',
     'whop_plan_bronze' => '',
     'whop_plan_silver' => '',
     'whop_plan_gold' => '',
+    'whop_plan_agency' => '',
 
     // Affiliate display controls
     'recommended_hosting_codes' => 'hostinger,bluehost,siteground',

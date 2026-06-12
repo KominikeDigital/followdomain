@@ -13,12 +13,13 @@ $currentUser = function_exists('getCurrentUser') ? getCurrentUser($pdo) : null;
 $userEmail = $currentUser['email'] ?? '';
 
 $plan = isset($_GET['plan']) ? trim($_GET['plan']) : 'bronze';
-if (!in_array($plan, ['bronze', 'silver', 'gold'])) $plan = 'bronze';
+if (!in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true)) $plan = 'bronze';
 
 $planDetails = [
     'bronze' => ['name' => 'BRONZE', 'price' => 9,  'currency' => 'USD', 'label' => '$9/ay'],
     'silver' => ['name' => 'SILVER', 'price' => 29, 'currency' => 'USD', 'label' => '$29/ay'],
     'gold'   => ['name' => 'GOLD',   'price' => 99, 'currency' => 'USD', 'label' => '$99/ay'],
+    'agency' => ['name' => 'AGENCY', 'price' => 199, 'currency' => 'USD', 'label' => '$199/ay'],
 ];
 $pd = $planDetails[$plan];
 
@@ -47,11 +48,13 @@ $whopLinks = [
     'bronze' => $config['whop_link_bronze'] ?? '',
     'silver' => $config['whop_link_silver'] ?? '',
     'gold'   => $config['whop_link_gold']   ?? '',
+    'agency' => $config['whop_link_agency'] ?? '',
 ];
 $whopPlanIds = [
     'bronze' => trim((string)($config['whop_plan_bronze'] ?? '')),
     'silver' => trim((string)($config['whop_plan_silver'] ?? '')),
     'gold'   => trim((string)($config['whop_plan_gold'] ?? '')),
+    'agency' => trim((string)($config['whop_plan_agency'] ?? '')),
 ];
 if (empty($whopPlanIds[$plan]) && !empty($whopLinks[$plan])) {
     $whopPlanIds[$plan] = extractWhopPlanId($whopLinks[$plan]);
@@ -275,9 +278,10 @@ $bankNotes   = $config['bank_notes']        ?? 'Havale açıklamasına kullanıc
                     </div>
                     <?php
                     $features = [
-                        'bronze' => ['50 Domain Takibi','CSV Dışa Aktarma','5 Webhook','30 Gün Geçmiş'],
-                        'silver' => ['500 Domain Takibi','CSV Dışa Aktarma','50 Webhook','1 Yıl Geçmiş','Öncelikli Kuyruk'],
-                        'gold'   => ['Sınırsız Domain','Sınırsız Webhook','Sınırsız Geçmiş','SLA & Premium Destek'],
+                        'bronze' => ['50 Domain Takibi','25 Hosting/Özel Varlık','CSV İçe & Dışa Aktarma','5 Webhook','30 Gün Geçmiş'],
+                        'silver' => ['500 Domain Takibi','250 Hosting/Özel Varlık','Bulk CSV İçe & Dışa Aktarma','50 Webhook','1 Yıl Geçmiş','Tags/Folders'],
+                        'gold'   => ['Sınırsız Domain','Sınırsız Hosting/Özel Varlık','Sınırsız Webhook','Sınırsız Geçmiş','SLA & Premium Destek'],
+                        'agency' => ['Gold içindeki her şey','5 takım koltuğu','Müşteri bazlı portföy klasörleri','Rol bazlı yetkiler','Exportable client reports'],
                     ];
                     foreach ($features[$plan] as $f):
                     ?>

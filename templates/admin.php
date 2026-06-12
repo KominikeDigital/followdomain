@@ -67,7 +67,7 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Manual plan change by admin
     if ($action === 'admin_set_plan' && !empty($_POST['user_id']) && !empty($_POST['plan'])) {
-        $plan = in_array($_POST['plan'], ['free','bronze','silver','gold']) ? $_POST['plan'] : 'free';
+        $plan = in_array($_POST['plan'], ['free','bronze','silver','gold','agency'], true) ? $_POST['plan'] : 'free';
         $pdo->prepare("UPDATE users SET api_plan = ?, pending_plan = NULL WHERE id = ?")
             ->execute([$plan, (int)$_POST['user_id']]);
         $settingsSaved = true;
@@ -1655,6 +1655,14 @@ html[data-theme="light"] .admin-card textarea {
                             <label>Whop Gold Plan ID (Embed için)</label>
                             <input type="text" name="settings[whop_plan_gold]" value="<?php echo esc($config['whop_plan_gold'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
                         </div>
+                        <div class="form-group">
+                            <label>Whop Agency Plan Link</label>
+                            <input type="url" name="settings[whop_link_agency]" value="<?php echo esc($config['whop_link_agency'] ?? ''); ?>" placeholder="https://whop.com/checkout/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Whop Agency Plan ID (Embed için)</label>
+                            <input type="text" name="settings[whop_plan_agency]" value="<?php echo esc($config['whop_plan_agency'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
+                        </div>
                         <div style="padding: 0.75rem 1rem; border-radius: 8px; background: rgba(15, 118, 110,0.08); border: 1px solid rgba(15, 118, 110,0.2); font-size: 0.82rem; color: var(--color-text-secondary);">
                             💡 <strong style="color: var(--color-text-primary);">Whop Kurulumu:</strong> whop.com'da ürün/fiyat oluşturun → Checkout Links bölümünde pricing option detayından <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">plan_...</code> ID'sini alın → Webhook URL: <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;"><?php echo url('webhook/whop'); ?></code>
                         </div>
@@ -1959,7 +1967,7 @@ html[data-theme="light"] .admin-card textarea {
                                 <tbody>
                                     <?php foreach ($members as $m): ?>
                                         <?php
-                                        $pc = ['free'=>'#6b7280','bronze'=>'#d97706','silver'=>'#94a3b8','gold'=>'#eab308'];
+                                        $pc = ['free'=>'#6b7280','bronze'=>'#d97706','silver'=>'#94a3b8','gold'=>'#eab308','agency'=>'#14b8a6'];
                                         $pc2 = $pc[$m['api_plan']] ?? '#6b7280';
                                         ?>
                                         <tr class="table-row-hover">
@@ -1981,7 +1989,7 @@ html[data-theme="light"] .admin-card textarea {
                                                     <input type="hidden" name="action" value="admin_set_plan">
                                                     <input type="hidden" name="user_id" value="<?php echo (int)$m['id']; ?>">
                                                     <select name="plan" style="padding:3px 6px; border-radius:5px; font-size:0.75rem; background:rgba(0,0,0,0.2); border:1px solid var(--color-border); color: var(--color-text-primary);">
-                                                        <?php foreach(['free','bronze','silver','gold'] as $pl): ?>
+                                                        <?php foreach(['free','bronze','silver','gold','agency'] as $pl): ?>
                                                             <option value="<?php echo $pl; ?>" <?php echo $m['api_plan']===$pl?'selected':''; ?>><?php echo strtoupper($pl); ?></option>
                                                         <?php endforeach; ?>
                                                     </select>

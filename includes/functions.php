@@ -373,7 +373,7 @@ function esc($str) {
 
 function normalizePlanKey($plan) {
     $plan = strtolower(trim((string)$plan));
-    return in_array($plan, ['free', 'bronze', 'silver', 'gold'], true) ? $plan : 'free';
+    return in_array($plan, ['free', 'bronze', 'silver', 'gold', 'agency'], true) ? $plan : 'free';
 }
 
 function getPlanCapabilities($plan = 'free') {
@@ -403,6 +403,14 @@ function getPlanCapabilities($plan = 'free') {
             'api_daily_limit' => 50000,
         ],
         'gold' => [
+            'domain_limit' => null,
+            'csv_export' => true,
+            'bulk_import' => true,
+            'webhook_limit' => null,
+            'history_days' => null,
+            'api_daily_limit' => null,
+        ],
+        'agency' => [
             'domain_limit' => null,
             'csv_export' => true,
             'bulk_import' => true,
@@ -1732,7 +1740,7 @@ function detectWhopPlan($payload) {
     global $config;
 
     $payloadText = strtolower(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    foreach (['gold', 'silver', 'bronze'] as $candidate) {
+    foreach (['agency', 'gold', 'silver', 'bronze'] as $candidate) {
         $configuredPlanId = strtolower(trim((string)($config['whop_plan_' . $candidate] ?? '')));
         if ($configuredPlanId !== '' && strpos($payloadText, $configuredPlanId) !== false) {
             return $candidate;
@@ -1740,11 +1748,11 @@ function detectWhopPlan($payload) {
     }
 
     $plan = strtolower((string)(findNestedValueByKeys($payload, ['tldix_plan', 'plan', 'plan_key', 'tier']) ?? ''));
-    if (in_array($plan, ['bronze', 'silver', 'gold'], true)) {
+    if (in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true)) {
         return $plan;
     }
 
-    foreach (['gold', 'silver', 'bronze'] as $candidate) {
+    foreach (['agency', 'gold', 'silver', 'bronze'] as $candidate) {
         if (strpos($payloadText, $candidate) !== false) {
             return $candidate;
         }
@@ -1752,9 +1760,11 @@ function detectWhopPlan($payload) {
 
     $amount = findNestedValueByKeys($payload, ['amount', 'total', 'subtotal', 'price', 'value']);
     $amount = is_numeric($amount) ? (float)$amount : 0.0;
+    if ($amount >= 19900) return 'agency';
     if ($amount >= 9900) return 'gold';
     if ($amount >= 2900) return 'silver';
     if ($amount >= 900) return 'bronze';
+    if ($amount >= 199) return 'agency';
     if ($amount >= 99) return 'gold';
     if ($amount >= 29) return 'silver';
     if ($amount >= 9) return 'bronze';
