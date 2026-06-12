@@ -12,7 +12,7 @@ $homeTrending = $stmt->fetchAll();
 if (!function_exists('renderHeroTitle')) {
     function renderHeroTitle($lang)
     {
-        $words = ['domain', 'hosting', 'ssl'];
+        $words = ['domain', 'hosting', 'SSL'];
         $wordItems = implode('', array_map(static function ($word) {
             return '<span class="hero-rotator-word">' . esc($word) . '</span>';
         }, $words));
@@ -45,6 +45,7 @@ if (!function_exists('getTrendBadgeLabel')) {
     <div class="hero-content">
         <h1 class="hero-title"><?php echo renderHeroTitle($lang ?? 'en'); ?></h1>
         <p class="hero-subtitle"><?php echo __('hero_subtitle'); ?></p>
+        <p class="hero-subtitle hero-subtitle-secondary"><?php echo __('hero_subtitle_secondary'); ?></p>
 
         <div class="hero-free-strip">
             <span class="hero-free-badge"><?php echo __('hero_free_badge'); ?></span>
@@ -230,6 +231,30 @@ $chromeExtensionHasUrl = $chromeExtensionUrl !== '';
             </div>
             <h3><?php echo __('home_feature_4_title'); ?></h3>
             <p><?php echo __('home_feature_4_desc'); ?></p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><line x1="7" y1="8" x2="7.01" y2="8"/><line x1="7" y1="17" x2="7.01" y2="17"/></svg>
+            </div>
+            <h3><?php echo __('home_feature_5_title'); ?></h3>
+            <p><?php echo __('home_feature_5_desc'); ?></p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-5"/></svg>
+            </div>
+            <h3><?php echo __('home_feature_6_title'); ?></h3>
+            <p><?php echo __('home_feature_6_desc'); ?></p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12l8.73-5.04"/><path d="M12 22V12"/></svg>
+            </div>
+            <h3><?php echo __('home_feature_7_title'); ?></h3>
+            <p><?php echo __('home_feature_7_desc'); ?></p>
         </div>
     </div>
 </section>
