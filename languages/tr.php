@@ -25,7 +25,7 @@ return [
     'admin_panel' => 'Yönetim (Admin)',
     
     // Footer
-    'footer_logo_sub' => 'Güvenilir, gerçek zamanlı alan adı ve hosting takip platformu. Süre sonu yaklaştığında anlık e-posta ve webhook bildirimleri alın.',
+    'footer_logo_sub' => 'Domainleri, SSL sertifikalarını, hosting hesaplarını, lisansları ve kritik yenilemeleri güvenilir tek bir çalışma alanından takip edin.',
     'footer_explore' => 'Keşfet',
     'footer_developer' => 'Geliştirici',
     'footer_partners' => 'Kayıtçı Partnerler',
@@ -37,9 +37,11 @@ return [
     'status_online' => 'Tüm Sistemler Çevrimiçi',
     
     // Home Page
+    'home_meta_title' => 'TLDix | Domain, SSL, Hosting ve Dijital Varlık Yenileme Takibi',
+    'home_meta_description' => 'Domainleri, SSL sertifikalarını, hosting hesaplarını, lisansları ve kritik yenilemeleri tek panelden takip edin. Her şeyin süresi dolmadan uyarılar, API erişimi, herkese açık sayfalar ve trend sinyalleri alın.',
     'hero_title' => 'Bir daha hiçbir alan adını <span>kaybetmeyin.</span>',
     'hero_subtitle' => 'Domainleri, SSL sertifikalarını, hosting hesaplarını, lisansları ve kritik yenilemeleri e-posta uyarıları, herkese açık sayfalar, trend sinyalleri ve API erişimiyle takip edin.',
-    'hero_subtitle_secondary' => 'SSL sertifikalarını, hosting hesaplarını ve kritik yenilemeleri takip edin.',
+    'hero_subtitle_secondary' => 'Domainlerden SSL sertifikalarına, hosting planlarından lisans ve aboneliklere kadar hiçbir yenileme tarihini bir daha kaçırmayın.',
     'hero_free_badge' => 'Üyelik ücretsiz',
     'hero_free_cta' => 'Ücretsiz Hesap Oluştur',
     'hero_free_note' => 'Kredi kartı gerekmez. Kişisel kullanım için ücretsiz planla başlayın.',
@@ -62,8 +64,8 @@ return [
     'home_feature_2_desc' => 'Ham takipçi sayısı göstermeden Hot, Watched ve Trending gibi temiz etiketlerle ilgiyi görünür kılın.',
     'home_feature_3_title' => 'Herkese Açık Domain Sayfaları',
     'home_feature_3_desc' => 'Her alan adının; geri sayım sayacı, kayıt kuruluşu verileri ve takipçi durumunu gösteren paylaşılabilir bir detay sayfası vardır.',
-    'home_feature_4_title' => 'Geliştiriciler İçin Ücretsiz API',
-    'home_feature_4_desc' => 'Alan adı verilerine programatik erişim. Temiz dokümantasyon, kişisel API token\'ları ve yüksek istek limitleri.',
+    'home_feature_4_title' => 'Developer API',
+    'home_feature_4_desc' => 'Yenileme verilerine yapılandırılmış JSON erişimi, kişisel API tokenları, net dokümantasyon ve pakete göre ölçeklenen limitler.',
     'home_feature_5_title' => 'Hosting Monitoring',
     'home_feature_5_desc' => 'Hosting sağlayıcılarını, yenileme tarihlerini, plan notlarını ve hatırlatma akışlarını domainlerle birlikte takip edin.',
     'home_feature_6_title' => 'SSL Monitoring',
@@ -83,7 +85,7 @@ return [
     'chrome_extension_note_pending' => 'Chrome Web Store onayı bekleniyor. Yayınlandıktan sonra bağlantı buradan güncellenecek.',
     'chrome_extension_note_live' => 'Chrome Web Store bağlantısı yeni sekmede açılır.',
     'trending_title' => 'Şu Anda Trend Olanlar',
-    'trending_subtitle' => 'Topluluğumuz tarafından en çok takip edilen alan adları.',
+    'trending_subtitle' => 'Şu anda en çok dikkat çeken domainler.',
     'trending_followers' => 'takipçi',
     'view_all_trending' => 'Tüm Trendleri Görüntüle',
     'reliability_title' => 'Uzun vadeli ve güvenilir izleme altyapısı.',
@@ -491,7 +493,7 @@ return [
     
     // Trending Page
     'trending_page_title' => 'Trend Alan Adları',
-    'trending_page_subtitle' => 'Topluluk aboneliklerine göre sıralanmış en popüler takip listeleri.',
+    'trending_page_subtitle' => 'Şu anda en çok dikkat çeken domainler.',
     
     // Time & Countdown units
     'time_day' => 'gün',

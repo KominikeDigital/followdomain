@@ -33,8 +33,8 @@ $config = [
     'custom_head_code' => '',
     
     // Site Identity
-    'site_title' => 'TLDix.com',
-    'site_description' => 'Renewal tracking for domains, hosting, SSL, licenses, and custom assets',
+    'site_title' => 'TLDix',
+    'site_description' => 'Track domains, SSL certificates, hosting accounts, licenses and critical renewals from one dashboard. Get alerts, API access, public pages and trend signals before anything expires.',
     'site_url' => getenv('TLDIX_SITE_URL') ?: 'https://tldix.com',
     'seo_og_image' => getenv('TLDIX_OG_IMAGE') ?: 'https://tldix.com/assets/images/logo.png',
     'contact_recipient_email' => 'hello@tldix.com',

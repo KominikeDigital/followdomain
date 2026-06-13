@@ -25,7 +25,7 @@ return [
     'admin_panel' => 'Administration',
     
     // Footer
-    'footer_logo_sub' => 'Reliable, real-time domain and hosting tracking platform. Get instant email and webhook notifications when expiration is near.',
+    'footer_logo_sub' => 'Track domains, SSL certificates, hosting accounts, licenses and critical renewals from one reliable workspace.',
     'footer_explore' => 'Explore',
     'footer_developer' => 'Developer',
     'footer_partners' => 'Registrar Partners',
@@ -37,9 +37,11 @@ return [
     'status_online' => 'All Systems Online',
     
     // Home Page
+    'home_meta_title' => 'TLDix | Renewal Tracking for Domains, SSL, Hosting and Digital Assets',
+    'home_meta_description' => 'Track domains, SSL certificates, hosting accounts, licenses and critical renewals from one dashboard. Get alerts, API access, public pages and trend signals before anything expires.',
     'hero_title' => 'Never lose a domain <span>again.</span>',
     'hero_subtitle' => 'Track domains, SSL certificates, hosting accounts, licenses, and critical renewals with email alerts, public pages, trend signals, and API access.',
-    'hero_subtitle_secondary' => 'Track SSL certificates, hosting accounts and critical renewals.',
+    'hero_subtitle_secondary' => 'Never miss a renewal deadline again — from domains and SSL certificates to hosting plans, licenses and subscriptions.',
     'hero_free_badge' => 'Free membership',
     'hero_free_cta' => 'Create Free Account',
     'hero_free_note' => 'No credit card required. Start with the free plan for personal use.',
@@ -62,8 +64,8 @@ return [
     'home_feature_2_desc' => 'Surface public interest as clean labels such as Hot, Watched, and Trending without exposing raw watcher counts.',
     'home_feature_3_title' => 'Public Domain Pages',
     'home_feature_3_desc' => 'Each domain has a shareable detail page showing a countdown timer, registrar data, and follower status.',
-    'home_feature_4_title' => 'Free API for Developers',
-    'home_feature_4_desc' => 'Programmatic access to domain data. Clean documentation, personal API tokens, and high request limits.',
+    'home_feature_4_title' => 'Developer API',
+    'home_feature_4_desc' => 'Structured JSON access to renewal data with personal API tokens, clear documentation, and plan-based limits.',
     'home_feature_5_title' => 'Hosting Monitoring',
     'home_feature_5_desc' => 'Track hosting providers, renewal dates, plan notes, and reminder schedules beside your domains.',
     'home_feature_6_title' => 'SSL Monitoring',
@@ -83,7 +85,7 @@ return [
     'chrome_extension_note_pending' => 'Chrome Web Store approval is pending. The link will be updated here after publication.',
     'chrome_extension_note_live' => 'The Chrome Web Store link opens in a new tab.',
     'trending_title' => 'Currently Trending',
-    'trending_subtitle' => 'Most followed domains by our community.',
+    'trending_subtitle' => 'Domains attracting the most attention right now.',
     'trending_followers' => 'followers',
     'view_all_trending' => 'View All Trending',
     'reliability_title' => 'Long-term and reliable tracking infrastructure.',
@@ -491,7 +493,7 @@ return [
     
     // Trending Page
     'trending_page_title' => 'Trend Monitoring watchlist',
-    'trending_page_subtitle' => 'Top domains sorted by community watch subscriptions interest.',
+    'trending_page_subtitle' => 'Domains attracting the most attention right now.',
     
     // Time & Countdown units
     'time_day' => 'day',

@@ -25,7 +25,7 @@ return [
     'admin_panel' => 'Administración',
     
     // Footer
-    'footer_logo_sub' => 'Plataforma confiable de seguimiento de dominios y hosting en tiempo real. Reciba notificaciones instantáneas por correo electrónico y webhook cuando se acerque la expiración.',
+    'footer_logo_sub' => 'Realice seguimiento de dominios, certificados SSL, cuentas de hosting, licencias y renovaciones críticas desde un espacio de trabajo fiable.',
     'footer_explore' => 'Explorar',
     'footer_developer' => 'Desarrollador',
     'footer_partners' => 'Socios Registradores',
@@ -37,9 +37,11 @@ return [
     'status_online' => 'Todos los sistemas en línea',
     
     // Home Page
+    'home_meta_title' => 'TLDix | Seguimiento de renovaciones para dominios, SSL, hosting y activos digitales',
+    'home_meta_description' => 'Realice seguimiento de dominios, certificados SSL, cuentas de hosting, licencias y renovaciones críticas desde un solo panel. Reciba alertas, acceso API, páginas públicas y señales de tendencia antes de que algo expire.',
     'hero_title' => 'No vuelvas a perder un dominio <span>nunca más.</span>',
     'hero_subtitle' => 'Realice seguimiento de dominios, certificados SSL, cuentas de hosting, licencias y renovaciones críticas con alertas por correo, páginas públicas, señales de tendencia y acceso API.',
-    'hero_subtitle_secondary' => 'Realice seguimiento de certificados SSL, cuentas de hosting y renovaciones críticas.',
+    'hero_subtitle_secondary' => 'No vuelva a perder una fecha de renovación: desde dominios y certificados SSL hasta planes de hosting, licencias y suscripciones.',
     'hero_free_badge' => 'Membresía gratuita',
     'hero_free_cta' => 'Crear cuenta gratis',
     'hero_free_note' => 'No se requiere tarjeta. Empiece con el plan gratuito para uso personal.',
@@ -62,8 +64,8 @@ return [
     'home_feature_2_desc' => 'Muestre el interés público con etiquetas como Hot, Watched y Trending sin exponer recuentos brutos.',
     'home_feature_3_title' => 'Páginas de dominio públicas',
     'home_feature_3_desc' => 'Cada dominio tiene una página de detalles compartible que muestra un temporizador de cuenta regresiva, datos del registrador y estado de seguidores.',
-    'home_feature_4_title' => 'API gratuita para desarrolladores',
-    'home_feature_4_desc' => 'Acceso programático a los datos del dominio. Documentación limpia, tokens de API personales y límites de solicitudes altos.',
+    'home_feature_4_title' => 'Developer API',
+    'home_feature_4_desc' => 'Acceso JSON estructurado a datos de renovación con tokens API personales, documentación clara y límites según el plan.',
     'home_feature_5_title' => 'Hosting Monitoring',
     'home_feature_5_desc' => 'Realice seguimiento de proveedores de hosting, fechas de renovación, notas del plan y recordatorios junto a sus dominios.',
     'home_feature_6_title' => 'SSL Monitoring',
@@ -83,7 +85,7 @@ return [
     'chrome_extension_note_pending' => 'La aprobación de Chrome Web Store está pendiente. El enlace se actualizará aquí después de la publicación.',
     'chrome_extension_note_live' => 'El enlace de Chrome Web Store se abre en una pestaña nueva.',
     'trending_title' => 'Tendencias Actuales',
-    'trending_subtitle' => 'Los dominios más seguidos por nuestra comunidad.',
+    'trending_subtitle' => 'Dominios que atraen más atención ahora mismo.',
     'trending_followers' => 'seguidores',
     'view_all_trending' => 'Ver Todas las Tendencias',
     'reliability_title' => 'Infraestructura de seguimiento fiable y a largo plazo.',
@@ -491,7 +493,7 @@ return [
     
     // Trending Page
     'trending_page_title' => 'Dominios en Tendencia',
-    'trending_page_subtitle' => 'Lista de dominios ordenados según el interés de suscripción de la comunidad.',
+    'trending_page_subtitle' => 'Dominios que atraen más atención ahora mismo.',
     
     // Time & Countdown units
     'time_day' => 'día',

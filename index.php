@@ -134,18 +134,27 @@ if (empty($config['site_url']) || strpos($config['site_url'], 'followdomain1.kom
     $config['site_url'] = 'https://tldix.com';
 }
 
-$currentSiteTitle = trim((string)($config['site_title'] ?? ''));
-if ($currentSiteTitle === '' || $currentSiteTitle === 'TLDix') {
-    $config['site_title'] = 'TLDix.com';
-}
-
+$defaultSiteTitle = 'TLDix';
+$defaultSiteDescription = 'Track domains, SSL certificates, hosting accounts, licenses and critical renewals from one dashboard. Get alerts, API access, public pages and trend signals before anything expires.';
+$legacySiteTitles = [
+    'TLDix.com',
+    'domainawait',
+    'domainawait.com',
+];
 $legacySiteDescriptions = [
     'Track domain expirations, get email reminders, and see how many other people are watching each domain — all in one place.',
     'Domain Expiration Tracker, Alerts & Domain Watchers',
+    'Renewal tracking for domains, hosting, SSL, licenses, and custom assets',
 ];
+
+$currentSiteTitle = trim((string)($config['site_title'] ?? ''));
+if ($currentSiteTitle === '' || in_array($currentSiteTitle, $legacySiteTitles, true)) {
+    $config['site_title'] = $defaultSiteTitle;
+}
+
 $currentSiteDescription = trim((string)($config['site_description'] ?? ''));
 if ($currentSiteDescription === '' || in_array($currentSiteDescription, $legacySiteDescriptions, true)) {
-    $config['site_description'] = 'Renewal tracking for domains, hosting, SSL, licenses, and custom assets';
+    $config['site_description'] = $defaultSiteDescription;
 }
 
 if (empty($config['seo_og_image']) || strpos($config['seo_og_image'], 'followdomain1.kominikee.com') !== false) {
@@ -287,11 +296,12 @@ if ($route === 'home' && isset($_GET['q'])) {
 }
 
 // Global page variables
-$pageTitle = $config['site_title'];
-if ($route === 'home' && !empty($config['site_description'])) {
-    $pageTitle .= ' | ' . $config['site_description'];
-}
-$pageDesc = $config['site_description'];
+$pageTitle = $route === 'home'
+    ? __('home_meta_title', 'TLDix | Renewal Tracking for Domains, SSL, Hosting and Digital Assets')
+    : $config['site_title'];
+$pageDesc = $route === 'home'
+    ? __('home_meta_description', $defaultSiteDescription)
+    : $config['site_description'];
 
 // Handle specific page logic before loading template headers
 switch ($route) {

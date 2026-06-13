@@ -25,7 +25,7 @@ return [
     'admin_panel' => 'Verwaltung',
     
     // Footer
-    'footer_logo_sub' => 'Zuverlässige Echtzeit-Überwachungsplattform für Domains und Hosting. Erhalten Sie sofortige E-Mail- und Webhook-Benachrichtigungen, wenn das Ablaufdatum näher rückt.',
+    'footer_logo_sub' => 'Überwachen Sie Domains, SSL-Zertifikate, Hosting-Konten, Lizenzen und kritische Verlängerungen in einem zuverlässigen Arbeitsbereich.',
     'footer_explore' => 'Erkunden',
     'footer_developer' => 'Entwickler',
     'footer_partners' => 'Registrar-Partner',
@@ -37,9 +37,11 @@ return [
     'status_online' => 'Alle Systeme online',
     
     // Home Page
+    'home_meta_title' => 'TLDix | Verlängerungs-Tracking für Domains, SSL, Hosting und digitale Assets',
+    'home_meta_description' => 'Überwachen Sie Domains, SSL-Zertifikate, Hosting-Konten, Lizenzen und kritische Verlängerungen in einem Dashboard. Erhalten Sie Warnungen, API-Zugriff, öffentliche Seiten und Trendsignale, bevor etwas abläuft.',
     'hero_title' => 'Verlieren Sie <span>nie wieder</span> eine Domain.',
     'hero_subtitle' => 'Überwachen Sie Domains, SSL-Zertifikate, Hosting-Konten, Lizenzen und kritische Verlängerungen mit E-Mail-Warnungen, öffentlichen Seiten, Trendsignalen und API-Zugriff.',
-    'hero_subtitle_secondary' => 'Überwachen Sie SSL-Zertifikate, Hosting-Konten und kritische Verlängerungen.',
+    'hero_subtitle_secondary' => 'Verpassen Sie nie wieder eine Verlängerungsfrist — von Domains und SSL-Zertifikaten bis zu Hosting-Tarifen, Lizenzen und Abonnements.',
     'hero_free_badge' => 'Kostenlose Mitgliedschaft',
     'hero_free_cta' => 'Kostenloses Konto erstellen',
     'hero_free_note' => 'Keine Kreditkarte erforderlich. Starten Sie mit dem kostenlosen Plan für private Nutzung.',
@@ -62,8 +64,8 @@ return [
     'home_feature_2_desc' => 'Zeigen Sie öffentliches Interesse mit klaren Labels wie Hot, Watched und Trending, ohne rohe Zähler offenzulegen.',
     'home_feature_3_title' => 'Öffentliche Domain-Seiten',
     'home_feature_3_desc' => 'Jede Domain verfügt über eine teilbare Detailseite mit Countdown-Timer, Registrar-Daten und Follower-Status.',
-    'home_feature_4_title' => 'Kostenlose API für Entwickler',
-    'home_feature_4_desc' => 'Programmatischer Zugriff auf Domaindaten. Saubere Dokumentation, persönliche API-Token und hohe Anfragelimits.',
+    'home_feature_4_title' => 'Developer API',
+    'home_feature_4_desc' => 'Strukturierter JSON-Zugriff auf Verlängerungsdaten mit persönlichen API-Token, klarer Dokumentation und tarifbasierten Limits.',
     'home_feature_5_title' => 'Hosting Monitoring',
     'home_feature_5_desc' => 'Überwachen Sie Hosting-Anbieter, Verlängerungsdaten, Tarifnotizen und Erinnerungen direkt neben Ihren Domains.',
     'home_feature_6_title' => 'SSL Monitoring',
@@ -83,7 +85,7 @@ return [
     'chrome_extension_note_pending' => 'Die Freigabe im Chrome Web Store steht noch aus. Der Link wird nach der Veröffentlichung hier aktualisiert.',
     'chrome_extension_note_live' => 'Der Chrome Web Store-Link wird in einem neuen Tab geöffnet.',
     'trending_title' => 'Aktuelle Trends',
-    'trending_subtitle' => 'Die von unserer Community am häufigsten abonnierten Domains.',
+    'trending_subtitle' => 'Domains, die aktuell die meiste Aufmerksamkeit erhalten.',
     'trending_followers' => 'Follower',
     'view_all_trending' => 'Alle Trends anzeigen',
     'reliability_title' => 'Langfristige und zuverlässige Überwachungsinfrastruktur.',
@@ -491,7 +493,7 @@ return [
     
     // Trending Page
     'trending_page_title' => 'Trend-Domains',
-    'trending_page_subtitle' => 'Die beliebtesten Domains sortiert nach dem Interesse der Community.',
+    'trending_page_subtitle' => 'Domains, die aktuell die meiste Aufmerksamkeit erhalten.',
     
     // Time & Countdown units
     'time_day' => 'Tag',
