@@ -13,13 +13,12 @@ $currentUser = function_exists('getCurrentUser') ? getCurrentUser($pdo) : null;
 $userEmail = $currentUser['email'] ?? '';
 
 $plan = isset($_GET['plan']) ? trim($_GET['plan']) : 'bronze';
-if (!in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true)) $plan = 'bronze';
+if (!in_array($plan, ['bronze', 'silver', 'agency'], true)) $plan = 'bronze';
 
 $planDetails = [
     'bronze' => ['name' => 'BRONZE', 'price' => 9,  'currency' => 'USD', 'label' => '$9/ay'],
     'silver' => ['name' => 'SILVER', 'price' => 29, 'currency' => 'USD', 'label' => '$29/ay'],
-    'gold'   => ['name' => 'GOLD',   'price' => 99, 'currency' => 'USD', 'label' => '$99/ay'],
-    'agency' => ['name' => 'AGENCY', 'price' => 199, 'currency' => 'USD', 'label' => '$199/ay'],
+    'agency' => ['name' => 'AGENCY', 'price' => 99, 'currency' => 'USD', 'label' => '$99/ay'],
 ];
 $pd = $planDetails[$plan];
 
@@ -47,13 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $whopLinks = [
     'bronze' => $config['whop_link_bronze'] ?? '',
     'silver' => $config['whop_link_silver'] ?? '',
-    'gold'   => $config['whop_link_gold']   ?? '',
     'agency' => $config['whop_link_agency'] ?? '',
 ];
 $whopPlanIds = [
     'bronze' => trim((string)($config['whop_plan_bronze'] ?? '')),
     'silver' => trim((string)($config['whop_plan_silver'] ?? '')),
-    'gold'   => trim((string)($config['whop_plan_gold'] ?? '')),
     'agency' => trim((string)($config['whop_plan_agency'] ?? '')),
 ];
 if (empty($whopPlanIds[$plan]) && !empty($whopLinks[$plan])) {

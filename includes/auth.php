@@ -21,10 +21,10 @@ function getPasswordStrengthScore($password) {
 /**
  * Register a new user
  */
-function registerUser($pdo, $username, $email, $password, $plan = 'free') {
+function registerUser($pdo, $username, $email, $password, $plan = 'free', $refCode = null) {
     $username = trim($username);
     $email = trim(strtolower($email));
-    $plan = in_array($plan, ['free', 'bronze', 'silver', 'gold', 'agency'], true) ? $plan : 'free';
+    $plan = in_array($plan, ['free', 'bronze', 'silver', 'agency'], true) ? $plan : 'free';
     
     if (empty($username) || empty($email) || empty($password)) {
         return ['success' => false, 'message' => 'Lütfen tüm alanları doldurun.'];
@@ -61,10 +61,22 @@ function registerUser($pdo, $username, $email, $password, $plan = 'free') {
     $apiKey = 'da_' . bin2hex(random_bytes(16));
     $verificationToken = bin2hex(random_bytes(16));
     
+    // Find referred_by_id if refCode is provided
+    $referredById = null;
+    if (!empty($refCode)) {
+        $stmtRef = $pdo->prepare("SELECT id, username FROM users WHERE username = ?");
+        $stmtRef->execute([$refCode]);
+        $refUser = $stmtRef->fetch();
+        // Ensure they exist and are not referring themselves
+        if ($refUser && strtolower($refUser['username']) !== strtolower($username)) {
+            $referredById = (int)$refUser['id'];
+        }
+    }
+    
     try {
-        $pendingPlan = in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true) ? $plan : null;
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, api_plan, pending_plan, created_at, is_verified, verification_token) VALUES (?, ?, ?, ?, 'free', ?, ?, 0, ?)");
-        $stmt->execute([$username, $email, $passwordHash, $apiKey, $pendingPlan, $now, $verificationToken]);
+        $pendingPlan = in_array($plan, ['bronze', 'silver', 'agency'], true) ? $plan : null;
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, api_key, api_plan, pending_plan, referred_by_id, created_at, is_verified, verification_token) VALUES (?, ?, ?, ?, 'free', ?, ?, ?, 0, ?)");
+        $stmt->execute([$username, $email, $passwordHash, $apiKey, $pendingPlan, $referredById, $now, $verificationToken]);
         $userId = $pdo->lastInsertId();
         
         // Log activity

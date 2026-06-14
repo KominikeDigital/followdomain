@@ -147,11 +147,9 @@ $config = [
     'whop_webhook_secret' => getenv('WHOP_WEBHOOK_SECRET') ?: '',
     'whop_link_bronze' => '',
     'whop_link_silver' => '',
-    'whop_link_gold' => '',
     'whop_link_agency' => '',
     'whop_plan_bronze' => '',
     'whop_plan_silver' => '',
-    'whop_plan_gold' => '',
     'whop_plan_agency' => '',
 
     // Affiliate display controls

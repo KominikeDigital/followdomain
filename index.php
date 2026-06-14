@@ -80,6 +80,19 @@ session_set_cookie_params([
 // Start session for admin/user auth
 session_start();
 
+// Check for referral code and store in a cookie for 30 days
+if (isset($_GET['ref']) && $_GET['ref'] !== '') {
+    $refUsername = trim($_GET['ref']);
+    $secure = tldixIsHttpsRequest();
+    setcookie('tldix_ref', $refUsername, [
+        'expires' => time() + 30 * 86400,
+        'path' => '/',
+        'secure' => $secure,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+}
+
 if (!empty($_SESSION['user_id'])) {
     tldixSetExtensionSessionCookie();
 }
@@ -235,6 +248,8 @@ if (isset($_GET['route']) && $_GET['route'] !== '') {
             exit;
         } elseif ($path === 'checkout') {
             $route = 'checkout';
+        } elseif ($path === 'affiliate') {
+            $route = 'affiliate';
         } elseif ($path === 'webhook/whop') {
             $route = 'webhook_whop';
         } elseif ($path === 'domains-for-sale') {
@@ -430,7 +445,8 @@ switch ($route) {
         // Handle Register Submission
         if (isset($_POST['submit_register'])) {
             $plan = trim($_POST['plan'] ?? 'free');
-            $res = registerUser($pdo, $_POST['username'], $_POST['email'], $_POST['password'], $plan);
+            $refCode = isset($_COOKIE['tldix_ref']) ? trim($_COOKIE['tldix_ref']) : null;
+            $res = registerUser($pdo, $_POST['username'], $_POST['email'], $_POST['password'], $plan, $refCode);
             if ($res['success']) {
                 $userEmail = trim($_POST['email']);
                 $userName = trim($_POST['username']);
@@ -595,11 +611,12 @@ switch ($route) {
             if ($action === 'add_domains') {
                 $mode = isset($_POST['mode']) ? $_POST['mode'] : 'single';
                 $alertSettings = isset($_POST['alerts']) ? $_POST['alerts'] : [];
+                $showInTrends = isset($_POST['show_in_trends']) ? 1 : 0;
                 
                 if ($mode === 'single') {
                     $domainName = cleanDomainName($_POST['domain_name']);
                     if (!empty($domainName)) {
-                        $addResult = addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings, 0);
+                        $addResult = addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings, 0, $showInTrends);
                         if (!empty($addResult['success']) && ($addResult['code'] ?? '') === 'inserted') {
                             logActivity($pdo, $userId, "Alan adı takibe eklendi: $domainName");
                             $_SESSION['domain_msg'] = "Alan adı takibe eklendi: $domainName";
@@ -611,7 +628,7 @@ switch ($route) {
                     }
                 } elseif ($mode === 'bulk') {
                     $bulkText = isset($_POST['domains_bulk']) ? $_POST['domains_bulk'] : '';
-                    $bulkResult = importBulkDomains($pdo, $userId, $bulkText, $alertSettings);
+                    $bulkResult = importBulkDomains($pdo, $userId, $bulkText, $alertSettings, $showInTrends);
                     if (!empty($bulkResult['imported_count'])) {
                         $_SESSION['domain_msg'] = $bulkResult['imported_count'] . " alan adı takibe eklendi.";
                     }
@@ -649,6 +666,7 @@ switch ($route) {
             if ($action === 'update_alerts') {
                 $domainName = cleanDomainName($_POST['domain_name']);
                 $alertSettings = isset($_POST['alerts']) ? $_POST['alerts'] : [];
+                $showInTrends = isset($_POST['show_in_trends']) ? 1 : 0;
                 
                 $n60 = isset($alertSettings['60']) ? (int)$alertSettings['60'] : 0;
                 $n30 = isset($alertSettings['30']) ? (int)$alertSettings['30'] : 0;
@@ -658,9 +676,9 @@ switch ($route) {
                 $n1 = isset($alertSettings['1']) ? (int)$alertSettings['1'] : 0;
                 
                 $stmt = $pdo->prepare("UPDATE user_domains SET 
-                    notify_60 = ?, notify_30 = ?, notify_14 = ?, notify_7 = ?, notify_3 = ?, notify_1 = ? 
+                    notify_60 = ?, notify_30 = ?, notify_14 = ?, notify_7 = ?, notify_3 = ?, notify_1 = ?, show_in_trends = ? 
                     WHERE user_id = ? AND domain_name = ?");
-                $stmt->execute([$n60, $n30, $n14, $n7, $n3, $n1, $userId, $domainName]);
+                $stmt->execute([$n60, $n30, $n14, $n7, $n3, $n1, $showInTrends, $userId, $domainName]);
                 
                 logActivity($pdo, $userId, "Alan adı bildirim ayarları güncellendi: $domainName");
                 header("Location: " . url("panel/domains"));
@@ -812,8 +830,12 @@ switch ($route) {
     case 'trending':
         $pageTitle = "Trend Alan Adları | " . $config['site_title'];
         
-        // Fetch top followed domains
-        $stmt = $pdo->query("SELECT * FROM domains ORDER BY follower_count DESC, last_checked DESC LIMIT 50");
+        $stmt = $pdo->query("SELECT d.* FROM domains d 
+        WHERE NOT EXISTS (
+            SELECT 1 FROM user_domains ud 
+            WHERE ud.domain_name = d.domain_name AND ud.show_in_trends = 0
+        ) 
+        ORDER BY d.follower_count DESC, d.last_checked DESC LIMIT 50");
         $trendingDomains = $stmt->fetchAll();
         break;
         
@@ -1469,6 +1491,9 @@ switch ($route) {
         break;
     case 'checkout':
         require_once __DIR__ . '/templates/checkout.php';
+        break;
+    case 'affiliate':
+        require_once __DIR__ . '/templates/affiliate.php';
         break;
     case 'domains_for_sale':
         require_once __DIR__ . '/templates/domains_for_sale.php';

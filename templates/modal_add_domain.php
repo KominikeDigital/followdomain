@@ -83,6 +83,14 @@ $modalCanAddDomain = !empty($modalLimitStatus['allowed']);
                 <input type="hidden" name="alerts[1]" id="alert_val_1" value="1">
             </div>
             
+            <!-- Trend Visibility Selector -->
+            <div class="form-group" style="margin-top: 1rem; margin-bottom: 1rem;">
+                <label class="checkbox-container" style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-secondary); cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" name="show_in_trends" id="modal_show_in_trends" value="1" checked style="accent-color: var(--color-primary); width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--color-border); background: rgba(0,0,0,0.3);">
+                    <span><?php echo __('show_in_trends_label', 'Trend tablosunda göster'); ?></span>
+                </label>
+            </div>
+            
             <!-- Actions -->
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeAddDomainModal()"><?php echo __('modal_btn_cancel'); ?></button>

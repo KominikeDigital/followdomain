@@ -188,7 +188,7 @@ $canExportCsv = userPlanAllows($userPlan, 'csv_export');
                                 <!-- Star Button -->
                                 <button type="button" class="action-icon-btn fav-btn <?php echo $item['is_favorite'] ? 'active' : ''; ?>" onclick="toggleFavorite('<?php echo esc($domName); ?>', this)" title="<?php echo esc(__('favorites')); ?>">★</button>
                                 <!-- Alert Bell Config -->
-                                <button type="button" class="action-icon-btn bell-btn" onclick="openAlertConfig('<?php echo esc($domName); ?>', <?php echo (int)$item['notify_60']; ?>, <?php echo (int)$item['notify_30']; ?>, <?php echo (int)$item['notify_14']; ?>, <?php echo (int)$item['notify_7']; ?>, <?php echo (int)$item['notify_3']; ?>, <?php echo (int)$item['notify_1']; ?>)" title="<?php echo esc(__('action_alerts')); ?>">🔔</button>
+                                <button type="button" class="action-icon-btn bell-btn" onclick="openAlertConfig('<?php echo esc($domName); ?>', <?php echo (int)$item['notify_60']; ?>, <?php echo (int)$item['notify_30']; ?>, <?php echo (int)$item['notify_14']; ?>, <?php echo (int)$item['notify_7']; ?>, <?php echo (int)$item['notify_3']; ?>, <?php echo (int)$item['notify_1']; ?>, <?php echo (int)($item['show_in_trends'] ?? 1); ?>)" title="<?php echo esc(__('action_alerts')); ?>">🔔</button>
                                 <!-- Delete Button -->
                                 <button type="button" class="action-icon-btn delete-btn" onclick="deleteDomain('<?php echo esc($domName); ?>', '<?php echo esc(sprintf(__('action_unfollow_confirm'), $domName)); ?>')" title="<?php echo esc(__('action_unfollow')); ?>">🗑</button>
                             </div>
@@ -266,6 +266,14 @@ $canExportCsv = userPlanAllows($userPlan, 'csv_export');
                 <input type="hidden" name="alerts[7]" id="config_alert_val_7" value="0">
                 <input type="hidden" name="alerts[3]" id="config_alert_val_3" value="0">
                 <input type="hidden" name="alerts[1]" id="config_alert_val_1" value="0">
+            </div>
+
+            <!-- Trend Visibility Selector -->
+            <div class="form-group" style="margin-top: 1rem; margin-bottom: 1rem;">
+                <label class="checkbox-container" style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-secondary); cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" name="show_in_trends" id="config_show_in_trends" value="1" style="accent-color: var(--color-primary); width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--color-border); background: rgba(0,0,0,0.3);">
+                    <span><?php echo __('show_in_trends_label', 'Trend tablosunda göster'); ?></span>
+                </label>
             </div>
 
             <div class="modal-actions" style="margin-top: 2rem;">

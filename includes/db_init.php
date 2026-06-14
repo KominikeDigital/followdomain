@@ -60,6 +60,7 @@ function initializeDatabase($pdo, $dbType) {
             webhook_url TEXT NULL,
             is_verified INTEGER DEFAULT 0,
             verification_token TEXT NULL,
+            referred_by_id INTEGER NULL,
             created_at TEXT
         )";
 
@@ -74,6 +75,7 @@ function initializeDatabase($pdo, $dbType) {
             notify_7 INTEGER DEFAULT 1,
             notify_3 INTEGER DEFAULT 1,
             notify_1 INTEGER DEFAULT 1,
+            show_in_trends INTEGER DEFAULT 1,
             notified_60_sent INTEGER DEFAULT 0,
             notified_30_sent INTEGER DEFAULT 0,
             notified_14_sent INTEGER DEFAULT 0,
@@ -200,6 +202,17 @@ function initializeDatabase($pdo, $dbType) {
             confirmed_at TEXT
         )";
 
+        $queries[] = "CREATE TABLE IF NOT EXISTS affiliate_commissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            referred_id INTEGER NOT NULL,
+            payment_id INTEGER NOT NULL,
+            commission_amount REAL NOT NULL,
+            currency TEXT DEFAULT 'USD',
+            status TEXT DEFAULT 'pending',
+            created_at TEXT
+        )";
+
         $queries[] = "CREATE TABLE IF NOT EXISTS domain_lookup_cache (
             domain_name TEXT PRIMARY KEY,
             registered INTEGER DEFAULT 0,
@@ -270,6 +283,7 @@ function initializeDatabase($pdo, $dbType) {
             webhook_url TEXT NULL,
             is_verified TINYINT DEFAULT 0,
             verification_token VARCHAR(100) NULL,
+            referred_by_id INT NULL,
             created_at DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
@@ -284,6 +298,7 @@ function initializeDatabase($pdo, $dbType) {
             notify_7 TINYINT DEFAULT 1,
             notify_3 TINYINT DEFAULT 1,
             notify_1 TINYINT DEFAULT 1,
+            show_in_trends TINYINT DEFAULT 1,
             notified_60_sent TINYINT DEFAULT 0,
             notified_30_sent TINYINT DEFAULT 0,
             notified_14_sent TINYINT DEFAULT 0,
@@ -410,6 +425,17 @@ function initializeDatabase($pdo, $dbType) {
             confirmed_at DATETIME NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
+        $queries[] = "CREATE TABLE IF NOT EXISTS affiliate_commissions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            referrer_id INT NOT NULL,
+            referred_id INT NOT NULL,
+            payment_id INT NOT NULL,
+            commission_amount DECIMAL(10,2) NOT NULL,
+            currency VARCHAR(10) DEFAULT 'USD',
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at DATETIME
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
         $queries[] = "CREATE TABLE IF NOT EXISTS domain_lookup_cache (
             domain_name VARCHAR(255) PRIMARY KEY,
             registered TINYINT(1) DEFAULT 0,
@@ -442,7 +468,8 @@ function initializeDatabase($pdo, $dbType) {
         'last_api_query_date' => "TEXT DEFAULT ''",
         'webhook_url' => 'TEXT NULL',
         'is_verified' => 'INTEGER DEFAULT 0',
-        'verification_token' => 'TEXT NULL'
+        'verification_token' => 'TEXT NULL',
+        'referred_by_id' => 'INTEGER NULL'
     ];
     
     if ($dbType === 'mysql') {
@@ -454,13 +481,31 @@ function initializeDatabase($pdo, $dbType) {
             'last_api_query_date' => "VARCHAR(10) DEFAULT ''",
             'webhook_url' => 'TEXT NULL',
             'is_verified' => 'TINYINT DEFAULT 0',
-            'verification_token' => 'VARCHAR(100) NULL'
+            'verification_token' => 'VARCHAR(100) NULL',
+            'referred_by_id' => 'INT NULL'
         ];
     }
     
     foreach ($columnsToAdd as $col => $definition) {
         try {
             $pdo->exec("ALTER TABLE users ADD COLUMN $col $definition");
+        } catch (PDOException $e) {
+            // Fails silently if column already exists
+        }
+    }
+
+    // Add columns dynamically to user_domains table if they do not exist
+    $userDomainCols = [
+        'show_in_trends' => 'INTEGER DEFAULT 1',
+    ];
+    if ($dbType === 'mysql') {
+        $userDomainCols = [
+            'show_in_trends' => 'TINYINT DEFAULT 1',
+        ];
+    }
+    foreach ($userDomainCols as $col => $definition) {
+        try {
+            $pdo->exec("ALTER TABLE user_domains ADD COLUMN $col $definition");
         } catch (PDOException $e) {
             // Fails silently if column already exists
         }
@@ -564,7 +609,9 @@ function initializeDatabase($pdo, $dbType) {
         "CREATE INDEX IF NOT EXISTS idx_user_licenses_expiration ON user_licenses (expiration_date)",
         "CREATE INDEX IF NOT EXISTS idx_followers_domain ON followers (domain_id)",
         "CREATE INDEX IF NOT EXISTS idx_domain_lookup_cache_checked ON domain_lookup_cache (last_checked)",
-        "CREATE INDEX IF NOT EXISTS idx_payments_whop_order ON payments (whop_order_id)"
+        "CREATE INDEX IF NOT EXISTS idx_payments_whop_order ON payments (whop_order_id)",
+        "CREATE INDEX IF NOT EXISTS idx_affiliate_commissions_referrer ON affiliate_commissions (referrer_id)",
+        "CREATE INDEX IF NOT EXISTS idx_affiliate_commissions_referred ON affiliate_commissions (referred_id)"
     ];
     
     if ($dbType === 'mysql') {
@@ -576,7 +623,9 @@ function initializeDatabase($pdo, $dbType) {
             "CREATE INDEX idx_user_licenses_expiration ON user_licenses (expiration_date)",
             "CREATE INDEX idx_followers_domain ON followers (domain_id)",
             "CREATE INDEX idx_domain_lookup_cache_checked ON domain_lookup_cache (last_checked)",
-            "CREATE INDEX idx_payments_whop_order ON payments (whop_order_id)"
+            "CREATE INDEX idx_payments_whop_order ON payments (whop_order_id)",
+            "CREATE INDEX idx_affiliate_commissions_referrer ON affiliate_commissions (referrer_id)",
+            "CREATE INDEX idx_affiliate_commissions_referred ON affiliate_commissions (referred_id)"
         ];
     }
     

@@ -572,7 +572,7 @@ function toggleFavorite(domainName, button) {
     .catch(err => console.error('Error toggling favorite:', err));
 }
 
-function openAlertConfig(domainName, n60, n30, n14, n7, n3, n1) {
+function openAlertConfig(domainName, n60, n30, n14, n7, n3, n1, showInTrends) {
     const dialog = document.getElementById('alertConfigDialog');
     const titleNode = document.getElementById('configDialogDomainName');
     const inputNode = document.getElementById('configAlertDomainInput');
@@ -609,6 +609,12 @@ function openAlertConfig(domainName, n60, n30, n14, n7, n3, n1) {
                 hiddenInput.value = isActive ? '1' : '0';
             }
         });
+        
+        // Handle show_in_trends checkbox
+        const trendsCheckbox = document.getElementById('config_show_in_trends');
+        if (trendsCheckbox) {
+            trendsCheckbox.checked = showInTrends === 1;
+        }
         
         dialog.showModal();
     }

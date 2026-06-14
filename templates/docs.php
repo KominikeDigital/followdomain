@@ -130,16 +130,16 @@ $apiUrlBase = "http://" . $_SERVER['HTTP_HOST'];
                         </ul>
                     </div>
 
-                    <!-- Gold Plan -->
+                    <!-- Agency Plan -->
                     <div style="border: 1px solid var(--color-border); border-radius: 8px; padding: 1.25rem; background: rgba(255,255,255,0.01);">
                         <div class="api-plan-card-head">
-                            <strong><?php echo __('plan_gold_name'); ?></strong>
-                            <span class="success-price"><?php echo __('plan_gold_price'); ?> <?php echo __('plan_gold_period'); ?></span>
+                            <strong><?php echo __('plan_agency_name'); ?></strong>
+                            <span class="success-price"><?php echo __('plan_agency_price'); ?> <?php echo __('plan_agency_period'); ?></span>
                         </div>
                         <ul style="list-style: none; font-size: 0.85rem; color: var(--color-text-secondary); padding: 0; display: flex; flex-direction: column; gap: 0.4rem;">
-                            <li>✓ <?php echo __('plan_gold_feature_1'); ?></li>
-                            <li><?php echo __('plan_gold_feature_2'); ?></li>
-                            <li><?php echo __('plan_gold_feature_3'); ?></li>
+                            <li>✓ <?php echo __('plan_agency_feature_1'); ?></li>
+                            <li><?php echo __('plan_agency_feature_11'); ?></li>
+                            <li><?php echo __('plan_agency_feature_12'); ?></li>
                         </ul>
                     </div>
                 </div>

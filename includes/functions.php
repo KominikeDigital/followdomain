@@ -373,7 +373,7 @@ function esc($str) {
 
 function normalizePlanKey($plan) {
     $plan = strtolower(trim((string)$plan));
-    return in_array($plan, ['free', 'bronze', 'silver', 'gold', 'agency'], true) ? $plan : 'free';
+    return in_array($plan, ['free', 'bronze', 'silver', 'agency'], true) ? $plan : 'free';
 }
 
 function getPlanCapabilities($plan = 'free') {
@@ -401,14 +401,6 @@ function getPlanCapabilities($plan = 'free') {
             'webhook_limit' => 50,
             'history_days' => 365,
             'api_daily_limit' => 50000,
-        ],
-        'gold' => [
-            'domain_limit' => null,
-            'csv_export' => true,
-            'bulk_import' => true,
-            'webhook_limit' => null,
-            'history_days' => null,
-            'api_daily_limit' => null,
         ],
         'agency' => [
             'domain_limit' => null,
@@ -515,7 +507,7 @@ function getDomainAlertFlagValues($alertSettings, $default = 1) {
     ];
 }
 
-function addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings = [], $defaultAlert = 1) {
+function addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings = [], $defaultAlert = 1, $showInTrends = 1) {
     $domainName = cleanDomainName($domainName);
     if ($domainName === '' || strpos($domainName, '.') === false) {
         return ['success' => false, 'code' => 'invalid_domain', 'message' => 'Geçerli bir alan adı girin.'];
@@ -544,8 +536,8 @@ function addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings = []
     $flags = getDomainAlertFlagValues($alertSettings, (int)$defaultAlert);
     try {
         $stmt = $pdo->prepare("INSERT INTO user_domains
-            (user_id, domain_name, notify_60, notify_30, notify_14, notify_7, notify_3, notify_1, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            (user_id, domain_name, notify_60, notify_30, notify_14, notify_7, notify_3, notify_1, show_in_trends, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             (int)$userId,
             $domainName,
@@ -555,6 +547,7 @@ function addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings = []
             $flags['7'],
             $flags['3'],
             $flags['1'],
+            (int)$showInTrends,
             date('Y-m-d H:i:s')
         ]);
 
@@ -1435,7 +1428,7 @@ function sendAdminRegistrationNotification($email, $username, $mailSent, $token 
 /**
  * Bulk Import Domains for a user
  */
-function importBulkDomains($pdo, $userId, $domainsText, $alertSettings) {
+function importBulkDomains($pdo, $userId, $domainsText, $alertSettings, $showInTrends = 1) {
     $userPlan = getUserPlan($pdo, $userId);
     if (!userPlanAllows($userPlan, 'bulk_import')) {
         return [
@@ -1462,7 +1455,7 @@ function importBulkDomains($pdo, $userId, $domainsText, $alertSettings) {
         }
         $seen[$domainName] = true;
 
-        $result = addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings, 1);
+        $result = addUserDomainToTracking($pdo, $userId, $domainName, $alertSettings, 1, $showInTrends);
         if (!empty($result['success']) && ($result['code'] ?? '') === 'inserted') {
             $count++;
             continue;
@@ -1740,7 +1733,7 @@ function detectWhopPlan($payload) {
     global $config;
 
     $payloadText = strtolower(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    foreach (['agency', 'gold', 'silver', 'bronze'] as $candidate) {
+    foreach (['agency', 'silver', 'bronze'] as $candidate) {
         $configuredPlanId = strtolower(trim((string)($config['whop_plan_' . $candidate] ?? '')));
         if ($configuredPlanId !== '' && strpos($payloadText, $configuredPlanId) !== false) {
             return $candidate;
@@ -1748,24 +1741,30 @@ function detectWhopPlan($payload) {
     }
 
     $plan = strtolower((string)(findNestedValueByKeys($payload, ['tldix_plan', 'plan', 'plan_key', 'tier']) ?? ''));
-    if (in_array($plan, ['bronze', 'silver', 'gold', 'agency'], true)) {
+    if (in_array($plan, ['bronze', 'silver', 'agency'], true)) {
         return $plan;
     }
 
-    foreach (['agency', 'gold', 'silver', 'bronze'] as $candidate) {
+    if ($plan === 'gold') {
+        return 'agency';
+    }
+
+    foreach (['agency', 'silver', 'bronze'] as $candidate) {
         if (strpos($payloadText, $candidate) !== false) {
             return $candidate;
         }
     }
 
+    if (strpos($payloadText, 'gold') !== false) {
+        return 'agency';
+    }
+
     $amount = findNestedValueByKeys($payload, ['amount', 'total', 'subtotal', 'price', 'value']);
     $amount = is_numeric($amount) ? (float)$amount : 0.0;
-    if ($amount >= 19900) return 'agency';
-    if ($amount >= 9900) return 'gold';
+    if ($amount >= 9900) return 'agency';
     if ($amount >= 2900) return 'silver';
     if ($amount >= 900) return 'bronze';
-    if ($amount >= 199) return 'agency';
-    if ($amount >= 99) return 'gold';
+    if ($amount >= 99) return 'agency';
     if ($amount >= 29) return 'silver';
     if ($amount >= 9) return 'bronze';
 
@@ -1871,6 +1870,10 @@ function processWhopWebhook($pdo, $rawPayload, $headers) {
         $now,
         $now
     ]);
+    $paymentId = $pdo->lastInsertId();
+    if ($paymentId) {
+        rewardAffiliateCommission($pdo, $paymentId);
+    }
     if (function_exists('logActivity')) {
         logActivity($pdo, $user['id'], "Whop ödemesi onaylandı. Plan " . strtoupper($plan) . " aktif edildi.");
     }
@@ -2102,4 +2105,75 @@ function getBlogPostsByCategory($categorySlug, $lang = 'en') {
         }
     }
     return $filtered;
+}
+
+/**
+ * Reward an affiliate commission of 40% when a referred user makes their first paid subscription payment.
+ */
+function rewardAffiliateCommission($pdo, $paymentId) {
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM payments WHERE id = ?");
+        $stmt->execute([(int)$paymentId]);
+        $payment = $stmt->fetch();
+        if (!$payment) {
+            return false;
+        }
+
+        // We only reward for confirmed paid subscriptions (method is whop or bank transfer / wire, etc.)
+        if (strtolower($payment['status']) !== 'confirmed') {
+            return false;
+        }
+
+        // Check plan, if it's free, no commission
+        if (strtolower($payment['plan']) === 'free') {
+            return false;
+        }
+
+        // Check if user has referred_by_id
+        $stmt = $pdo->prepare("SELECT referred_by_id FROM users WHERE id = ?");
+        $stmt->execute([(int)$payment['user_id']]);
+        $referrerId = $stmt->fetchColumn();
+
+        if (!$referrerId) {
+            return false;
+        }
+
+        // Check if user is trying to refer themselves
+        if ((int)$referrerId === (int)$payment['user_id']) {
+            return false;
+        }
+
+        // Check if this referred user has already generated any affiliate commission
+        // Affiliate payout is strictly one-time per referred paid user
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM affiliate_commissions WHERE referred_id = ?");
+        $stmt->execute([(int)$payment['user_id']]);
+        $hasCommission = $stmt->fetchColumn();
+
+        if ($hasCommission > 0) {
+            return false;
+        }
+
+        // Calculate 40% commission
+        $commissionAmount = round((float)$payment['amount'] * 0.40, 2);
+        $currency = $payment['currency'] ?: 'USD';
+
+        // Insert pending commission
+        $stmt = $pdo->prepare("
+            INSERT INTO affiliate_commissions (referrer_id, referred_id, payment_id, commission_amount, currency, status, created_at)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?)
+        ");
+        $stmt->execute([
+            (int)$referrerId,
+            (int)$payment['user_id'],
+            (int)$paymentId,
+            $commissionAmount,
+            $currency,
+            date('Y-m-d H:i:s')
+        ]);
+
+        return true;
+    } catch (Throwable $e) {
+        error_log("rewardAffiliateCommission error: " . $e->getMessage());
+        return false;
+    }
 }

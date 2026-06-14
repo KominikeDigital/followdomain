@@ -1,0 +1,175 @@
+<?php
+// Prevent direct access
+if (count(get_included_files()) === 1) {
+    http_response_code(403);
+    exit('Direct access not allowed.');
+}
+
+$isUser = isLoggedIn();
+$username = $_SESSION['username'] ?? '';
+$userId = $_SESSION['user_id'] ?? 0;
+
+$stats = [
+    'referred_count' => 0,
+    'pending_commission' => 0,
+    'paid_commission' => 0,
+];
+$userCommissions = [];
+
+if ($isUser) {
+    // Referred registrations count
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE referred_by_id = ?");
+    $stmt->execute([$userId]);
+    $stats['referred_count'] = (int)$stmt->fetchColumn();
+
+    // Pending commissions total
+    $stmt = $pdo->prepare("SELECT SUM(commission_amount) FROM affiliate_commissions WHERE referrer_id = ? AND status = 'pending'");
+    $stmt->execute([$userId]);
+    $stats['pending_commission'] = (float)($stmt->fetchColumn() ?: 0.0);
+
+    // Paid commissions total
+    $stmt = $pdo->prepare("SELECT SUM(commission_amount) FROM affiliate_commissions WHERE referrer_id = ? AND status = 'paid'");
+    $stmt->execute([$userId]);
+    $stats['paid_commission'] = (float)($stmt->fetchColumn() ?: 0.0);
+
+    // History list of commissions
+    $stmt = $pdo->prepare("
+        SELECT ac.*, u.username as referred_username 
+        FROM affiliate_commissions ac 
+        LEFT JOIN users u ON ac.referred_id = u.id 
+        WHERE ac.referrer_id = ? 
+        ORDER BY ac.created_at DESC
+    ");
+    $stmt->execute([$userId]);
+    $userCommissions = $stmt->fetchAll();
+}
+
+$refLink = rtrim($config['site_url'] ?? 'https://tldix.com', '/') . '/?ref=' . esc($username);
+?>
+
+<div class="affiliate-page-container" style="max-width: 960px; margin: 2rem auto; padding: 0 1rem;">
+    <!-- Kicker Header -->
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <span class="premium-section-kicker" style="background: rgba(20, 184, 166, 0.1); color: var(--color-primary); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">
+            TLDix Affiliate
+        </span>
+        <h1 style="font-family: var(--font-display); color: var(--color-text-primary); font-size: 2.5rem; margin-top: 1rem; margin-bottom: 0.75rem;">
+            Ortaklık Programı
+        </h1>
+        <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.6;">
+            TLDix'i çevrenize önererek her ücretli üye kaydı için %40 tek seferlik komisyon kazanın. İşletmelerin domain ve SSL sürelerini kaçırma korkusuna son verin.
+        </p>
+    </div>
+
+    <?php if (!$isUser): ?>
+        <!-- Guest View Page -->
+        <div class="glass-panel" style="padding: 3rem; border-radius: 16px; text-align: center; border: 1px solid var(--color-border); background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(12px);">
+            <h2 style="font-family: var(--font-display); color: var(--color-text-primary); margin-bottom: 1rem;">Kazanmaya Başlayın</h2>
+            <p style="color: var(--color-text-secondary); max-width: 500px; margin: 0 auto 2rem; font-size: 0.95rem; line-height: 1.5;">
+                Hemen ücretsiz üye olun veya hesabınıza giriş yapın, size özel oluşturulan ortaklık linkinizi kopyalayıp paylaşın.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="<?php echo url('register'); ?>" class="btn btn-primary" style="padding: 0.75rem 2rem;">Hemen Üye Ol</a>
+                <a href="<?php echo url('login'); ?>" class="btn btn-secondary" style="padding: 0.75rem 2rem;">Giriş Yap</a>
+            </div>
+        </div>
+        
+        <div style="margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border);">
+                <span style="font-size: 2rem;">💰</span>
+                <h4 style="margin: 1rem 0 0.5rem; color: var(--color-text-primary);">%40 Yüksek Komisyon</h4>
+                <p style="font-size: 0.88rem; color: var(--color-text-secondary); line-height: 1.4;">Önerdiğiniz kullanıcının ilk başarılı premium ödemesinden (Bronze, Silver veya Agency) %40 komisyon kazanırsınız.</p>
+            </div>
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border);">
+                <span style="font-size: 2rem;">🍪</span>
+                <h4 style="margin: 1rem 0 0.5rem; color: var(--color-text-primary);">30 Gün Cookie Süresi</h4>
+                <p style="font-size: 0.88rem; color: var(--color-text-secondary); line-height: 1.4;">Ziyaretçiler linkinize tıkladıktan sonra 30 gün içinde ne zaman üye olurlarsa olsunlar sizin referansınız olarak kaydedilirler.</p>
+            </div>
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border);">
+                <span style="font-size: 2rem;">⚡</span>
+                <h4 style="margin: 1rem 0 0.5rem; color: var(--color-text-primary);">Hızlı ve Güvenilir Payout</h4>
+                <p style="font-size: 0.88rem; color: var(--color-text-secondary); line-height: 1.4;">Yönetici panelimiz üzerinden komisyon ödemelerinizi şeffaf bir şekilde izleyebilir, kazançlarınızı banka hesabınıza talep edebilirsiniz.</p>
+            </div>
+        </div>
+    <?php else: ?>
+        <!-- Member View Page -->
+        <div class="glass-panel" style="padding: 2.5rem; border-radius: 16px; border: 1px solid var(--color-border); background: rgba(255, 255, 255, 0.02); margin-bottom: 2rem;">
+            <h3 style="color: var(--color-text-primary); margin-bottom: 1.25rem; font-family: var(--font-display);">Size Özel Referans Linki</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="refLinkInput" value="<?php echo $refLink; ?>" readonly style="flex: 1; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--color-border); background: rgba(0,0,0,0.3); color: var(--color-text-primary); font-family: monospace; font-size: 0.95rem;">
+                <button onclick="copyRefLink()" class="btn btn-primary" style="padding: 0 1.5rem;">Kopyala</button>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--color-text-muted); margin-top: 0.75rem; margin-bottom: 0;">
+                Ziyaretçileriniz bu linkle geldiğinde 30 günlük bir çerez (cookie) ile takip edilirler.
+            </p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border); text-align: center;">
+                <span style="color: var(--color-text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Kayıtlı Referanslar</span>
+                <div style="font-size: 2.25rem; font-weight: 700; color: var(--color-text-primary); margin-top: 0.5rem;"><?php echo $stats['referred_count']; ?></div>
+            </div>
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border); text-align: center;">
+                <span style="color: var(--color-text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Bekleyen Ödemeler</span>
+                <div style="font-size: 2.25rem; font-weight: 700; color: var(--color-warning); margin-top: 0.5rem;"><?php echo number_format($stats['pending_commission'], 2); ?> USD</div>
+            </div>
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border); text-align: center;">
+                <span style="color: var(--color-text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Ödenen Kazanç</span>
+                <div style="font-size: 2.25rem; font-weight: 700; color: var(--color-success); margin-top: 0.5rem;"><?php echo number_format($stats['paid_commission'], 2); ?> USD</div>
+            </div>
+        </div>
+
+        <!-- Commissions list -->
+        <div class="glass-panel" style="padding: 2rem; border-radius: 16px; border: 1px solid var(--color-border);">
+            <h3 style="color: var(--color-text-primary); margin-bottom: 1.5rem; font-family: var(--font-display);">Referans Kazanç Geçmişi</h3>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 0.85rem;">
+                            <th style="padding: 1rem 0.75rem;">Kayıt Olan</th>
+                            <th style="padding: 1rem 0.75rem;">Komisyon Tutarı</th>
+                            <th style="padding: 1rem 0.75rem;">Durum</th>
+                            <th style="padding: 1rem 0.75rem;">Tarih</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($userCommissions)): ?>
+                            <tr>
+                                <td colspan="4" style="padding: 2rem 0.75rem; text-align: center; color: var(--color-text-muted); font-size: 0.9rem;">
+                                    Henüz referans komisyonu kazanmadınız. İlk referansınızı hemen davet edin!
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($userCommissions as $comm): ?>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--color-text-secondary); font-size: 0.9rem;">
+                                    <td style="padding: 1rem 0.75rem; font-weight: 600; color: var(--color-text-primary);"><?php echo esc($comm['referred_username'] ?? 'Müşteri'); ?></td>
+                                    <td style="padding: 1rem 0.75rem; font-weight: 700; color: var(--color-success);"><?php echo esc($comm['commission_amount']); ?> <?php echo esc($comm['currency']); ?></td>
+                                    <td style="padding: 1rem 0.75rem;">
+                                        <?php if ($comm['status'] === 'paid'): ?>
+                                            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">ÖDENDİ</span>
+                                        <?php else: ?>
+                                            <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">BEKLEYEN</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="padding: 1rem 0.75rem; color: var(--color-text-muted); font-size: 0.8rem;"><?php echo formatDate($comm['created_at'], 'd M Y H:i'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script>
+        function copyRefLink() {
+            var copyText = document.getElementById("refLinkInput");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // Mobile
+            navigator.clipboard.writeText(copyText.value);
+            alert("Referans linkiniz kopyalandı!");
+        }
+        </script>
+    <?php endif; ?>
+</div>

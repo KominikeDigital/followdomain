@@ -39,6 +39,7 @@
                             <li><a href="<?php echo url('expiring'); ?>"><?php echo __('nav_expiring'); ?></a></li>
                         <?php endif; ?>
                         <li><a href="<?php echo url('contact'); ?>"><?php echo __('nav_contact', 'Contact'); ?></a></li>
+                        <li><a href="<?php echo url('affiliate'); ?>"><?php echo __('nav_affiliate', 'Affiliate'); ?></a></li>
                         <li><a href="<?php echo url('privacy-policy'); ?>"><?php echo __('legal_privacy_title'); ?></a></li>
                         <li><a href="<?php echo url('terms-of-service'); ?>"><?php echo __('legal_terms_title'); ?></a></li>
                     </ul>

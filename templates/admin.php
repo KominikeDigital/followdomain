@@ -53,6 +53,10 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     ->execute([date('Y-m-d H:i:s'), $pid]);
                 $pdo->prepare("UPDATE users SET api_plan = ?, pending_plan = NULL WHERE id = ?")
                     ->execute([$payRow['plan'], $payRow['user_id']]);
+                
+                // Reward affiliate commission if applicable
+                rewardAffiliateCommission($pdo, $pid);
+
                 $settingsSaved = true;
             }
         } catch (Exception $e) {}
@@ -65,9 +69,19 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {}
     }
 
+    // Pay commission action
+    if ($action === 'pay_commission' && !empty($_POST['commission_id'])) {
+        try {
+            $cid = (int)$_POST['commission_id'];
+            $pdo->prepare("UPDATE affiliate_commissions SET status = 'paid' WHERE id = ?")
+                ->execute([$cid]);
+            $settingsSaved = true;
+        } catch (Exception $e) {}
+    }
+
     // Manual plan change by admin
     if ($action === 'admin_set_plan' && !empty($_POST['user_id']) && !empty($_POST['plan'])) {
-        $plan = in_array($_POST['plan'], ['free','bronze','silver','gold','agency'], true) ? $_POST['plan'] : 'free';
+        $plan = in_array($_POST['plan'], ['free','bronze','silver','agency'], true) ? $_POST['plan'] : 'free';
         $pdo->prepare("UPDATE users SET api_plan = ?, pending_plan = NULL WHERE id = ?")
             ->execute([$plan, (int)$_POST['user_id']]);
         $settingsSaved = true;
@@ -279,9 +293,21 @@ if ($isAdmin) {
     $allAffiliateProviders = getAffiliateProviders($pdo, $config, null, true);
 }
 
+// Query affiliate commissions
+try {
+    $commissions = $pdo->query("
+        SELECT ac.*, u1.username as referrer_username, u2.username as referred_username, p.amount as payment_amount 
+        FROM affiliate_commissions ac 
+        LEFT JOIN users u1 ON ac.referrer_id = u1.id 
+        LEFT JOIN users u2 ON ac.referred_id = u2.id 
+        LEFT JOIN payments p ON ac.payment_id = p.id 
+        ORDER BY ac.created_at DESC
+    ")->fetchAll();
+} catch(Exception $e) { $commissions = []; }
+
 // Active tab
 $activeTab = $_GET['tab'] ?? 'dashboard';
-$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','social','domains','members','payments','affiliate-stats','integrations','blog'];
+$validTabs = ['dashboard','general','affiliate','ads','email','email-templates','social','domains','members','payments','affiliate-stats','integrations','blog','affiliate-commissions'];
 if (!in_array($activeTab, $validTabs)) $activeTab = 'dashboard';
 
 $socialLinkRows = getConfiguredSocialLinks($config);
@@ -661,6 +687,9 @@ html[data-theme="light"] .admin-card textarea {
                 <a href="?tab=affiliate-stats" class="<?php echo $activeTab==='affiliate-stats'?'active':''; ?>">
                     Affiliate İstatistik
                 </a>
+                <a href="?tab=affiliate-commissions" class="<?php echo $activeTab==='affiliate-commissions'?'active':''; ?>">
+                    Affiliate Komisyonları
+                </a>
 
                 <div class="sidebar-section-label">Kullanıcı & Domain</div>
                 <a href="?tab=blog" class="<?php echo $activeTab==='blog'?'active':''; ?>">
@@ -737,7 +766,7 @@ html[data-theme="light"] .admin-card textarea {
                 <div class="admin-card">
                     <h3>⚡ Hızlı Erişim</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                        <?php foreach(['general'=>'⚙️ Genel Ayarlar','email'=>'📧 SMTP Ayarları','social'=>'Sosyal Medya','affiliate'=>'🔗 Affiliate URL','payments'=>'💳 Ödemeler','members'=>'👥 Üyeler','domains'=>'🌐 Domainler'] as $t=>$l): ?>
+                        <?php foreach(['general'=>'⚙️ Genel Ayarlar','email'=>'📧 SMTP Ayarları','social'=>'Sosyal Medya','affiliate'=>'🔗 Affiliate URL','payments'=>'💳 Ödemeler','members'=>'👥 Üyeler','domains'=>'🌐 Domainler','affiliate-commissions'=>'🤝 Ortaklık Komisyonları'] as $t=>$l): ?>
                             <a href="?tab=<?php echo $t; ?>" class="btn btn-secondary btn-sm"><?php echo $l; ?></a>
                         <?php endforeach; ?>
                     </div>
@@ -1647,14 +1676,7 @@ html[data-theme="light"] .admin-card textarea {
                             <label>Whop Silver Plan ID (Embed için)</label>
                             <input type="text" name="settings[whop_plan_silver]" value="<?php echo esc($config['whop_plan_silver'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
                         </div>
-                        <div class="form-group">
-                            <label>Whop Gold Plan Link</label>
-                            <input type="url" name="settings[whop_link_gold]" value="<?php echo esc($config['whop_link_gold'] ?? ''); ?>" placeholder="https://whop.com/checkout/...">
-                        </div>
-                        <div class="form-group">
-                            <label>Whop Gold Plan ID (Embed için)</label>
-                            <input type="text" name="settings[whop_plan_gold]" value="<?php echo esc($config['whop_plan_gold'] ?? ''); ?>" placeholder="plan_XXXXXXXXX">
-                        </div>
+
                         <div class="form-group">
                             <label>Whop Agency Plan Link</label>
                             <input type="url" name="settings[whop_link_agency]" value="<?php echo esc($config['whop_link_agency'] ?? ''); ?>" placeholder="https://whop.com/checkout/...">
@@ -1967,7 +1989,7 @@ html[data-theme="light"] .admin-card textarea {
                                 <tbody>
                                     <?php foreach ($members as $m): ?>
                                         <?php
-                                        $pc = ['free'=>'#6b7280','bronze'=>'#d97706','silver'=>'#94a3b8','gold'=>'#eab308','agency'=>'#14b8a6'];
+                                        $pc = ['free'=>'#6b7280','bronze'=>'#d97706','silver'=>'#94a3b8','agency'=>'#14b8a6'];
                                         $pc2 = $pc[$m['api_plan']] ?? '#6b7280';
                                         ?>
                                         <tr class="table-row-hover">
@@ -1989,7 +2011,7 @@ html[data-theme="light"] .admin-card textarea {
                                                     <input type="hidden" name="action" value="admin_set_plan">
                                                     <input type="hidden" name="user_id" value="<?php echo (int)$m['id']; ?>">
                                                     <select name="plan" style="padding:3px 6px; border-radius:5px; font-size:0.75rem; background:rgba(0,0,0,0.2); border:1px solid var(--color-border); color: var(--color-text-primary);">
-                                                        <?php foreach(['free','bronze','silver','gold','agency'] as $pl): ?>
+                                                        <?php foreach(['free','bronze','silver','agency'] as $pl): ?>
                                                             <option value="<?php echo $pl; ?>" <?php echo $m['api_plan']===$pl?'selected':''; ?>><?php echo strtoupper($pl); ?></option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -2155,6 +2177,68 @@ html[data-theme="light"] .admin-card textarea {
                     </div>
                     <button type="submit" class="btn btn-primary">💾 Kaydet</button>
                 </form>
+            </div>
+
+            <!-- Tab Pane: Affiliate Commissions -->
+            <div class="admin-tab-pane <?php echo $activeTab==='affiliate-commissions'?'active':''; ?>">
+                <div class="admin-page-header">
+                    <h2>🤝 Ortaklık (Affiliate) Komisyonları</h2>
+                    <p>Referans sistemi üzerinden kazanılan komisyonlar ve ödeme durumları</p>
+                </div>
+                
+                <div class="admin-card">
+                    <h3>📋 Komisyon Listesi</h3>
+                    <div style="overflow-x: auto; margin-top: 1rem;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Referans Olan</th>
+                                    <th>Kayıt Olan (Müşteri)</th>
+                                    <th>Ödeme Tutarı</th>
+                                    <th>Komisyon Tutarı (%40)</th>
+                                    <th>Durum</th>
+                                    <th>Tarih</th>
+                                    <th>Aksiyon</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($commissions)): ?>
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--color-text-muted);">Kayıtlı komisyon bulunmamaktadır.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($commissions as $comm): ?>
+                                        <tr class="table-row-hover">
+                                            <td><strong style="color: var(--color-text-primary);"><?php echo esc($comm['referrer_username'] ?? 'Silinmiş Kullanıcı'); ?></strong></td>
+                                            <td><span style="color: var(--color-text-secondary);"><?php echo esc($comm['referred_username'] ?? 'Silinmiş Kullanıcı'); ?></span></td>
+                                            <td><?php echo esc($comm['payment_amount'] ?? '0'); ?> <?php echo esc($comm['currency']); ?></td>
+                                            <td><strong style="color: var(--color-success);"><?php echo esc($comm['commission_amount']); ?> <?php echo esc($comm['currency']); ?></strong></td>
+                                            <td>
+                                                <?php if ($comm['status'] === 'paid'): ?>
+                                                    <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">ÖDENDİ</span>
+                                                <?php else: ?>
+                                                    <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">BEKLEYEN</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="color: var(--color-text-muted); font-size: 0.85rem;"><?php echo formatDate($comm['created_at'], 'd M Y H:i'); ?></td>
+                                            <td>
+                                                <?php if ($comm['status'] === 'pending'): ?>
+                                                    <form method="POST" action="?tab=affiliate-commissions" style="display: inline;">
+                                                        <input type="hidden" name="action" value="pay_commission">
+                                                        <input type="hidden" name="commission_id" value="<?php echo (int)$comm['id']; ?>">
+                                                        <button type="submit" class="btn btn-sm" style="padding: 3px 8px; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Ödeme Yapıldı İşaretle</button>
+                                                    </form>
+                                                <?php else: ?>
+                                                    -
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
         </main>
