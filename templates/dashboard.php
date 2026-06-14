@@ -82,6 +82,34 @@ $stmtLicenseCount = $pdo->prepare("SELECT COUNT(*) FROM user_licenses WHERE user
 $stmtLicenseCount->execute([$userId]);
 $totalLicenses = $stmtLicenseCount->fetchColumn();
 
+// Fetch affiliate stats
+$affStats = [
+    'referred_count' => 0,
+    'pending_commission' => 0,
+    'paid_commission' => 0,
+];
+
+try {
+    // Referred registrations count
+    $stmtAff = $pdo->prepare("SELECT COUNT(*) FROM users WHERE referred_by_id = ?");
+    $stmtAff->execute([$userId]);
+    $affStats['referred_count'] = (int)$stmtAff->fetchColumn();
+
+    // Pending commissions total
+    $stmtAff = $pdo->prepare("SELECT SUM(commission_amount) FROM affiliate_commissions WHERE referrer_id = ? AND status = 'pending'");
+    $stmtAff->execute([$userId]);
+    $affStats['pending_commission'] = (float)($stmtAff->fetchColumn() ?: 0.0);
+
+    // Paid commissions total
+    $stmtAff = $pdo->prepare("SELECT SUM(commission_amount) FROM affiliate_commissions WHERE referrer_id = ? AND status = 'paid'");
+    $stmtAff->execute([$userId]);
+    $affStats['paid_commission'] = (float)($stmtAff->fetchColumn() ?: 0.0);
+} catch (PDOException $e) {
+    // Fallback in case table does not exist
+}
+
+$refLink = rtrim($config['site_url'] ?? 'https://tldix.com', '/') . '/?ref=' . esc($username);
+
 // Expiring soon domains list
 if ($dbType === 'sqlite') {
     $stmtExp = $pdo->prepare("
@@ -356,7 +384,49 @@ $recentActivities = $stmtAct->fetchAll();
 
     </div>
 
-    <!-- Bottom: Activity Log -->
+    <!-- Affiliate Stats Widget -->
+    <div class="glass-panel content-list-card" style="margin-top: 2rem; padding: 1.5rem 2rem;">
+        <div class="card-header-flex" style="border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+            <h3>🤝 <?php echo __('nav_affiliate', 'Affiliate'); ?></h3>
+            <a href="<?php echo url('affiliate'); ?>" class="header-link-btn"><?php echo __('view_all', 'Detaylar'); ?></a>
+        </div>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 280px;">
+                <label style="display: block; font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: 600;">
+                    <?php echo __('affiliate_member_link_title', 'Size Özel Referans Linki'); ?>
+                </label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="dbRefLinkInput" value="<?php echo $refLink; ?>" readonly 
+                           style="flex: 1; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--color-border); background: rgba(0,0,0,0.3); color: var(--color-text-primary); font-family: monospace; font-size: 0.85rem;">
+                    <button onclick="copyDbRefLink()" class="btn btn-primary btn-sm" style="padding: 0 1.25rem; font-size: 0.8rem;"><?php echo __('affiliate_btn_copy', 'Kopyala'); ?></button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
+                <div style="text-align: center; padding: 0.5rem 1rem; border-left: 2px solid rgba(255, 255, 255, 0.05);">
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block; text-transform: uppercase;"><?php echo __('affiliate_stat_referred', 'Kayıtlılar'); ?></span>
+                    <strong style="font-size: 1.4rem; color: var(--color-text-primary);"><?php echo $affStats['referred_count']; ?></strong>
+                </div>
+                <div style="text-align: center; padding: 0.5rem 1rem; border-left: 2px solid rgba(255, 255, 255, 0.05);">
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block; text-transform: uppercase;"><?php echo __('affiliate_stat_pending', 'Bekleyen'); ?></span>
+                    <strong style="font-size: 1.4rem; color: var(--color-warning);"><?php echo number_format($affStats['pending_commission'], 2); ?> USD</strong>
+                </div>
+                <div style="text-align: center; padding: 0.5rem 1rem; border-left: 2px solid rgba(255, 255, 255, 0.05);">
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block; text-transform: uppercase;"><?php echo __('affiliate_stat_paid', 'Ödenen'); ?></span>
+                    <strong style="font-size: 1.4rem; color: var(--color-success);"><?php echo number_format($affStats['paid_commission'], 2); ?> USD</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function copyDbRefLink() {
+        var copyText = document.getElementById("dbRefLinkInput");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        alert("<?php echo esc(__('affiliate_copy_success', 'Referans linkiniz kopyalandı!')); ?>");
+    }
+    </script>
+
     <!-- All Tracked Domains List (New Widget) -->
     <div class="glass-panel content-list-card" style="margin-top: 2rem;">
         <div class="card-header-flex" style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1rem;">

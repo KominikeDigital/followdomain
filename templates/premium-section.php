@@ -49,12 +49,23 @@ $premiumPlans = [
                         $feature = __('plan_' . $planKey . '_feature_' . $i);
                         $isExcluded = strpos($feature, '✗') !== false;
                     ?>
-                        <li class="<?php echo $isExcluded ? 'feature-excluded' : 'feature-included'; ?>">
+                        <li class="<?php echo $isExcluded ? 'feature-excluded' : 'feature-included'; ?><?php echo $i > 9 ? ' extra-feature' : ''; ?>"<?php echo $i > 9 ? ' style="display: none;"' : ''; ?>>
                             <span class="<?php echo $isExcluded ? 'feature-icon-cross' : 'feature-icon-check'; ?>"><?php echo $isExcluded ? '✗' : '✓'; ?></span>
                             <span><?php echo esc(str_replace(['✓ ', '✗ '], '', $feature)); ?></span>
                         </li>
                     <?php endfor; ?>
                 </ul>
+
+                <?php if ($plan['feature_count'] > 9): ?>
+                    <span role="button" class="btn-toggle-features" 
+                          onclick="togglePlanFeatures(this, event)" 
+                          data-collapsed="true"
+                          data-text-more="<?php echo esc(__('show_more_features', 'More Features')); ?>"
+                          data-text-less="<?php echo esc(__('show_less_features', 'Less Features')); ?>"
+                          style="background:none; border:none; color:var(--color-primary); cursor:pointer; font-size:0.8rem; margin:-0.5rem auto 1rem; display:block; font-weight:600; text-align:center; position:relative; z-index:10; padding: 4px 8px;">
+                        <?php echo esc(__('show_more_features', 'More Features')); ?> &darr;
+                    </span>
+                <?php endif; ?>
 
                 <span class="<?php echo $planKey === 'free' ? 'btn btn-secondary' : 'btn btn-primary'; ?> w-full home-plan-cta">
                     <?php echo esc($plan['cta']); ?>
@@ -65,3 +76,28 @@ $premiumPlans = [
 
     <p class="home-pricing-note"><?php echo __('home_pricing_note'); ?></p>
 </section>
+
+<script>
+function togglePlanFeatures(btn, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const card = btn.closest('.home-plan-card');
+    const extraFeatures = card.querySelectorAll('.pricing-features li.extra-feature');
+    const isCollapsed = btn.getAttribute('data-collapsed') !== 'false';
+    
+    if (isCollapsed) {
+        extraFeatures.forEach(li => {
+            li.style.display = 'flex';
+        });
+        btn.innerHTML = btn.getAttribute('data-text-less') + ' &uarr;';
+        btn.setAttribute('data-collapsed', 'false');
+    } else {
+        extraFeatures.forEach(li => {
+            li.style.display = 'none';
+        });
+        btn.innerHTML = btn.getAttribute('data-text-more') + ' &darr;';
+        btn.setAttribute('data-collapsed', 'true');
+    }
+}
+</script>

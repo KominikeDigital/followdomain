@@ -236,7 +236,6 @@ $cfIntegration = $stmt->fetch();
                 'free' => ['class' => 'free-tier', 'badge' => __('plan_badge_free', 'Basic'), 'feature_count' => 9],
                 'bronze' => ['class' => 'bronze-tier', 'badge' => __('plan_badge_bronze', 'Starter'), 'feature_count' => 10, 'popular' => __('plan_popular')],
                 'silver' => ['class' => 'silver-tier', 'badge' => __('plan_badge_silver', 'Professional'), 'feature_count' => 12],
-                'gold' => ['class' => 'gold-tier', 'badge' => __('plan_badge_gold', 'Business'), 'feature_count' => 11, 'popular' => __('plan_badge_gold_right', 'Best Value')],
                 'agency' => ['class' => 'agency-tier', 'badge' => __('plan_badge_agency', 'Agency'), 'feature_count' => 18],
             ];
             ?>
@@ -244,7 +243,7 @@ $cfIntegration = $stmt->fetch();
                 <?php foreach ($upgradePlans as $planKey => $planMeta): ?>
                     <div class="pricing-card <?php echo esc($planMeta['class']); ?> <?php echo ($userPlan === $planKey) ? 'active' : ''; ?>">
                         <?php if (!empty($planMeta['popular'])): ?>
-                            <span class="pricing-popular-tag <?php echo $planKey === 'gold' ? 'best-value' : ''; ?>"><?php echo esc($planMeta['popular']); ?></span>
+                            <span class="pricing-popular-tag"><?php echo esc($planMeta['popular']); ?></span>
                         <?php endif; ?>
                         <div class="pricing-card-header">
                             <span class="pricing-badge"><?php echo esc($planMeta['badge']); ?></span>

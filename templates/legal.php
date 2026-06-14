@@ -50,7 +50,7 @@ $lastUpdated = __('legal_last_updated');
                     <p>Sistemimiz, süre dolumlarını e-posta ve webhook bildirimleri aracılığıyla takip etmenizi kolaylaştırır. Ancak, e-posta servislerindeki gecikmeler, spam filtreleri veya üçüncü taraf sunuculardaki aksaklıklar sebebiyle kaçırılan alan adı yenilemelerinden TLDix hiçbir şekilde sorumlu tutulamaz. Kritik alan adlarınızı manuel olarak da kontrol etmeniz önerilir.</p>
 
                     <h3 style="color: #ffffff; margin-top: 1.5rem;">3. Hesap Paketleri ve API Limitleri</h3>
-                    <p>Her üyelik paketi (Free, Bronze, Silver, Gold) belirli alan adı takip limitleri ve sorgu limitleri içerir. Kayıt olurken veya panelinizden seçeceğiniz paketlere uygulanan limitlerin aşılması durumunda hizmet geçici olarak durdurulabilir veya ek paket satın almanız istenebilir.</p>
+                    <p>Her üyelik paketi (Free, Bronze, Silver, Agency) belirli alan adı takip limitleri ve sorgu limitleri içerir. Kayıt olurken veya panelinizden seçeceğiniz paketlere uygulanan limitlerin aşılması durumunda hizmet geçici olarak durdurulabilir veya ek paket satın almanız istenebilir.</p>
 
                     <h3 style="color: #ffffff; margin-top: 1.5rem;">4. Kötüye Kullanım</h3>
                     <p>Sistem kaynaklarını (API servisleri, WHOIS sorgulayıcıları) botlarla sabote etmek, aşırı yüklemek veya güvenlik açıklarını taramak hesabınızın kalıcı olarak askıya alınmasına sebep olur.</p>
@@ -82,7 +82,7 @@ $lastUpdated = __('legal_last_updated');
                     <p>Nuestro sistema le ayuda a realizar el seguimiento a través de correo electrónico y notificaciones de webhook. Sin embargo, TLDix no se hace responsable de las renovaciones de dominio fallidas debido a retrasos en el correo, filtros de spam o problemas con servidores de terceros. Se recomienda verificar manualmente sus dominios críticos.</p>
 
                     <h3 style="color: #ffffff; margin-top: 1.5rem;">3. Planes de Cuenta y Límites de API</h3>
-                    <p>Cada plan (Free, Bronze, Silver, Gold) incluye ciertos límites de seguimiento y límites de API. Si supera estos límites, su acceso a la API puede suspenderse temporalmente hasta la actualización de su plan.</p>
+                    <p>Cada plan (Free, Bronze, Silver, Agency) incluye ciertos límites de seguimiento y límites de API. Si supera estos límites, su acceso a la API puede suspenderse temporalmente hasta la actualización de su plan.</p>
                 <?php endif; ?>
 
             <?php elseif ($lang === 'de'): ?>
@@ -111,7 +111,7 @@ $lastUpdated = __('legal_last_updated');
                     <p>Obwohl wir automatisierte Benachrichtigungen senden, haftet TLDix nicht für versäumte Domainverlängerungen infolge von E-Mail-Verzögerungen, Spam-Filtern oder Serverausfällen. Wir empfehlen, kritische Domains zusätzlich manuell zu kontrollieren.</p>
 
                     <h3 style="color: #ffffff; margin-top: 1.5rem;">3. API-Limits und Tarife</h3>
-                    <p>Jeder Tarif (Free, Bronze, Silver, Gold) unterliegt Limits für die Domain-Überwachung und die Anzahl der täglichen API-Abfragen. Die Überschreitung dieser Limits führt zur vorübergehenden Sperrung der API-Funktionen.</p>
+                    <p>Jeder Tarif (Free, Bronze, Silver, Agency) unterliegt Limits für die Domain-Überwachung und die Anzahl der täglichen API-Abfragen. Die Überschreitung dieser Limits führt zur vorübergehenden Sperrung der API-Funktionen.</p>
                 <?php endif; ?>
 
             <?php else: ?>
@@ -141,7 +141,7 @@ $lastUpdated = __('legal_last_updated');
                     <p>While our alerts help you track renewals, TLDix is not responsible for failed domain registrations or missed renewals caused by SMTP delays, network down times, or spam filters. Critical domains should be checked manually.</p>
 
                     <h3 style="color: #ffffff; margin-top: 1.5rem;">3. Subscription Plans and API Limits</h3>
-                    <p>Each tier (Free, Bronze, Silver, Gold) imposes strict domain-tracking limits and API query quotas. Quota overages may lead to temporary API suspension until the account plan is upgraded or renewed.</p>
+                    <p>Each tier (Free, Bronze, Silver, Agency) imposes strict domain-tracking limits and API query quotas. Quota overages may lead to temporary API suspension until the account plan is upgraded or renewed.</p>
                 <?php endif; ?>
             <?php endif; ?>
         </div>
